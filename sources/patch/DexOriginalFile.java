@@ -125,7 +125,7 @@ public class DexOriginalFile extends DexParser {
     int classDataItemsIndex = 0;
     
     HashMap<Long, Integer> debugInfoOffsetMap;
-    DebugInfoItem[] debugInfoItems;
+    public DebugInfoItem[] debugInfoItems;
     int debugInfoItemIndex = 0;
     
     HashMap<Long, Integer> codeItemOffsetMap;

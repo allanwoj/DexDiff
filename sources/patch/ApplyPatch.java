@@ -468,9 +468,6 @@ public class ApplyPatch {
         			debugInfoItemFile.writeULeb128(1 + (int)stringIndexMap[(int)code.name]);
         		}
 			}
-				
-			
-			debugInfoItemFile.writeULeb128((int)debugInfoItem.lineStart);
 		}
 		
 		

@@ -1,5 +1,8 @@
 package generate;
 
+import item.ClassDataItem;
+import item.DebugByteCode;
+import item.DebugInfoItem;
 import item.FieldIdItem;
 import item.MethodIdItem;
 import item.ProtoIdItem;
@@ -7,6 +10,7 @@ import item.TypeList;
 
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -153,13 +157,20 @@ public class GeneratePatch {
 		l = lcs2(original.fieldIds, update.fieldIds, original.typeIds, update.typeIds, original.stringData, update.stringData);
 		it = l.listIterator(l.size());
 		c = it.previous();
+		long[] fieldIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
 			int count = 0;
 			while (nx == val) {
-				if(nx == 1) {
+				if (nx == 0) {
+					fieldIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
 					dataFile.write(c.data);
+				} else if (nx == 2) {
+					fieldIndexMap[mapIndex++] = -1;
 				}
 				
 				++count;
@@ -175,8 +186,12 @@ public class GeneratePatch {
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
-					if(nx == 1) {
+					if (nx == 0) {
+						fieldIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
 						dataFile.write(c.data);
+					} else if (nx == 2) {
+						fieldIndexMap[mapIndex++] = -1;
 					}
 					patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
@@ -332,6 +347,56 @@ public class GeneratePatch {
 			}
 		}
 		
+		
+		patchFile.write("7\n");
+		// debug_info_item
+		l = lcs2(original.debugInfoItems, update.debugInfoItems, typeIndexMap, stringIndexMap);
+		it = l.listIterator(l.size());
+		c = it.previous();
+		long[] debugInfoIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
+		while (true) {
+			int val = c.type;
+			int nx = c.type;
+			int count = 0;
+			while (nx == val) {
+				if (nx == 0) {
+					debugInfoIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
+					dataFile.write(c.data);
+					++fileIndex;
+				} else if (nx == 2) {
+					debugInfoIndexMap[mapIndex++] = -1;
+				}
+				
+				++count;
+				
+				if (!it.hasPrevious())
+					break;
+				
+				c = it.previous();
+				nx = c.type;
+			}
+			
+			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			
+			if (!it.hasPrevious()) {
+				if(nx != val) {
+					if (nx == 0) {
+						debugInfoIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if (nx == 2) {
+						debugInfoIndexMap[mapIndex++] = -1;
+					}
+					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+				}
+				break;
+			}
+		}
+		
 		System.out.print("done");
 	}
 	
@@ -354,7 +419,7 @@ public class GeneratePatch {
 	    for (int x = a.length, y = b.length;
 	         x != 0 && y != 0; ) {
 	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2, null));
+	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	byte[] by = new byte[b[y-1].length() - 1];
@@ -363,7 +428,7 @@ public class GeneratePatch {
 	        	y--;
 	            
 	        } else {
-	        	l.add(new PCommand(0, null));
+	        	l.add(new PCommand(0));
 	        	
 	        	x--;
 	            y--;
@@ -391,14 +456,14 @@ public class GeneratePatch {
 	    for (int x = a.length, y = b.length;
 	         x != 0 && y != 0; ) {
 	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2, null));
+	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1]));
 	        	y--;
 	            
 	        } else {
-	        	l.add(new PCommand(0, null));
+	        	l.add(new PCommand(0));
 	        	
 	        	x--;
 	            y--;
@@ -429,7 +494,7 @@ public class GeneratePatch {
 	    for (int x = a.length, y = b.length;
 	         x != 0 && y != 0; ) {
 	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2, null));
+	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	String s = ((Integer)b[y-1].classId).toString() + "\n" +
@@ -442,7 +507,7 @@ public class GeneratePatch {
 	        	y--;
 	            
 	        } else {
-	        	l.add(new PCommand(0, null));
+	        	l.add(new PCommand(0));
 	        	
 	        	x--;
 	            y--;
@@ -485,7 +550,7 @@ public class GeneratePatch {
 	    for (int x = a.length, y = b.length;
 	         x != 0 && y != 0; ) {
 	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2, null));
+	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	String s = ((Long)b[y-1].size).toString() + "\n";
@@ -499,7 +564,7 @@ public class GeneratePatch {
 	        	y--;
 	            
 	        } else {
-	        	l.add(new PCommand(0, null));
+	        	l.add(new PCommand(0));
 	        	
 	        	x--;
 	            y--;
@@ -547,7 +612,7 @@ public class GeneratePatch {
 	    for (int x = a.length, y = b.length;
 	         x != 0 && y != 0; ) {
 	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2, null));
+	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	String s = ((Long)b[y-1].shorty).toString() + "\n" +
@@ -559,7 +624,7 @@ public class GeneratePatch {
 	        	l.add(new PCommand(1, by));
 	        	y--;
 	        } else {
-	        	l.add(new PCommand(0, null));
+	        	l.add(new PCommand(0));
 	        	
 	        	x--;
 	            y--;
@@ -598,7 +663,7 @@ public class GeneratePatch {
 	    for (int x = a.length, y = b.length;
 	         x != 0 && y != 0; ) {
 	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2, null));
+	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	String s = ((Long)b[y-1].classId).toString() + "\n" +
@@ -611,7 +676,7 @@ public class GeneratePatch {
 	        	y--;
 	            
 	        } else {
-	        	l.add(new PCommand(0, null));
+	        	l.add(new PCommand(0));
 	        	
 	        	x--;
 	            y--;
@@ -621,15 +686,94 @@ public class GeneratePatch {
 	    return l;
 	}
     
+    // debug_info_item
+    public static List<PCommand> lcs2(DebugInfoItem[] a, DebugInfoItem[] b, long[] typeIndexMap, long[] stringIndexMap) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++) {
+	        for (int j = 0; j < b.length; j++) {
+	        	boolean isEqual = true;
+	        	
+	        	if (a[i].lineStart != b[j].lineStart || a[i].parametersSize != b[j].parametersSize ||
+	        			a[i].debugByteCode.size() != b[j].debugByteCode.size()) {
+	        		isEqual = false;
+	        	} else {
+	        		for (int k = 0; k < a[i].parametersSize; ++k) {
+	        			if (stringIndexMap[(int)a[i].parameterNames[k] + 1] != b[j].parameterNames[k] + 1) {
+	        				isEqual = false;
+	        				break;
+	        			}
+	        		}
+	        		
+	        		if (isEqual) {
+	        			Iterator<DebugByteCode> it1 = a[i].debugByteCode.iterator();
+	        			Iterator<DebugByteCode> it2 = b[j].debugByteCode.iterator();
+	        			
+	        			while (it1.hasNext()) {
+	        				DebugByteCode b1 = it1.next();
+	        				DebugByteCode b2 = it2.next();
+	        				
+	        				if (!b1.isEqual(b2, typeIndexMap, stringIndexMap)) {
+	        					isEqual = false;
+	        					break;
+	        				}
+	        			}
+	        		}
+	        	}
+	        	
+	        	if (isEqual) {
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	        }
+	    }
+	 // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 && y != 0; ) {
+	        if (lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2));
+	        	x--;
+	        } else if (lengths[x][y] == lengths[x][y-1]) {
+	        	l.add(new PCommand(1, b[y-1].getByteCode()));
+	        	y--;
+	            
+	        } else {
+	        	l.add(new PCommand(0));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
 	
 	private static class PCommand {
 		public int type;
 		byte[] data;
 		int index;
 		
+		public PCommand(int type) {
+			this.type = type;
+			this.data = null;
+		}
+		
 		public PCommand(int type, byte[] data) {
 			this.type = type;
 			this.data = data;
+		}
+		
+		public PCommand(int type, Byte[] data) {
+			this.type = type;
+			this.data = new byte[data.length];
+			for (int i = 0; i < data.length; ++i) {
+				this.data[i] = data[i];
+			}
 		}
 		
 		public PCommand(int type, int index) {
