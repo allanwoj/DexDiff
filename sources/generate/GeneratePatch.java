@@ -1,6 +1,7 @@
 package generate;
 
 import item.FieldIdItem;
+import item.MethodIdItem;
 import item.ProtoIdItem;
 import item.TypeList;
 
@@ -238,13 +239,21 @@ public class GeneratePatch {
 		l = lcs2(original.protoIds, update.protoIds, typeListIndexMap, typeIndexMap, stringIndexMap);
 		it = l.listIterator(l.size());
 		c = it.previous();
+		long[] protoIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
 			int count = 0;
 			while (nx == val) {
-				if(nx == 1) {
+				if (nx == 0) {
+					protoIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
 					dataFile.write(c.data);
+					++fileIndex;
+				} else if (nx == 2) {
+					protoIndexMap[mapIndex++] = -1;
 				}
 				
 				++count;
@@ -260,8 +269,62 @@ public class GeneratePatch {
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
-					if(nx == 1) {
+					if (nx == 0) {
+						protoIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
 						dataFile.write(c.data);
+						++fileIndex;
+					} else if (nx == 2) {
+						protoIndexMap[mapIndex++] = -1;
+					}
+					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+				}
+				break;
+			}
+		}
+		
+		patchFile.write("7\n");
+		// method_id
+		l = lcs2(original.methodIds, update.methodIds, typeIndexMap, protoIndexMap, stringIndexMap);
+		it = l.listIterator(l.size());
+		c = it.previous();
+		long[] methodIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
+		while (true) {
+			int val = c.type;
+			int nx = c.type;
+			int count = 0;
+			while (nx == val) {
+				if (nx == 0) {
+					methodIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
+					dataFile.write(c.data);
+					++fileIndex;
+				} else if (nx == 2) {
+					methodIndexMap[mapIndex++] = -1;
+				}
+				
+				++count;
+				
+				if (!it.hasPrevious())
+					break;
+				
+				c = it.previous();
+				nx = c.type;
+			}
+			
+			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			
+			if (!it.hasPrevious()) {
+				if(nx != val) {
+					if (nx == 0) {
+						methodIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if (nx == 2) {
+						methodIndexMap[mapIndex++] = -1;
 					}
 					patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
@@ -478,7 +541,7 @@ public class GeneratePatch {
 	            }
 	        }
 	    }
-	 
+	   
 	    // read the substring out from the matrix
 	    List<PCommand> l = new LinkedList<PCommand>();
 	    for (int x = a.length, y = b.length;
@@ -488,8 +551,59 @@ public class GeneratePatch {
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	String s = ((Long)b[y-1].shorty).toString() + "\n" +
-	        		((Long)b[y-1].type).toString() + "\n" +
-	        		((Long)b[y-1].typeListOffset).toString() + "\n";
+        		((Long)b[y-1].type).toString() + "\n" +
+        		((Long)b[y-1].typeListOffset).toString() + "\n";
+	        	byte[] by = new byte[s.length()];
+	        	s.getBytes(0, s.length(), by, 0);
+        	
+	        	l.add(new PCommand(1, by));
+	        	y--;
+	        } else {
+	        	l.add(new PCommand(0, null));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
+	
+	 // method ids
+    public static List<PCommand> lcs2(MethodIdItem[] a, MethodIdItem[] b, long[] typeIndexMap, long[] protoIndexMap, long[] stringIndexMap) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++) {
+	        for (int j = 0; j < b.length; j++) {
+	        	boolean isEqual = true;
+	        	
+	        	if (typeIndexMap[(int)a[i].classId] != b[j].classId ||
+	        			protoIndexMap[(int)a[i].proto] != b[j].proto ||
+	        			stringIndexMap[(int)a[i].name] != b[j].name) {
+	        		isEqual = false;
+	        	}
+	        	
+	        	if (isEqual) {
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	        }
+	    }
+	 // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 && y != 0; ) {
+	        if (lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2, null));
+	        	x--;
+	        } else if (lengths[x][y] == lengths[x][y-1]) {
+	        	String s = ((Long)b[y-1].classId).toString() + "\n" +
+	        		((Long)b[y-1].proto).toString() + "\n" +
+	        		((Long)b[y-1].name).toString() + "\n";
 	        	byte[] by = new byte[s.length()];
 	        	s.getBytes(0, s.length(), by, 0);
 	        	
@@ -506,6 +620,7 @@ public class GeneratePatch {
 	 
 	    return l;
 	}
+    
 	
 	private static class PCommand {
 		public int type;

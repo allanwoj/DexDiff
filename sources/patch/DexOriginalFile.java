@@ -99,7 +99,7 @@ public class DexOriginalFile extends DexParser {
     public ProtoIdItem[] protoIds;
     int protoIdsIndex = 0;
     
-    MethodIdItem[] methodIds;
+    public MethodIdItem[] methodIds;
     int methodIdsIndex = 0;
     
     HashMap<Long, Integer> annotationOffsetMap;
