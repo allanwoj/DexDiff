@@ -1,0 +1,74 @@
+<project name="dedexer" default="package" basedir=".">
+
+
+<!-- Directories of the project -->
+<property name="home" value="/home/paller/android_dev/bytecode/dedexer"/>
+<property name="junit-home" value="/home/paller/junit"/>
+
+<!-- Directories derived from the source tree root -->
+<property name="classdir" value="${home}/classes"/>
+<property name="src" value="${home}/sources"/>
+<property name="testbase" value="${home}/testfiles"/>
+
+<!-- Directories derived from the JUnit base -->
+<property name="junit_jar" value="${junit-home}/junit-4.8.2.jar"/>
+
+<target name="init">
+<!-- Create the time stamp -->
+  <tstamp/>
+<!-- Create the build directory structure used by compile -->
+  <mkdir dir="${classdir}"/>
+</target>
+
+<target name="compile" depends="init">
+  <javac srcdir="${src}"
+         destdir="${classdir}"
+     debug="on">
+     <classpath>
+        <pathelement path="${classdir}"/>
+        <pathelement location="${junit_jar}"/>
+     </classpath>     
+  </javac>
+</target>
+
+<target name="package" depends="compile">
+	<delete file="${home}/ddx.jar"/>
+	<jar destfile="${home}/ddx.jar"
+	   manifest="${home}/etc/manifest.mf">
+		<fileset dir="${classdir}">
+            <include name="**/dedexer/*"/>
+		</fileset>
+	</jar>
+</target>
+
+<target name="junit" depends="compile">
+    <java classname="org.junit.runner.JUnitCore"
+            fork="yes">
+        <classpath>
+            <pathelement path="${classdir}"/>
+            <pathelement location="${junit_jar}"/>
+        </classpath>
+        <arg value="hu.uw.pallergabor.dedexertest.DedexerSuite"/>
+        <jvmarg value="-Dtestbase=${testbase}"/>
+    </java>
+</target>
+
+<target name="junit-single" depends="compile">
+    <java classname="org.junit.runner.JUnitCore"
+            fork="yes">
+        <classpath>
+            <pathelement path="${classdir}"/>
+            <pathelement location="${junit_jar}"/>
+        </classpath>
+        <arg value="hu.uw.pallergabor.dedexertest.DexDependencyTest"/>
+        <jvmarg value="-Dtestbase=${testbase}"/>
+    </java>
+</target>
+
+<target name="clean">
+<!-- Delete the ${build} directory trees -->
+  <delete dir="${classdir}"/>
+  <delete file="${home}/ddx.jar"/>
+</target>
+
+</project>
