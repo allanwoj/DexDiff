@@ -20,7 +20,7 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					generated.write(original.getData());
+					generated.write(original.getTableData());
 					indexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {
@@ -32,7 +32,7 @@ public class ApplyPatch {
 			} else if (command.type == 2) {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
-					original.getData();
+					original.getTableData();
 					indexMap[mapIndex++] = -1;
 				}
 			}
@@ -47,6 +47,30 @@ public class ApplyPatch {
 		for (int i = 0; i < mapIndex; ++i) {
 			System.out.print(indexMap[i] + " ");
 		}
+		
+		while(patch.hasDataCommands()) {
+			command = patch.getNextDataCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					generated.write((char)10);
+					generated.write((char)(indexMap[original.getData()] + 48));
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					generated.write((char)10);
+					generated.write(patch.getData());
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					System.out.print("Delete: " + indexMap[original.getData()]);
+				}
+			}
+		}
+		
+		
 		
 	}
 

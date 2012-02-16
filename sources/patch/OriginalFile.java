@@ -7,13 +7,24 @@ import java.io.IOException;
 
 public class OriginalFile {
 
-	String data;
-	int index = 0;
+	String stringTable;
+	int[] data = new int[100];
+	int stringTableIndex = 0;
+	int dataIndex = 0;
+	int dataSize = 0;
 	
 	public OriginalFile(String fileName) {
 		try {
 			BufferedReader file = new BufferedReader(new FileReader(fileName));
-			data = file.readLine();
+			stringTable = file.readLine();
+			String buf;
+			while(true) {
+				buf = file.readLine();
+				if (buf == null) {
+					break;
+				}
+				data[dataSize++] = Integer.parseInt(buf);
+			}
 			file.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -24,8 +35,16 @@ public class OriginalFile {
 		}
 	}
 	
-	char getData() {
-		return data.charAt(index++);
+	char getTableData() {
+		return stringTable.charAt(stringTableIndex++);
+	}
+	
+	int getData() {
+		return data[dataIndex++];
+	}
+	
+	boolean hasData() {
+		return dataIndex < dataSize;
 	}
 	
 }
