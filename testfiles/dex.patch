@@ -1,0 +1,41 @@
+408668
+0 434
+2 1
+0 128
+2 1
+0 371
+1 1
+0 274
+2 1
+0 281
+1 5
+0 34
+1 1
+0 517
+2 1
+1 1
+0 1126
+1 1
+0 689
+1 1
+0 67
+1 1
+0 267
+2 1
+0 936
+2 2
+0 140
+2 1
+0 163
+4
+Landroid/text/AndroidCharacter;
+Lorg/connectbot/util/EastAsianWidth$1;
+Lorg/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder;
+Lorg/connectbot/util/EastAsianWidth$FroyoAndBeyond;
+Lorg/connectbot/util/EastAsianWidth$PreFroyo$Holder;
+Lorg/connectbot/util/EastAsianWidth$PreFroyo;
+N
+VLIILLI
+getEastAsianWidths
+mWidths
+measurer

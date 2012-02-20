@@ -127,6 +127,25 @@ public abstract class DexParser {
   */
     public String readString() throws IOException {
         int size = read8Bit();
+        int buff;
+        if (size > 0x7f) {
+        	buff = read8Bit();
+        	size = (size & 0x7f) | ((buff & 0x7f) << 7);
+        	if (buff > 0x7f) {
+        		buff = read8Bit();
+            	size |= ((buff & 0x7f) << 14);
+            	if (buff > 0x7f) {
+            		buff = read8Bit();
+                	size |= ((buff & 0x7f) << 21);
+                	if (buff > 0x7f) {
+                		buff = read8Bit();
+                    	size |= ((buff & 0x7f) << 28);
+                	}
+            	}
+        	}
+        }
+        
+        
         StringBuilder b = new StringBuilder( size );
         for( int i = 0 ; i < size ; ++i )
             b.append( (char)read8Bit() );
