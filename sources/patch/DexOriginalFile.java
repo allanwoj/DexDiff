@@ -65,8 +65,6 @@ public class DexOriginalFile extends DexParser {
 	        
 	        stringData = new String[(int)stringIdsSize];
 	        for(int i = 0 ; i < stringIdsSize; ++i) {
-	        	if(i == 1899)
-	        		System.out.print("hi");
 	        	setFilePosition(stringsPos[i]);
 	        	stringData[i] = readString();
 	        }

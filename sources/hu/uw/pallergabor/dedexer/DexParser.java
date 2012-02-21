@@ -126,7 +126,20 @@ public abstract class DexParser {
   * @throws IOException in case of I/O error.
   */
     public String readString() throws IOException {
-        int size = read8Bit();
+    	String out = "";
+    	int buff;
+    	buff = read8Bit();
+    	out += (char)buff;
+    	
+    	while(true) {
+    		buff = read8Bit();
+    		if(buff == 0)
+    			break;
+    		out += (char)buff;
+    	}
+    	return out;
+    	
+    	/*int size = read8Bit();
         int buff;
         if (size > 0x7f) {
         	buff = read8Bit();
@@ -149,7 +162,7 @@ public abstract class DexParser {
         StringBuilder b = new StringBuilder( size );
         for( int i = 0 ; i < size ; ++i )
             b.append( (char)read8Bit() );
-        return new String( b );
+        return new String( b );*/
     }
 
 /**

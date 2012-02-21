@@ -27,7 +27,9 @@ public class GeneratedFile {
 	
 	public void write(String data) {
 		try {
-			out.write(data.getBytes());
+			byte[] b = new byte[data.length()];
+			data.getBytes(0, data.length(), b, 0);
+			out.write(b);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

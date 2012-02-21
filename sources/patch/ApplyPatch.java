@@ -35,17 +35,8 @@ public class ApplyPatch {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
 					buf = original.getStringData();
-					int size = buf.length();
-					int size_buf = 2;
-					while (size >127) {
-						size = size >> 8;
-						++size_buf;
-					}
-					current += buf.length() + size_buf;
-					if (current > 461219)
-						System.out.print("Sup");
+					current += buf.length() + 1;
 					tableFile.write(current);
-					stringFile.write(buf.length());
 					stringFile.write(buf);
 					stringFile.write(0);
 					indexMap[mapIndex++] = fileIndex++;
@@ -61,8 +52,9 @@ public class ApplyPatch {
 						++size_buf;
 					}
 					current += buf.length() + size_buf;
+					// TODO Handle cases when length is larger than 127.
 					tableFile.write(current);
-					stringFile.write((long)buf.length());
+					stringFile.write(buf.length());
 					stringFile.write(buf);
 					stringFile.write((char)0);
 					++fileIndex;
