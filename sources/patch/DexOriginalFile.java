@@ -29,7 +29,10 @@ public class DexOriginalFile extends DexParser {
     private long dataOffset;
     
     String[] stringData;
-    int dataIndex = 0;
+    int stringDataIndex = 0;
+    
+    int[] typeIds;
+    int typeIdsIndex = 0;
 
 	@Override
 	public void parse() {
@@ -63,7 +66,14 @@ public class DexOriginalFile extends DexParser {
 	        	stringsPos[i] = readFileOffset();
 	        }
 	        
+	        typeIds = new int[(int)typeIdsSize];
+	        // Read type_ids
+	        for(int i = 0 ; i < typeIdsSize; ++i) {
+	        	typeIds[i] = (int) read32Bit();
+	        }
+	        
 	        stringData = new String[(int)stringIdsSize];
+	        // Read string_data_items
 	        for(int i = 0 ; i < stringIdsSize; ++i) {
 	        	setFilePosition(stringsPos[i]);
 	        	stringData[i] = readString();
@@ -75,7 +85,11 @@ public class DexOriginalFile extends DexParser {
 	}
 	
 	public String getStringData() {
-		return stringData[dataIndex++];
+		return stringData[stringDataIndex++];
+	}
+	
+	public int getTypeIdData() {
+		return typeIds[typeIdsIndex++];
 	}
 	
 	public long getFileSize() {

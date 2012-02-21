@@ -1,7 +1,7 @@
 408668
-0 434 // 434
+0 434 //434
 2 1
-0 128 // 562
+0 128 //562
 2 1 //563
 0 370 //933
 1 1
@@ -28,6 +28,17 @@
 2 1 //5271
 0 163 //5434
 4
+0 103 //103
+1 933
+0 270 //373
+2 1 //374
+0 256 //629
+1 1489
+1 1490
+1 1491
+1 1492
+1 1493
+0 45 //674
 Landroid/text/AndroidCharacter;
 Lorg/connectbot/util/EastAsianWidth$1;
 Lorg/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder;

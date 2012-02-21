@@ -28,6 +28,17 @@
 2 1
 0 163
 4
+0 103
+1 933
+0 270
+2 1
+0 256
+1 1489
+1 1490
+1 1491
+1 1492
+1 1493
+0 45
 Landroid/text/AndroidCharacter;
 Lorg/connectbot/util/EastAsianWidth$1;
 Lorg/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder;
