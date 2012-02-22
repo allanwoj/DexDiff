@@ -19,24 +19,27 @@ public class ApplyPatch {
 		original.setRandomAccessFile(raf);
 		original.parse();
 		DexPatchFile patch = new DexPatchFile(args[1]);
-		GeneratedFile tableFile = new GeneratedFile(args[2]);
+		GeneratedFile stringIdsFile = new GeneratedFile(args[2]);
+		GeneratedFile typeIdsFile = new GeneratedFile("out/type.dex");
 		GeneratedFile stringFile = new GeneratedFile("out/data.dex");
-		int[] indexMap = new int[10000];
+		long[] indexMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
 		long current = patch.getOffset();
-		tableFile.write(current);
+		stringIdsFile.write(current);
 		String buf;
-		while(patch.hasCommands()) {
-			command = patch.getNextCommand();
+		
+		// Generate patched string_ids and string_data_items
+		while(patch.hasStringCommands()) {
+			command = patch.getNextStringCommand();
 			
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
 					buf = original.getStringData();
 					current += buf.length() + 1;
-					tableFile.write(current);
+					stringIdsFile.write(current);
 					stringFile.write(buf);
 					stringFile.write(0);
 					indexMap[mapIndex++] = fileIndex++;
@@ -53,7 +56,7 @@ public class ApplyPatch {
 					}
 					current += buf.length() + size_buf;
 					// TODO Handle cases when length is larger than 127.
-					tableFile.write(current);
+					stringIdsFile.write(current);
 					stringFile.write(buf.length());
 					stringFile.write(buf);
 					stringFile.write((char)0);
@@ -68,40 +71,29 @@ public class ApplyPatch {
 			}
 		}
 		
+		
 		System.out.println("DONE");
 		
-		/*for (int i = 0; i < mapIndex; ++i) {
-			System.out.print(i + " ");
-		}
-		System.out.println(" ");
-		for (int i = 0; i < mapIndex; ++i) {
-			System.out.print(indexMap[i] + " ");
-		}
-		
-		while(patch.hasDataCommands()) {
-			command = patch.getNextDataCommand();
+		// Generate patched type_ids
+		while(patch.hasTypeCommands()) {
+			command = patch.getNextTypeCommand();
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					generated.write((char)10);
-					generated.write((char)(indexMap[original.getData()] + 48));
+					typeIdsFile.write((indexMap[original.getTypeIdData()]));
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					generated.write((char)10);
-					generated.write(patch.getData());
+					typeIdsFile.write(Long.parseLong(patch.getNextData()));
 				}
 			} else if (command.type == 2) {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
-					System.out.print("Delete: " + indexMap[original.getData()]);
+					System.out.print("Delete: " + indexMap[original.getTypeIdData()]);
 				}
 			}
-		}
-		*/
-		
-		
+		}		
 	}
 	
 	/*

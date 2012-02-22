@@ -3,7 +3,6 @@ package patch;
 import java.io.IOException;
 
 import hu.uw.pallergabor.dedexer.DexParser;
-import hu.uw.pallergabor.dedexer.UnknownInstructionException;
 
 public class DexOriginalFile extends DexParser {
 

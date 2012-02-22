@@ -8,14 +8,17 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 public class DexPatchFile {
-	private LinkedHashSet<PatchCommand> commands;
-	private Iterator<PatchCommand> it;
+	private LinkedHashSet<PatchCommand> stringCommands;
+	private LinkedHashSet<PatchCommand> typeCommands;
+	private Iterator<PatchCommand> stringIt;
+	private Iterator<PatchCommand> typeIt;
 	private LinkedHashSet<String> data;
 	private Iterator<String> dataIt;
 	private long stringOffset;
 	
 	public DexPatchFile(String fileName) {
-		commands = new LinkedHashSet<PatchCommand>();
+		stringCommands = new LinkedHashSet<PatchCommand>();
+		typeCommands = new LinkedHashSet<PatchCommand>();
 		data = new LinkedHashSet<String>();
 		try {
 			BufferedReader file = new BufferedReader(new FileReader(fileName));
@@ -33,9 +36,20 @@ public class DexPatchFile {
 				}
 				type = buf.charAt(0) - 48;
 				size = Integer.parseInt(buf.substring(2));
-				commands.add(new PatchCommand(type, size));
+				stringCommands.add(new PatchCommand(type, size));
 			}
 			
+			while(true) {
+				buf = file.readLine();
+				if (buf.equals("5")) {
+					break;
+				}
+				type = buf.charAt(0) - 48;
+				size = Integer.parseInt(buf.substring(2));
+				typeCommands.add(new PatchCommand(type, size));
+			}
+			
+			// Read patch data
 			while(true) {
 				String buff = file.readLine();
 				if (buff == null)
@@ -44,7 +58,8 @@ public class DexPatchFile {
 			}
 			
 			file.close();
-			it = commands.iterator();
+			stringIt = stringCommands.iterator();
+			typeIt = typeCommands.iterator();
 			dataIt = data.iterator();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -55,12 +70,20 @@ public class DexPatchFile {
 		}
 	}
 	
-	PatchCommand getNextCommand() {
-		return it.next();
+	PatchCommand getNextStringCommand() {
+		return stringIt.next();
 	}
 	
-	boolean hasCommands() {
-		return it.hasNext();
+	boolean hasStringCommands() {
+		return stringIt.hasNext();
+	}
+	
+	PatchCommand getNextTypeCommand() {
+		return typeIt.next();
+	}
+	
+	boolean hasTypeCommands() {
+		return typeIt.hasNext();
 	}
 	
 	String getNextData() {
