@@ -22,7 +22,8 @@ public class ApplyPatch {
 		GeneratedFile stringIdsFile = new GeneratedFile(args[2]);
 		GeneratedFile typeIdsFile = new GeneratedFile("out/type.dex");
 		GeneratedFile stringFile = new GeneratedFile("out/data.dex");
-		long[] indexMap = new long[10000];
+		long[] stringIndexMap = new long[10000];
+		long[] typeIndexMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
@@ -42,7 +43,7 @@ public class ApplyPatch {
 					stringIdsFile.write(current);
 					stringFile.write(buf);
 					stringFile.write(0);
-					indexMap[mapIndex++] = fileIndex++;
+					stringIndexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {
 				// ADD
@@ -66,13 +67,15 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getStringData();
-					indexMap[mapIndex++] = -1;
+					stringIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
 		
 		
 		System.out.println("DONE");
+		fileIndex = 0;
+		mapIndex = 0;
 		
 		// Generate patched type_ids
 		while(patch.hasTypeCommands()) {
@@ -80,17 +83,20 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					typeIdsFile.write((indexMap[original.getTypeIdData()]));
+					typeIdsFile.write((stringIndexMap[original.getTypeIdData()]));
+					typeIndexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
 					typeIdsFile.write(Long.parseLong(patch.getNextData()));
+					++fileIndex;
 				}
 			} else if (command.type == 2) {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
-					System.out.print("Delete: " + indexMap[original.getTypeIdData()]);
+					System.out.print("Delete: " + stringIndexMap[original.getTypeIdData()]);
+					stringIndexMap[mapIndex++] = -1;
 				}
 			}
 		}		
