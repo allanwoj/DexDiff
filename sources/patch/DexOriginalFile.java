@@ -32,6 +32,9 @@ public class DexOriginalFile extends DexParser {
     
     int[] typeIds;
     int typeIdsIndex = 0;
+    
+    FieldIdItem[] fieldIds;
+    int fieldIdsIndex = 0;
 
 	@Override
 	public void parse() {
@@ -77,6 +80,14 @@ public class DexOriginalFile extends DexParser {
 	        	setFilePosition(stringsPos[i]);
 	        	stringData[i] = readString();
 	        }
+	        
+	        setFilePosition(fieldIdsOffset);
+	        fieldIds = new FieldIdItem[(int) fieldIdsSize];
+	        // Read field_ids
+	        for (int i = 0; i < fieldIdsSize; ++i) {
+				fieldIds[i] = new FieldIdItem(read16Bit(), read16Bit(), (int)read32Bit());
+			}
+	        
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -89,6 +100,10 @@ public class DexOriginalFile extends DexParser {
 	
 	public int getTypeIdData() {
 		return typeIds[typeIdsIndex++];
+	}
+	
+	public FieldIdItem getFieldIdData() {
+		return fieldIds[fieldIdsIndex++];
 	}
 	
 	public long getFileSize() {

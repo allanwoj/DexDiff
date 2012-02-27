@@ -5,21 +5,25 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 public class DexPatchFile {
-	private LinkedHashSet<PatchCommand> stringCommands;
-	private LinkedHashSet<PatchCommand> typeCommands;
+	private List<PatchCommand> stringCommands;
+	private List<PatchCommand> typeCommands;
+	private List<PatchCommand> fieldCommands;
 	private Iterator<PatchCommand> stringIt;
 	private Iterator<PatchCommand> typeIt;
-	private LinkedHashSet<String> data;
+	private Iterator<PatchCommand> fieldIt;
+	private List<String> data;
 	private Iterator<String> dataIt;
 	private long stringOffset;
 	
 	public DexPatchFile(String fileName) {
-		stringCommands = new LinkedHashSet<PatchCommand>();
-		typeCommands = new LinkedHashSet<PatchCommand>();
-		data = new LinkedHashSet<String>();
+		stringCommands = new LinkedList<PatchCommand>();
+		typeCommands = new LinkedList<PatchCommand>();
+		fieldCommands = new LinkedList<PatchCommand>();
+		data = new LinkedList<String>();
 		try {
 			BufferedReader file = new BufferedReader(new FileReader(fileName));
 			String buf;
@@ -39,6 +43,7 @@ public class DexPatchFile {
 				stringCommands.add(new PatchCommand(type, size));
 			}
 			
+			// Read type_id commands
 			while(true) {
 				buf = file.readLine();
 				if (buf.equals("5")) {
@@ -47,6 +52,17 @@ public class DexPatchFile {
 				type = buf.charAt(0) - 48;
 				size = Integer.parseInt(buf.substring(2));
 				typeCommands.add(new PatchCommand(type, size));
+			}
+			
+			// Read field_id commands
+			while(true) {
+				buf = file.readLine();
+				if (buf.equals("6")) {
+					break;
+				}
+				type = buf.charAt(0) - 48;
+				size = Integer.parseInt(buf.substring(2));
+				fieldCommands.add(new PatchCommand(type, size));
 			}
 			
 			// Read patch data
@@ -60,6 +76,7 @@ public class DexPatchFile {
 			file.close();
 			stringIt = stringCommands.iterator();
 			typeIt = typeCommands.iterator();
+			fieldIt = fieldCommands.iterator();
 			dataIt = data.iterator();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -84,6 +101,14 @@ public class DexPatchFile {
 	
 	boolean hasTypeCommands() {
 		return typeIt.hasNext();
+	}
+	
+	PatchCommand getNextFieldCommand() {
+		return fieldIt.next();
+	}
+	
+	boolean hasFieldCommands() {
+		return fieldIt.hasNext();
 	}
 	
 	String getNextData() {

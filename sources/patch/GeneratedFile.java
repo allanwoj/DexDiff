@@ -25,6 +25,20 @@ public class GeneratedFile {
 		}
 	}
 	
+	public void write16bit(long data) {
+		byte[] output = new byte[2];
+		
+		for(int i = 0; i < 2; ++i) {
+			output[i] = (byte)((data >> (i*8)) & 0xFF);
+		}
+		try {
+			out.write(output);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void write(String data) {
 		try {
 			byte[] b = new byte[data.length()];
