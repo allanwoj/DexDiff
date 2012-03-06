@@ -1,10 +1,10 @@
-package patch;
+package item;
 
 public class FieldIdItem {
 
-	int classId;
-	int typeId;
-	int nameId;
+	public int classId;
+	public int typeId;
+	public int nameId;
 	
 	public FieldIdItem(int classId,	int typeId,	int nameId) {
 		this.classId = classId;

@@ -1,5 +1,11 @@
 package patch;
 
+import item.AnnotationItem;
+import item.EncodedAnnotation;
+import item.EncodedArray;
+import item.EncodedValue;
+import item.FieldIdItem;
+
 import java.io.IOException;
 
 import hu.uw.pallergabor.dedexer.DexParser;
@@ -27,6 +33,36 @@ public class DexOriginalFile extends DexParser {
     private long dataSize;
     private long dataOffset;
     
+    private long typeListSize;
+    private long typeListOffset;
+    
+    private long annotationSetRefListSize;
+    private long annotationSetRefListOffset;
+    
+    private long annotationSetItemSize;
+    private long annotationSetItemOffset;
+    
+    private long classDataItemSize;
+    private long classDataItemOffset;
+    
+    private long codeItemSize;
+    private long codeItemOffset;
+    
+    private long stringDataItemSize;
+    private long stringDataItemOffset;
+    
+    private long debugInfoItemSize;
+    private long debugInfoItemOffset;
+    
+    private long annotationItemSize;
+    private long annotationItemOffset;
+    
+    private long encodedArrayItemSize;
+    private long encodedArrayItemOffset;
+    
+    private long annotationsDirectoryItemSize;
+    private long annotationsDirectoryItemOffset;
+    
     String[] stringData;
     int stringDataIndex = 0;
     
@@ -35,6 +71,9 @@ public class DexOriginalFile extends DexParser {
     
     FieldIdItem[] fieldIds;
     int fieldIdsIndex = 0;
+    
+    AnnotationItem[] annotationItems;
+    int anntationItemsIndex = 0;
 
 	@Override
 	public void parse() {
@@ -88,10 +127,173 @@ public class DexOriginalFile extends DexParser {
 				fieldIds[i] = new FieldIdItem(read16Bit(), read16Bit(), (int)read32Bit());
 			}
 	        
+	        setFilePosition(mapOffset);
+	        // Read offsets
+	        int mapSize = (int)read32Bit();
+	        for (int i = 0; i < mapSize; ++i) {
+	        	int type = read16Bit();
+	        	read16Bit();
+	        	switch (type) {
+		        	/*case 0:break;
+		        	case 1:break;
+		        	case 2:break;
+		        	case 3:break;
+		        	case 4:break;
+		        	case 5:break;
+		        	case 6:break;
+		        	case 4096:break;*/
+		        	case 4097:
+		        		typeListSize = read32Bit();
+		        		typeListOffset = read32Bit();
+		        		break;
+		        	case 4098:
+		        		annotationSetRefListSize = read32Bit();
+		        		annotationSetRefListOffset = read32Bit();
+		        		break;
+		        	case 4099:
+		        		annotationSetItemSize = read32Bit();
+		        		annotationSetItemOffset = read32Bit();
+		        		break;
+		        	case 8192:
+		        		classDataItemSize = read32Bit();
+		        		classDataItemOffset = read32Bit();
+		        		break;
+		        	case 8193:
+		        		codeItemSize = read32Bit();
+		        		codeItemOffset = read32Bit();
+		        		break;
+		        	case 8194:
+		        		stringDataItemSize = read32Bit();
+		        		stringDataItemOffset = read32Bit();
+		        		break;
+		        	case 8195:
+		        		debugInfoItemSize = read32Bit();
+		        		debugInfoItemOffset = read32Bit();
+		        		break;
+		        	case 8196:
+		        		annotationItemSize = read32Bit();
+		        		annotationItemOffset = read32Bit();
+		        		break;
+		        	case 8197:
+		        		encodedArrayItemSize = read32Bit();
+		        		encodedArrayItemOffset = read32Bit();
+		        		break;
+		        	case 8198:
+		        		annotationsDirectoryItemSize = read32Bit();
+		        		annotationsDirectoryItemOffset = read32Bit();
+		        		break;
+		        	default:
+		        		read32Bit();
+		        		read32Bit();
+	        	}
+	        }
+	        
+	        setFilePosition(annotationItemOffset);
+	        annotationItems = new AnnotationItem[(int)annotationItemSize];
+	        // Read annotation_item
+	        for (int i = 0; i < annotationItemSize; ++i) {
+	        	int visibility = read8Bit();
+	        	int type = readULEB128();
+	        	int size = readULEB128();
+	        	annotationItems[i] = new AnnotationItem(visibility, new EncodedAnnotation(type, size));
+	        	for (int j = 0; j < size; ++j) {
+	        		int name = readULEB128();
+	        		Byte b = (byte) read8Bit();
+	        		int valueType = b & 0x1F;
+	        		int valueArg = (b & 0xFF) >> 5;
+
+	        		if (valueType == 0x1C) {
+	        			int anSize = readULEB128();
+	        			EncodedValue[] vals = new EncodedValue[anSize];
+	        			for (int k = 0; k < anSize; ++k) {
+	        				vals[k] = getEncodedValue();
+	        			}
+	        			annotationItems[i].getAnnotation().values[j] = new EncodedValue(name, valueType, valueArg, new EncodedArray(anSize, vals));
+	        			break;
+	        		} else if (valueType == 0x1D) {
+	        			annotationItems[i].getAnnotation().values[j] = new EncodedValue(name, valueType, valueArg, getEncodedAnnotation());
+	        			break;
+	        		} else if (valueType == 0x1E || valueArg == 0x1F) {
+	        			annotationItems[i].getAnnotation().values[j] = new EncodedValue(name, valueType, valueArg);
+	        			break;
+	        		}
+	        	
+	        		Byte[] by = new Byte[valueArg + 1];
+	        		for (int k = 0; k <= valueArg; ++k) {
+	        			by[k] = (byte)read8Bit();
+	        		}
+	        		
+	        		annotationItems[i].getAnnotation().values[j] = new EncodedValue(name, valueType, valueArg, by);
+	        		
+	        	}
+	        	
+	        }
+	        
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	private EncodedValue getEncodedValue() throws IOException {
+		Byte b = (byte) read8Bit();
+		int valueType = b & 0x1F;
+		int valueArg = (b & 0xFF) >> 5;
+
+		if (valueArg == 0x1C) {
+			int anSize = readULEB128();
+			EncodedValue[] vals = new EncodedValue[anSize];
+			for (int k = 0; k < anSize; ++k) {
+				vals[k] = getEncodedValue();
+			}
+			return new EncodedValue(-1, valueType, valueArg, new EncodedArray(anSize, vals));
+		} else if (valueArg == 0x1D) {
+			return new EncodedValue(-1, valueType, valueArg, getEncodedAnnotation());
+		} else if (valueArg == 0x1E || valueArg == 0x1F) {
+			return new EncodedValue(-1, valueType, valueArg);
+		}
+	
+		Byte[] by = new Byte[valueArg + 1];
+		for (int k = 0; k <= valueArg; ++k) {
+			by[k] = (byte)read8Bit();
+		}
+		
+		return new EncodedValue(-1, valueType, valueArg, by);
+	}
+	
+	private EncodedAnnotation getEncodedAnnotation() throws IOException {
+		int type = readULEB128();
+    	int size = readULEB128();
+    	EncodedAnnotation annotation = new EncodedAnnotation(type, size);
+    	
+    	for (int j = 0; j < size; ++j) {
+    		int name = readULEB128();
+    		Byte b = (byte) read8Bit();
+    		int valueType = b & 0x1F;
+    		int valueArg = (b & 0xFF) >> 5;
+
+    		if (valueArg == 0x1C) {
+    			int anSize = readULEB128();
+    			EncodedValue[] vals = new EncodedValue[anSize];
+    			for (int k = 0; k < anSize; ++k) {
+    				vals[k] = getEncodedValue();
+    			}
+    			annotation.values[j] = new EncodedValue(name, valueType, valueArg, new EncodedArray(anSize, vals));
+    			break;
+    		} else if (valueArg == 0x1D) {
+    			annotation.values[j] = new EncodedValue(name, valueType, valueArg, getEncodedAnnotation());
+    			break;
+    		} else if (valueArg == 0x1E || valueArg == 0x1F) {
+    			annotation.values[j] = new EncodedValue(name, valueType, valueArg);
+    		}
+    	
+    		Byte[] by = new Byte[valueArg + 1];
+    		for (int k = 0; k <= valueArg; ++k) {
+    			by[k] = (byte)read8Bit();
+    		}
+    		annotation.values[j] = new EncodedValue(name, valueType, valueArg, by);
+    	}
+    	return annotation;
 	}
 	
 	public String getStringData() {

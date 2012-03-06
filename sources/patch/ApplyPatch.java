@@ -1,5 +1,7 @@
 package patch;
 
+import item.FieldIdItem;
+
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 

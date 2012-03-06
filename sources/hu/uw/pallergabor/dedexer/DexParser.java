@@ -164,6 +164,28 @@ public abstract class DexParser {
             b.append( (char)read8Bit() );
         return new String( b );*/
     }
+    
+    public int readULEB128() throws IOException {
+    	int size = read8Bit();
+        int buff;
+        if (size > 0x7f) {
+        	buff = read8Bit();
+        	size = (size & 0x7f) | ((buff & 0x7f) << 7);
+        	if (buff > 0x7f) {
+        		buff = read8Bit();
+            	size |= ((buff & 0x7f) << 14);
+            	if (buff > 0x7f) {
+            		buff = read8Bit();
+                	size |= ((buff & 0x7f) << 21);
+                	if (buff > 0x7f) {
+                		buff = read8Bit();
+                    	size |= ((buff & 0x7f) << 28);
+                	}
+            	}
+        	}
+        }
+        return size;
+    }
 
 /**
   * Reads a variable-length number and returns it. If the current byte of the VLN
