@@ -5,6 +5,7 @@ import item.EncodedAnnotation;
 import item.EncodedArray;
 import item.EncodedValue;
 import item.FieldIdItem;
+import item.MethodIdItem;
 import item.ProtoIdItem;
 
 import java.io.IOException;
@@ -76,6 +77,9 @@ public class DexOriginalFile extends DexParser {
     ProtoIdItem[] protoIds;
     int protoIdsIndex = 0;
     
+    MethodIdItem[] methodIds;
+    int methodIdsIndex = 0;
+    
     AnnotationItem[] annotationItems;
     int annotationItemsIndex = 0;
 
@@ -136,6 +140,13 @@ public class DexOriginalFile extends DexParser {
 	        // Read proto_ids
 	        for (int i = 0; i < protoIdsSize; ++i) {
 				protoIds[i] = new ProtoIdItem(read32Bit(), read32Bit(), read32Bit());
+			}
+	        
+	        setFilePosition(methodIdsOffset);
+	        methodIds = new MethodIdItem[(int) methodIdsSize];
+	        // Read proto_ids
+	        for (int i = 0; i < methodIdsSize; ++i) {
+				methodIds[i] = new MethodIdItem(read16Bit(), read16Bit(), read32Bit());
 			}
 	        
 	        setFilePosition(mapOffset);
@@ -321,6 +332,10 @@ public class DexOriginalFile extends DexParser {
 	
 	public ProtoIdItem getProtoIdData() {
 		return protoIds[protoIdsIndex++];
+	}
+	
+	public MethodIdItem getMethodIdData() {
+		return methodIds[methodIdsIndex++];
 	}
 	
 	public AnnotationItem getAnnotationItem() {

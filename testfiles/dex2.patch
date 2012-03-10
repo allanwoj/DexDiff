@@ -50,7 +50,20 @@
 0 19 //723
 2 1 //724
 1 2
+0 115 //839
 7
+0 273 //272
+1 1
+0 2101 //2373
+2 1 //2374
+0 273 //2647
+2 1 //2648
+1 12
+0 1 //2649
+2 1 //2650
+1 2
+0 182 //2832
+
 Landroid/text/AndroidCharacter;
 Lorg/connectbot/util/EastAsianWidth$1;
 Lorg/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder;
@@ -95,6 +108,65 @@ measurer
 2046
 658
 408092
+104 //method
+728
+3173
+
+631
+389
+246
+
+631
+389
+247
+
+631
+383
+2180
+
+632
+389
+247
+
+632
+708
+247
+
+632
+729
+3925
+
+633
+389
+246
+
+633
+389
+247
+
+633
+384
+2178
+
+634
+389
+247
+
+634
+708
+247
+
+634
+729
+3925
+
+635
+385
+3215
+
+635
+729
+3925
 
 //fields
 77 02 78 02 
@@ -137,3 +209,63 @@ FE 07 00 00
 92 02 00 00 
 1C 3A 06 00 
 proto[729]: short signature: VLIILLI; return type: V; parameter block offset: 00063A1C
+
+//method
+68 00 D8 02 
+65 0C 00 00 
+method[273]: android/text/AndroidCharacter/getEastAsianWidths (getEastAsianWidths([CII[B)V)
+
+77 02 85 01 
+F6 00 00 00 
+method[2648]: org/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder/<clinit> (<clinit>()V)
+
+77 02 85 01 
+F7 00 00 00 
+method[2649]: org/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder/<init> (<init>()V)
+
+77 02 7F 01 
+84 08 00 00 
+method[2650]: org/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder/access$100 (access$100()Lorg/connectbot/util/EastAsianWidth$FroyoAndBeyond;)
+
+78 02 85 01 
+F7 00 00 00 
+method[2651]: org/connectbot/util/EastAsianWidth$FroyoAndBeyond/<init> (<init>()V)
+
+78 02 C4 02 
+F7 00 00 00 
+method[2652]: org/connectbot/util/EastAsianWidth$FroyoAndBeyond/<init> (<init>(Lorg/connectbot/util/EastAsianWidth$1;)V)
+
+78 02 D9 02 
+55 0F 00 00 
+method[2653]: org/connectbot/util/EastAsianWidth$FroyoAndBeyond/measure (measure([CII[BLandroid/graphics/Paint;I)V)
+
+79 02 85 01 
+F6 00 00 00 
+method[2654]: org/connectbot/util/EastAsianWidth$PreFroyo$Holder/<clinit> (<clinit>()V)
+
+79 02 85 01 
+F7 00 00 00 
+method[2655]: org/connectbot/util/EastAsianWidth$PreFroyo$Holder/<init> (<init>()V)
+
+79 02 80 01 
+82 08 00 00 
+method[2656]: org/connectbot/util/EastAsianWidth$PreFroyo$Holder/access$000 (access$000()Lorg/connectbot/util/EastAsianWidth$PreFroyo;)
+7A 02 85 01 
+F7 00 00 00 
+method[2657]: org/connectbot/util/EastAsianWidth$PreFroyo/<init> (<init>()V)
+
+7A 02 C4 02 
+F7 00 00 00 
+method[2658]: org/connectbot/util/EastAsianWidth$PreFroyo/<init> (<init>(Lorg/connectbot/util/EastAsianWidth$1;)V)
+
+7A 02 D9 02 
+55 0F 00 00 
+method[2659]: org/connectbot/util/EastAsianWidth$PreFroyo/measure (measure([CII[BLandroid/graphics/Paint;I)V)
+
+7B 02 81 01 
+8F 0C 00 00 
+method[2661]: org/connectbot/util/EastAsianWidth/getInstance (getInstance()Lorg/connectbot/util/EastAsianWidth;)
+
+7B 02 D9 02 
+55 0F 00 00 
+method[2662]: org/connectbot/util/EastAsianWidth/measure (measure([CII[BLandroid/graphics/Paint;I)V)

@@ -4,6 +4,7 @@ import item.AnnotationItem;
 import item.EncodedAnnotation;
 import item.EncodedValue;
 import item.FieldIdItem;
+import item.MethodIdItem;
 import item.ProtoIdItem;
 
 import java.io.FileNotFoundException;
@@ -30,6 +31,7 @@ public class ApplyPatch {
 		GeneratedFile fieldIdsFile = new GeneratedFile("out/field.dex");
 		GeneratedFile stringFile = new GeneratedFile("out/data.dex");
 		GeneratedFile protoFile = new GeneratedFile("out/proto.dex");
+		GeneratedFile methodFile = new GeneratedFile("out/method.dex");
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
@@ -109,7 +111,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getTypeIdData();
-					stringIndexMap[mapIndex++] = -1;
+					typeIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -173,10 +175,51 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getProtoIdData();
-					fieldIndexMap[mapIndex++] = -1;
+					protoIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
+		
+		
+		
+		fileIndex = 0;
+		mapIndex = 0;
+		MethodIdItem methodItem = null;
+		// Generate patched method_ids
+		while(patch.hasMethodCommands()) {
+			command = patch.getNextMethodCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					methodItem = original.getMethodIdData();
+					methodFile.write16bit(typeIndexMap[(int)methodItem.classId]);
+					methodFile.write16bit(protoIndexMap[(int)methodItem.proto]);
+					methodFile.write(stringIndexMap[(int)methodItem.name]);
+					methodIndexMap[mapIndex++] = fileIndex++;
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					methodFile.write16bit(Long.parseLong(patch.getNextData()));
+					methodFile.write16bit(Long.parseLong(patch.getNextData()));
+					methodFile.write(Long.parseLong(patch.getNextData()));
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getMethodIdData();
+					methodIndexMap[mapIndex++] = -1;
+				}
+			}
+		}
+		
+		
+		
+		
+		
+		
+		
 		
 		
 		fileIndex = 0;
