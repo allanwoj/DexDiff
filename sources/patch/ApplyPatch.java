@@ -4,6 +4,7 @@ import item.AnnotationItem;
 import item.EncodedAnnotation;
 import item.EncodedValue;
 import item.FieldIdItem;
+import item.ProtoIdItem;
 
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
@@ -28,6 +29,7 @@ public class ApplyPatch {
 		GeneratedFile typeIdsFile = new GeneratedFile("out/type.dex");
 		GeneratedFile fieldIdsFile = new GeneratedFile("out/field.dex");
 		GeneratedFile stringFile = new GeneratedFile("out/data.dex");
+		GeneratedFile protoFile = new GeneratedFile("out/proto.dex");
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
@@ -143,6 +145,39 @@ public class ApplyPatch {
 				}
 			}
 		}
+		
+		fileIndex = 0;
+		mapIndex = 0;
+		ProtoIdItem protoItem = null;
+		// Generate patched proto_ids
+		while(patch.hasProtoCommands()) {
+			command = patch.getNextProtoCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					protoItem = original.getProtoIdData();
+					protoFile.write(stringIndexMap[(int)protoItem.shorty]);
+					protoFile.write(typeIndexMap[(int)protoItem.type]);
+					protoFile.write(0L);
+					protoIndexMap[mapIndex++] = fileIndex++;
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					protoFile.write(Long.parseLong(patch.getNextData()));
+					protoFile.write(Long.parseLong(patch.getNextData()));
+					protoFile.write(Long.parseLong(patch.getNextData()));
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getProtoIdData();
+					fieldIndexMap[mapIndex++] = -1;
+				}
+			}
+		}
+		
 		
 		fileIndex = 0;
 		mapIndex = 0;
