@@ -73,7 +73,7 @@ public class DexOriginalFile extends DexParser {
     int fieldIdsIndex = 0;
     
     AnnotationItem[] annotationItems;
-    int anntationItemsIndex = 0;
+    int annotationItemsIndex = 0;
 
 	@Override
 	public void parse() {
@@ -308,6 +308,10 @@ public class DexOriginalFile extends DexParser {
 		return fieldIds[fieldIdsIndex++];
 	}
 	
+	public AnnotationItem getAnnotationItem() {
+		return annotationItems[annotationItemsIndex++];
+	}
+	
 	public long getFileSize() {
         return fileSize;
     }
@@ -382,6 +386,14 @@ public class DexOriginalFile extends DexParser {
 
     public long getDataOffset() {
         return dataOffset;
+    }
+    
+    public long getAnnotationItemSize() {
+        return annotationItemSize;
+    }
+
+    public long getAnnotationItemOffset() {
+        return annotationItemOffset;
     }
     
 }

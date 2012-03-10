@@ -1,5 +1,8 @@
 package patch;
 
+import item.AnnotationItem;
+import item.EncodedAnnotation;
+import item.EncodedValue;
 import item.FieldIdItem;
 
 import java.io.FileNotFoundException;
@@ -25,9 +28,13 @@ public class ApplyPatch {
 		GeneratedFile typeIdsFile = new GeneratedFile("out/type.dex");
 		GeneratedFile fieldIdsFile = new GeneratedFile("out/field.dex");
 		GeneratedFile stringFile = new GeneratedFile("out/data.dex");
+		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
 		long[] fieldIndexMap = new long[10000];
+		long[] protoIndexMap = new long[10000];
+		long[] methodIndexMap = new long[10000];
+		long[] annotationItemMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
@@ -136,7 +143,21 @@ public class ApplyPatch {
 				}
 			}
 		}
+		
+		fileIndex = 0;
+		mapIndex = 0;
+		AnnotationItem annotationItem;
+		EncodedAnnotation enAnn;
+		int annSize = (int)original.getAnnotationItemSize();
+		for (int i = 0; i < annSize; ++i) {
+			annotationItem = original.getAnnotationItem();
+			annotationItemFile.write(annotationItem.getVisibility());
+			enAnn = annotationItem.getAnnotation();
+			annotationItemFile.write(enAnn.getData(fieldIndexMap, null, stringIndexMap, typeIndexMap));
+		}
 	}
+	
+	
 	
 	/*
 	public static void main(String[] args) {
