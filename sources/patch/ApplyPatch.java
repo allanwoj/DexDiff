@@ -6,6 +6,7 @@ import item.EncodedValue;
 import item.FieldIdItem;
 import item.MethodIdItem;
 import item.ProtoIdItem;
+import item.TypeList;
 
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
@@ -16,6 +17,7 @@ public class ApplyPatch {
 	
 	public static void main(String[] args) {
 		DexOriginalFile original = new DexOriginalFile();
+		original.setDumpOff();
 		RandomAccessFile raf = null;
 		try {
 			raf = new RandomAccessFile(args[0], "r");
@@ -32,12 +34,14 @@ public class ApplyPatch {
 		GeneratedFile stringFile = new GeneratedFile("out/data.dex");
 		GeneratedFile protoFile = new GeneratedFile("out/proto.dex");
 		GeneratedFile methodFile = new GeneratedFile("out/method.dex");
+		GeneratedFile typeListFile = new GeneratedFile("out/type_list.dex");
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
 		long[] fieldIndexMap = new long[10000];
 		long[] protoIndexMap = new long[10000];
 		long[] methodIndexMap = new long[10000];
+		long[] typeListIndexMap = new long[10000];
 		long[] annotationItemMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
@@ -216,12 +220,26 @@ public class ApplyPatch {
 		
 		
 		
+		// type_list
+		fileIndex = 0;
+		mapIndex = 0;
+		TypeList typeList;
+		int typeListSize = (int)original.getTypeListSize();
+		for (int i = 0; i < typeListSize; ++i) {
+			typeList = original.getTypeList();
+			typeListFile.write(typeList.size);
+			
+			for (int j = 0; j < typeList.size; ++j) {
+				typeListFile.write16bit(typeIndexMap[typeList.types[j]]);
+			}
+			if (typeList.size % 2 == 1)
+				typeListFile.write16bit(0L);
+		}
 		
 		
 		
 		
-		
-		
+		// annotation_item
 		fileIndex = 0;
 		mapIndex = 0;
 		AnnotationItem annotationItem;
@@ -231,7 +249,7 @@ public class ApplyPatch {
 			annotationItem = original.getAnnotationItem();
 			annotationItemFile.write(annotationItem.getVisibility());
 			enAnn = annotationItem.getAnnotation();
-			annotationItemFile.write(enAnn.getData(fieldIndexMap, null, stringIndexMap, typeIndexMap));
+			annotationItemFile.write(enAnn.getData(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap));
 		}
 	}
 	

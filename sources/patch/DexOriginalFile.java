@@ -7,6 +7,7 @@ import item.EncodedValue;
 import item.FieldIdItem;
 import item.MethodIdItem;
 import item.ProtoIdItem;
+import item.TypeList;
 
 import java.io.IOException;
 
@@ -82,6 +83,9 @@ public class DexOriginalFile extends DexParser {
     
     AnnotationItem[] annotationItems;
     int annotationItemsIndex = 0;
+    
+    TypeList[] typeLists;
+    int typeListIndex = 0;
 
 	@Override
 	public void parse() {
@@ -251,6 +255,22 @@ public class DexOriginalFile extends DexParser {
 	        	
 	        }
 	        
+	        setFilePosition(typeListOffset);
+	        typeLists = new TypeList[(int)typeListSize];
+	        int size = 0;
+	        int[] data = null;
+	        // Read type_list
+	        for (int i = 0; i < typeListSize; ++i) {
+	        	size = (int)read32Bit();
+	        	data = new int[size];
+	        	for (int j = 0; j < size; ++j) {
+	        		data[j] = read16Bit();
+	        	}
+	        	if (size % 2 == 1)
+	        		read16Bit();
+	        	typeLists[i] = new TypeList(size, data);
+	        }
+	        
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -342,6 +362,10 @@ public class DexOriginalFile extends DexParser {
 		return annotationItems[annotationItemsIndex++];
 	}
 	
+	public TypeList getTypeList() {
+		return typeLists[typeListIndex++];
+	}
+	
 	public long getFileSize() {
         return fileSize;
     }
@@ -424,6 +448,14 @@ public class DexOriginalFile extends DexParser {
 
     public long getAnnotationItemOffset() {
         return annotationItemOffset;
+    }
+    
+    public long getTypeListSize() {
+        return typeListSize;
+    }
+    
+    public long getTypeListOffset() {
+        return typeListOffset;
     }
     
 }
