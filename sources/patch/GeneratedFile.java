@@ -38,6 +38,30 @@ public class GeneratedFile {
 		}
 	}
 	
+	public int writeSLeb128(int value) {
+        int remaining = value >> 7;
+        int count = 0;
+        boolean hasMore = true;
+        int end = ((value & Integer.MIN_VALUE) == 0) ? 0 : -1;
+
+        while (hasMore) {
+            hasMore = (remaining != end)
+                || ((remaining & 1) != ((value >> 6) & 1));
+
+            try {
+				out.write((int)((value & 0x7f) | (hasMore ? 0x80 : 0)));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            value = remaining;
+            remaining >>= 7;
+            count++;
+        }
+
+        return count;
+    }
+	
 	public int writeULeb128(int value) {
         long remaining = (value & 0xFFFFFFFFL) >> 7;
         long lValue = value;

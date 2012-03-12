@@ -5,6 +5,8 @@ import item.AnnotationSetItem;
 import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
 import item.ClassDataItem;
+import item.DebugByteCode;
+import item.DebugInfoItem;
 import item.EncodedAnnotation;
 import item.EncodedArray;
 import item.EncodedField;
@@ -19,6 +21,7 @@ import item.ProtoIdItem;
 import item.TypeList;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import hu.uw.pallergabor.dedexer.DexParser;
@@ -112,6 +115,10 @@ public class DexOriginalFile extends DexParser {
     
     ClassDataItem[] classDataItems;
     int classDataItemsIndex = 0;
+    
+    HashMap<Long, Integer> debugInfoOffsetMap;
+    DebugInfoItem[] debugInfoItems;
+    int debugInfoItemIndex = 0;
 
 	@Override
 	public void parse() {
@@ -233,6 +240,54 @@ public class DexOriginalFile extends DexParser {
 		        		read32Bit();
 		        		read32Bit();
 	        	}
+	        }
+	        
+	        setFilePosition(debugInfoItemOffset);
+	        debugInfoItems = new DebugInfoItem[(int)debugInfoItemSize];
+	        debugInfoOffsetMap = new HashMap<Long, Integer>();
+	        debugInfoOffsetMap.put(0L, -1);
+	        // Read debug_info_item
+	        for (int i = 0; i < debugInfoItemSize; ++i) {
+	        	debugInfoOffsetMap.put(position, i);
+	        	long lineStart = readULEB128();
+	        	long paramSize = readULEB128();
+	        	
+	        	long[] names = new long[(int)paramSize];
+	        	for (int j = 0; j < paramSize; ++j) {
+	        		names[j] = readULEB128p1();
+	        	}
+	        	ArrayList<DebugByteCode> byteCode = new ArrayList<DebugByteCode>();
+	        	int instruction = read8Bit();
+	        	while(instruction != 0) {
+	        		DebugByteCode b = null;
+	        		if (instruction == 1) {
+	        			b = new DebugByteCode(instruction, readULEB128(), 0, 0, 0, 0, 0);
+	        		} else if (instruction == 2) {
+	        			b = new DebugByteCode(instruction, 0, readSLEB128(), 0, 0, 0, 0);
+	        		} else if (instruction == 3) {
+	        			int reg = readULEB128();
+	        			long name = readULEB128p1();
+	        			long type = readULEB128p1();
+	        			b = new DebugByteCode(instruction, 0, 0, name, type, 0, reg);
+	        		} else if (instruction == 4) {
+	        			int reg = readULEB128();
+	        			long name = readULEB128p1();
+	        			long type = readULEB128p1();
+	        			long sig = readULEB128p1();
+	        			b = new DebugByteCode(instruction, 0, 0, name, type, sig, reg);
+	        		} else if (instruction == 5 || instruction == 6) {
+	        			int reg = readULEB128();
+	        			b = new DebugByteCode(instruction, 0, 0, 0, 0, 0, reg);
+	        		} else if (instruction == 9) {
+	        			long name = readULEB128p1();
+	        			b = new DebugByteCode(instruction, 0, 0, name, 0, 0, 0);
+	        		} else {
+	        			b = new DebugByteCode(instruction, 0, 0, 0, 0, 0, 0);
+	        		}
+	        		byteCode.add(b);
+	        		instruction = read8Bit();
+	        	}
+	        	debugInfoItems[i] = new DebugInfoItem(lineStart, paramSize, names, byteCode);
 	        }
 	        
 	        setFilePosition(annotationItemOffset);
@@ -538,6 +593,10 @@ public class DexOriginalFile extends DexParser {
 		return classDataItems[classDataItemsIndex++];
 	}
 	
+	public DebugInfoItem getDebugInfoItem() {
+		return debugInfoItems[debugInfoItemIndex++];
+	}
+	
 	public long getFileSize() {
         return fileSize;
     }
@@ -660,6 +719,14 @@ public class DexOriginalFile extends DexParser {
     
     public long getClassDataItemOffset() {
         return classDataItemOffset;
+    }
+    
+    public long getDebugInfoItemSize() {
+        return debugInfoItemSize;
+    }
+    
+    public long getDebugInfoItemOffset() {
+        return debugInfoItemOffset;
     }
     
 }

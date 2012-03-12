@@ -168,6 +168,38 @@ public abstract class DexParser {
         return new String( b );*/
     }
     
+    public int readSLEB128() throws IOException {
+        int size = read8Bit();
+        int buff;
+        
+        if (size <= 0x7f) {
+        	size = (size << 25) >> 25;
+        } else {
+        	buff = read8Bit();
+        	size = (size & 0x7f) | ((buff & 0x7f) << 7);
+            if (buff <= 0x7f) {
+            	size = (size << 18) >> 18;
+            } else {
+            	buff = read8Bit();
+            	size |= (buff & 0x7f) << 14;
+                if (buff <= 0x7f) {
+                	size = (size << 11) >> 11;
+                } else {
+                	buff = read8Bit();
+                	size |= (buff & 0x7f) << 21;
+                    if (buff <= 0x7f) {
+                    	size = (size << 4) >> 4;
+                    } else {
+                    	buff = read8Bit();
+                        size |= buff << 28;
+                    }
+                }
+            }
+        }
+
+        return size;
+    }
+    
     public int readULEB128() throws IOException {
     	int size = read8Bit();
         int buff;
@@ -188,6 +220,10 @@ public abstract class DexParser {
         	}
         }
         return size;
+    }
+    
+    public int readULEB128p1() throws IOException {
+    	return readULEB128() - 1;
     }
 
 /**

@@ -5,6 +5,8 @@ import item.AnnotationSetItem;
 import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
 import item.ClassDataItem;
+import item.DebugByteCode;
+import item.DebugInfoItem;
 import item.EncodedAnnotation;
 import item.EncodedValue;
 import item.FieldIdItem;
@@ -14,6 +16,7 @@ import item.TypeList;
 
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import java.util.Iterator;
 
 
 public class ApplyPatch {
@@ -44,6 +47,7 @@ public class ApplyPatch {
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		GeneratedFile annotationSetItemFile = new GeneratedFile("out/annotation_set_item.dex");
 		GeneratedFile annotationSetRefListFile = new GeneratedFile("out/annotation_set_ref_list.dex");
+		GeneratedFile debugInfoItemFile = new GeneratedFile("out/debug_info_item.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
 		long[] fieldIndexMap = new long[10000];
@@ -55,6 +59,7 @@ public class ApplyPatch {
 		long[] annotationItemMap = new long[10000];
 		long[] annotationSetItemMap = new long[10000];
 		long[] annotationSetRefListMap = new long[10000];
+		long[] debugInfoItemMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
@@ -375,6 +380,52 @@ public class ApplyPatch {
 			for (int j = 0 ; j < annotationSetRefList.size; ++j) {
 				annotationSetRefListFile.write(0L);
 			}
+		}
+		
+		// debug_info_item
+		fileIndex = 0;
+		mapIndex = 0;
+		DebugInfoItem debugInfoItem;
+		int debugInfoItemSize = (int)original.getDebugInfoItemSize();
+		for (int i = 0; i < debugInfoItemSize; ++i) {
+			debugInfoItem = original.getDebugInfoItem();
+			debugInfoItemFile.writeULeb128((int)debugInfoItem.lineStart);
+			debugInfoItemFile.writeULeb128((int)debugInfoItem.parametersSize);
+			for (int j = 0; j < debugInfoItem.parametersSize; ++j) {
+				if (debugInfoItem.parameterNames[j] == -1) {
+					debugInfoItemFile.writeULeb128(0);
+				} else {
+					debugInfoItemFile.writeULeb128(1 + (int)stringIndexMap[(int)debugInfoItem.parameterNames[j]]);
+				}
+			}
+			
+			Iterator<DebugByteCode> it = debugInfoItem.debugByteCode.iterator();
+			DebugByteCode code = null;
+			while (it.hasNext()) {
+				code = it.next();
+				debugInfoItemFile.write(code.value);
+				if (code.value == 1) {
+					debugInfoItemFile.writeULeb128((int)code.addrDiff);
+        		} else if (code.value == 2) {
+        			debugInfoItemFile.writeSLeb128((int)code.lineDiff);
+        		} else if (code.value == 3) {
+        			debugInfoItemFile.writeULeb128((int)code.registerNum);
+        			debugInfoItemFile.writeULeb128(1 + (int)stringIndexMap[(int)code.name]);
+        			debugInfoItemFile.writeULeb128(1 + (int)typeIndexMap[(int)code.type]);
+        		} else if (code.value == 4) {
+        			debugInfoItemFile.writeULeb128((int)code.registerNum);
+        			debugInfoItemFile.writeULeb128(1 + (int)stringIndexMap[(int)code.name]);
+        			debugInfoItemFile.writeULeb128(1 + (int)typeIndexMap[(int)code.type]);
+        			debugInfoItemFile.writeULeb128(1 + (int)stringIndexMap[(int)code.sig]);
+        		} else if (code.value == 5 || code.value == 6) {
+        			debugInfoItemFile.writeULeb128((int)code.registerNum);
+        		} else if (code.value == 9) {
+        			debugInfoItemFile.writeULeb128(1 + (int)stringIndexMap[(int)code.name]);
+        		}
+			}
+				
+			
+			debugInfoItemFile.writeULeb128((int)debugInfoItem.lineStart);
 		}
 	}
 	
