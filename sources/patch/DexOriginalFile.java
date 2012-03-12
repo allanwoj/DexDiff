@@ -1,6 +1,8 @@
 package patch;
 
 import item.AnnotationItem;
+import item.AnnotationSetItem;
+import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
 import item.ClassDataItem;
 import item.EncodedAnnotation;
@@ -17,6 +19,7 @@ import item.ProtoIdItem;
 import item.TypeList;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import hu.uw.pallergabor.dedexer.DexParser;
 
@@ -88,9 +91,19 @@ public class DexOriginalFile extends DexParser {
     MethodIdItem[] methodIds;
     int methodIdsIndex = 0;
     
+    HashMap<Long, Integer> annotationOffsetMap;
     AnnotationItem[] annotationItems;
     int annotationItemsIndex = 0;
     
+    HashMap<Long, Integer> annotationSetOffsetMap;
+    AnnotationSetItem[] annotationSetItems;
+    int annotationSetItemsIndex = 0;
+    
+    HashMap<Long, Integer> annotationSetRefListOffsetMap;
+    AnnotationSetRefList[] annotationSetRefList;
+    int annotationSetRefListIndex = 0;
+    
+    HashMap<Long, Integer> typeListOffsetMap;
     TypeList[] typeLists;
     int typeListIndex = 0;
     
@@ -152,12 +165,7 @@ public class DexOriginalFile extends DexParser {
 				fieldIds[i] = new FieldIdItem(read16Bit(), read16Bit(), (int)read32Bit());
 			}
 	        
-	        setFilePosition(protoIdsOffset);
-	        protoIds = new ProtoIdItem[(int) protoIdsSize];
-	        // Read proto_ids
-	        for (int i = 0; i < protoIdsSize; ++i) {
-				protoIds[i] = new ProtoIdItem(read32Bit(), read32Bit(), read32Bit());
-			}
+	        
 	        
 	        setFilePosition(methodIdsOffset);
 	        methodIds = new MethodIdItem[(int) methodIdsSize];
@@ -229,8 +237,11 @@ public class DexOriginalFile extends DexParser {
 	        
 	        setFilePosition(annotationItemOffset);
 	        annotationItems = new AnnotationItem[(int)annotationItemSize];
+	        annotationOffsetMap = new HashMap<Long, Integer>();
+	        annotationOffsetMap.put(0L, -1);
 	        // Read annotation_item
 	        for (int i = 0; i < annotationItemSize; ++i) {
+	        	annotationOffsetMap.put(position, i);
 	        	int visibility = read8Bit();
 	        	int type = readULEB128();
 	        	int size = readULEB128();
@@ -268,12 +279,47 @@ public class DexOriginalFile extends DexParser {
 	        	
 	        }
 	        
+	        
+	        setFilePosition(annotationSetItemOffset);
+	        annotationSetItems = new AnnotationSetItem[(int)annotationSetItemSize];
+	        annotationSetOffsetMap = new HashMap<Long, Integer>();
+	        annotationSetOffsetMap.put(0L, -1);
+	        // Read annotation_set_item
+	        for (int i = 0; i < annotationSetItemSize; ++i) {
+	        	annotationSetOffsetMap.put(position, i);
+	        	long size = read32Bit();
+	        	int[] offsetIndex = new int[(int)size];
+	        	for (int j = 0; j < size; ++j) {
+	        		offsetIndex[j] = annotationOffsetMap.get(read32Bit());
+	        	}
+	        	annotationSetItems[i] = new AnnotationSetItem(size, offsetIndex);
+	        }
+	        
+	        setFilePosition(annotationSetRefListOffset);
+	        annotationSetRefList = new AnnotationSetRefList[(int)annotationSetRefListSize];
+	        annotationSetRefListOffsetMap = new HashMap<Long, Integer>();
+	        annotationSetRefListOffsetMap.put(0L, -1);
+	        // Read annotation_set_ref_list
+	        for (int i = 0; i < annotationSetRefListSize; ++i) {
+	        	annotationSetRefListOffsetMap.put(position, i);
+	        	long size = read32Bit();
+	        	int[] offsetIndex = new int[(int)size];
+	        	for (int j = 0; j < size; ++j) {
+	        		offsetIndex[j] = annotationSetOffsetMap.get(read32Bit());
+	        	}
+	        	annotationSetRefList[i] = new AnnotationSetRefList(size, offsetIndex);
+	        }
+	        
+	        
 	        setFilePosition(typeListOffset);
 	        typeLists = new TypeList[(int)typeListSize];
+	        typeListOffsetMap = new HashMap<Long, Integer>();
+	        typeListOffsetMap.put(0L, -1);
 	        int size = 0;
 	        int[] data = null;
 	        // Read type_list
 	        for (int i = 0; i < typeListSize; ++i) {
+	        	typeListOffsetMap.put(position, i);
 	        	size = (int)read32Bit();
 	        	data = new int[size];
 	        	for (int j = 0; j < size; ++j) {
@@ -283,6 +329,13 @@ public class DexOriginalFile extends DexParser {
 	        		read16Bit();
 	        	typeLists[i] = new TypeList(size, data);
 	        }
+	        
+	        setFilePosition(protoIdsOffset);
+	        protoIds = new ProtoIdItem[(int) protoIdsSize];
+	        // Read proto_ids
+	        for (int i = 0; i < protoIdsSize; ++i) {
+				protoIds[i] = new ProtoIdItem(read32Bit(), read32Bit(), typeListOffsetMap.get(read32Bit()));
+			}
 	        
 	        setFilePosition(annotationsDirectoryItemOffset);
 	        annotationsDirectoryItems = new AnnotationsDirectoryItem[(int)annotationsDirectoryItemSize];
@@ -302,19 +355,19 @@ public class DexOriginalFile extends DexParser {
 	        	if (fieldsSize > 0) {
 	        		f = new FieldAnnotation[(int)fieldsSize];
 	        		for (int j = 0; j < fieldsSize; ++j) {
-	        			f[j] = new FieldAnnotation(read32Bit(), read32Bit());
+	        			f[j] = new FieldAnnotation(read32Bit(), annotationSetOffsetMap.get(read32Bit()));
 	        		}
 	        	}
 	        	if (methodsSize > 0) {
 	        		m = new MethodAnnotation[(int)methodsSize];
 	        		for (int j = 0; j < methodsSize; ++j) {
-	        			m[j] = new MethodAnnotation(read32Bit(), read32Bit());
+	        			m[j] = new MethodAnnotation(read32Bit(), annotationSetOffsetMap.get(read32Bit()));
 	        		}
 	        	}
 	        	if (paramsSize > 0) {
 	        		p = new ParameterAnnotation[(int)paramsSize];
 	        		for (int j = 0; j < paramsSize; ++j) {
-	        			p[j] = new ParameterAnnotation(read32Bit(), read32Bit());
+	        			p[j] = new ParameterAnnotation(read32Bit(), annotationSetRefListOffsetMap.get(read32Bit()));
 	        		}
 	        	}
 	        	
@@ -465,6 +518,14 @@ public class DexOriginalFile extends DexParser {
 		return annotationItems[annotationItemsIndex++];
 	}
 	
+	public AnnotationSetItem getAnnotationSetItem() {
+		return annotationSetItems[annotationSetItemsIndex++];
+	}
+	
+	public AnnotationSetRefList getAnnotationSetRefList() {
+		return annotationSetRefList[annotationSetRefListIndex++];
+	}
+	
 	public TypeList getTypeList() {
 		return typeLists[typeListIndex++];
 	}
@@ -559,6 +620,22 @@ public class DexOriginalFile extends DexParser {
 
     public long getAnnotationItemOffset() {
         return annotationItemOffset;
+    }
+    
+    public long getAnnotationSetItemSize() {
+        return annotationSetItemSize;
+    }
+
+    public long getAnnotationSetItemOffset() {
+        return annotationSetItemOffset;
+    }
+    
+    public long getAnnotationSetRefListSize() {
+        return annotationSetRefListSize;
+    }
+
+    public long getAnnotationSetRefListOffset() {
+        return annotationSetRefListOffset;
     }
     
     public long getTypeListSize() {

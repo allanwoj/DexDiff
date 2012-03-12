@@ -3,11 +3,11 @@ package item;
 public class ParameterAnnotation {
 
 	public long methodId;
-	public long offset;
+	public int annotationSetRefListIndex;
 
-	public ParameterAnnotation(long methodId, long offset) {
+	public ParameterAnnotation(long methodId, int annotationSetRefListIndex) {
 		this.methodId = methodId;
-		this.offset = offset;
+		this.annotationSetRefListIndex = annotationSetRefListIndex;
 	}
 		
 }

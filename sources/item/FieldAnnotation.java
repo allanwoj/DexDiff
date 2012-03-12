@@ -3,9 +3,9 @@ package item;
 public class FieldAnnotation {
 
 	public long fieldId;
-	public long offset;
-	public FieldAnnotation(long fieldId, long offset) {
+	public int annotationSetItemIndex;
+	public FieldAnnotation(long fieldId, int annotationSetItemIndex) {
 		this.fieldId = fieldId;
-		this.offset = offset;
+		this.annotationSetItemIndex = annotationSetItemIndex;
 	}
 }

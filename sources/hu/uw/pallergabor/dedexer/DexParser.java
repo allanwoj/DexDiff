@@ -18,13 +18,15 @@ public abstract class DexParser {
     private long dumpBaseOffset = -1L;
     private boolean dumpOn = true;
     private DexOptimizationData dexOptimizationData = null;
+    protected long position = 0;
 
     public void setRandomAccessFile( RandomAccessFile file ) {
         this.file = file;
     }
 
     public void setFilePosition( long position ) throws IOException {
-        file.seek( position ); 
+        this.position = position;
+    	file.seek( position ); 
     }
 
     public long getFilePosition() throws IOException {
@@ -61,6 +63,7 @@ public abstract class DexParser {
         int result = file.read();
         if( dumpOn )
             dumpStorage.add( new Integer( result ) );
+        position += 1;
         return result;
     }
 

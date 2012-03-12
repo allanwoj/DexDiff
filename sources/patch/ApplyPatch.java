@@ -1,6 +1,8 @@
 package patch;
 
 import item.AnnotationItem;
+import item.AnnotationSetItem;
+import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
 import item.ClassDataItem;
 import item.EncodedAnnotation;
@@ -40,6 +42,8 @@ public class ApplyPatch {
 		GeneratedFile annDirItemFile = new GeneratedFile("out/annotations_directory_item.dex");
 		GeneratedFile classDataItemFile = new GeneratedFile("out/class_data_item.dex");
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
+		GeneratedFile annotationSetItemFile = new GeneratedFile("out/annotation_set_item.dex");
+		GeneratedFile annotationSetRefListFile = new GeneratedFile("out/annotation_set_ref_list.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
 		long[] fieldIndexMap = new long[10000];
@@ -49,6 +53,8 @@ public class ApplyPatch {
 		long[] annotationsDirectoryItemMap = new long[10000];
 		long[] classDataItemMap = new long[10000];
 		long[] annotationItemMap = new long[10000];
+		long[] annotationSetItemMap = new long[10000];
+		long[] annotationSetRefListMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
@@ -343,6 +349,32 @@ public class ApplyPatch {
 			annotationItemFile.write(annotationItem.getVisibility());
 			enAnn = annotationItem.getAnnotation();
 			annotationItemFile.write(enAnn.getData(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap));
+		}
+		
+		// annotation_set_item
+		fileIndex = 0;
+		mapIndex = 0;
+		AnnotationSetItem annotationSetItem;
+		int annSetSize = (int)original.getAnnotationSetItemSize();
+		for (int i = 0; i < annSetSize; ++i) {
+			annotationSetItem = original.getAnnotationSetItem();
+			annotationSetItemFile.write(annotationSetItem.size);
+			for (int j = 0 ; j < annotationSetItem.size; ++j) {
+				annotationSetItemFile.write(0L);
+			}
+		}
+		
+		// annotation_set_ref_list
+		fileIndex = 0;
+		mapIndex = 0;
+		AnnotationSetRefList annotationSetRefList;
+		int annSetRefListSize = (int)original.getAnnotationSetRefListSize();
+		for (int i = 0; i < annSetRefListSize; ++i) {
+			annotationSetRefList = original.getAnnotationSetRefList();
+			annotationSetRefListFile.write(annotationSetRefList.size);
+			for (int j = 0 ; j < annotationSetRefList.size; ++j) {
+				annotationSetRefListFile.write(0L);
+			}
 		}
 	}
 	
