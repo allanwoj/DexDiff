@@ -2,8 +2,11 @@ package patch;
 
 import item.AnnotationItem;
 import item.AnnotationsDirectoryItem;
+import item.ClassDataItem;
 import item.EncodedAnnotation;
 import item.EncodedArray;
+import item.EncodedField;
+import item.EncodedMethod;
 import item.EncodedValue;
 import item.FieldAnnotation;
 import item.FieldIdItem;
@@ -93,6 +96,9 @@ public class DexOriginalFile extends DexParser {
     
     AnnotationsDirectoryItem[] annotationsDirectoryItems;
     int annotationsDirectoryItemsIndex = 0;
+    
+    ClassDataItem[] classDataItems;
+    int classDataItemsIndex = 0;
 
 	@Override
 	public void parse() {
@@ -316,6 +322,57 @@ public class DexOriginalFile extends DexParser {
 	        	
 	        }
 	        
+	        setFilePosition(classDataItemOffset);
+	        classDataItems = new ClassDataItem[(int)classDataItemSize];
+	        long sFieldsSize = 0;
+	        long iFieldsSize = 0;
+	        long dMethodsSize = 0;
+	        long vMethodsSize = 0;
+	        // Read class_data_item
+	        for (int i = 0; i < classDataItemSize; ++i) {
+	        	sFieldsSize = readULEB128();
+	        	iFieldsSize = readULEB128();
+	        	dMethodsSize = readULEB128();
+	        	vMethodsSize = readULEB128();
+	        	
+	        	EncodedField[] staticFields = null;
+	        	EncodedField[] instanceFields = null;
+	        	EncodedMethod[] directMethods = null;
+	        	EncodedMethod[] virtualMethods = null;
+	        	
+	        	if (sFieldsSize > 0) {
+	        		staticFields = new EncodedField[(int)sFieldsSize];
+	        		for (int j = 0; j < sFieldsSize; ++j) {
+	        			staticFields[j] = new EncodedField(readULEB128(), readULEB128());
+	        		}
+	        	}
+	        	
+	        	if (iFieldsSize > 0) {
+	        		instanceFields = new EncodedField[(int)iFieldsSize];
+	        		for (int j = 0; j < iFieldsSize; ++j) {
+	        			instanceFields[j] = new EncodedField(readULEB128(), readULEB128());
+	        		}
+	        	}
+	        	
+	        	if (dMethodsSize > 0) {
+	        		directMethods = new EncodedMethod[(int)dMethodsSize];
+	        		for (int j = 0; j < dMethodsSize; ++j) {
+	        			directMethods[j] = new EncodedMethod(readULEB128(), readULEB128(), readULEB128());
+	        		}
+	        	}
+	        	
+	        	if (vMethodsSize > 0) {
+	        		virtualMethods = new EncodedMethod[(int)vMethodsSize];
+	        		for (int j = 0; j < vMethodsSize; ++j) {
+	        			virtualMethods[j] = new EncodedMethod(readULEB128(), readULEB128(), readULEB128());
+	        		}
+	        	}
+	        	
+	        	classDataItems[i] = new ClassDataItem(sFieldsSize, iFieldsSize, dMethodsSize, vMethodsSize,
+	        			staticFields, instanceFields, directMethods, virtualMethods);
+	        	
+	        }
+	        
 	        
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -416,6 +473,10 @@ public class DexOriginalFile extends DexParser {
 		return annotationsDirectoryItems[annotationsDirectoryItemsIndex++];
 	}
 	
+	public ClassDataItem getClassDataItem() {
+		return classDataItems[classDataItemsIndex++];
+	}
+	
 	public long getFileSize() {
         return fileSize;
     }
@@ -514,6 +575,14 @@ public class DexOriginalFile extends DexParser {
     
     public long getAnnotationsDirectoryItemOffset() {
         return annotationsDirectoryItemOffset;
+    }
+    
+    public long getClassDataItemSize() {
+        return classDataItemSize;
+    }
+    
+    public long getClassDataItemOffset() {
+        return classDataItemOffset;
     }
     
 }

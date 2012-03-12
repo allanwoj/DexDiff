@@ -2,6 +2,7 @@ package patch;
 
 import item.AnnotationItem;
 import item.AnnotationsDirectoryItem;
+import item.ClassDataItem;
 import item.EncodedAnnotation;
 import item.EncodedValue;
 import item.FieldIdItem;
@@ -37,6 +38,7 @@ public class ApplyPatch {
 		GeneratedFile methodFile = new GeneratedFile("out/method.dex");
 		GeneratedFile typeListFile = new GeneratedFile("out/type_list.dex");
 		GeneratedFile annDirItemFile = new GeneratedFile("out/annotations_directory_item.dex");
+		GeneratedFile classDataItemFile = new GeneratedFile("out/class_data_item.dex");
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
@@ -45,6 +47,7 @@ public class ApplyPatch {
 		long[] methodIndexMap = new long[10000];
 		long[] typeListIndexMap = new long[10000];
 		long[] annotationsDirectoryItemMap = new long[10000];
+		long[] classDataItemMap = new long[10000];
 		long[] annotationItemMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
@@ -240,7 +243,7 @@ public class ApplyPatch {
 		}
 		
 		
-		// annotation_directory_item
+		// annotations_directory_item
 		fileIndex = 0;
 		mapIndex = 0;
 		AnnotationsDirectoryItem annItem;
@@ -268,7 +271,66 @@ public class ApplyPatch {
 			}
 		}
 		
-		
+		// class_data_item
+		fileIndex = 0;
+		mapIndex = 0;
+		ClassDataItem classDataItem;
+		int classDataItemSize = (int)original.getClassDataItemSize();
+		for (int i = 0; i < classDataItemSize; ++i) {
+			classDataItem = original.getClassDataItem();
+			classDataItemFile.writeULeb128((int) classDataItem.staticFieldsSize);
+			classDataItemFile.writeULeb128((int) classDataItem.instanceFieldsSize);
+			classDataItemFile.writeULeb128((int) classDataItem.directMethodsSize);
+			classDataItemFile.writeULeb128((int) classDataItem.virtualMethodsSize);
+			
+			if (classDataItem.staticFieldsSize > 0) {
+				long start = classDataItem.staticFields[0].diff;
+				classDataItemFile.writeULeb128((int)fieldIndexMap[(int)start]);
+				classDataItemFile.writeULeb128((int)classDataItem.staticFields[0].flags);
+				for (int j = 1; j < classDataItem.staticFieldsSize; ++j) {
+					classDataItemFile.writeULeb128((int)fieldIndexMap[(int)(classDataItem.staticFields[j].diff + start)]);
+					classDataItemFile.writeULeb128((int)classDataItem.staticFields[j].flags);
+				}
+			}
+			
+			if (classDataItem.instanceFieldsSize > 0) {
+				long start = classDataItem.instanceFields[0].diff;
+				classDataItemFile.writeULeb128((int)fieldIndexMap[(int)start]);
+				classDataItemFile.writeULeb128((int)classDataItem.instanceFields[0].flags);
+				for (int j = 1; j < classDataItem.instanceFieldsSize; ++j) {
+					classDataItemFile.writeULeb128((int)fieldIndexMap[(int)(classDataItem.instanceFields[j].diff + start)]);
+					classDataItemFile.writeULeb128((int)classDataItem.instanceFields[j].flags);
+				}
+			}
+			
+			
+			
+			
+			if (classDataItem.directMethodsSize > 0) {
+				long start = classDataItem.directMethods[0].diff;
+				classDataItemFile.writeULeb128((int)methodIndexMap[(int)start]);
+				classDataItemFile.writeULeb128((int)classDataItem.directMethods[0].flags);
+				classDataItemFile.writeULeb128(0);
+				for (int j = 1; j < classDataItem.directMethodsSize; ++j) {
+					classDataItemFile.writeULeb128((int)methodIndexMap[(int)(classDataItem.directMethods[j].diff + start)]);
+					classDataItemFile.writeULeb128((int)classDataItem.directMethods[j].flags);
+					classDataItemFile.writeULeb128(0);
+				}
+			}
+			
+			if (classDataItem.virtualMethodsSize > 0) {
+				long start = classDataItem.virtualMethods[0].diff;
+				classDataItemFile.writeULeb128((int)methodIndexMap[(int)start]);
+				classDataItemFile.writeULeb128((int)classDataItem.virtualMethods[0].flags);
+				classDataItemFile.writeULeb128(0);
+				for (int j = 1; j < classDataItem.virtualMethodsSize; ++j) {
+					classDataItemFile.writeULeb128((int)methodIndexMap[(int)(classDataItem.virtualMethods[j].diff + start)]);
+					classDataItemFile.writeULeb128((int)classDataItem.virtualMethods[j].flags);
+					classDataItemFile.writeULeb128(0);
+				}
+			}
+			
+		}
 		
 		// annotation_item
 		fileIndex = 0;
