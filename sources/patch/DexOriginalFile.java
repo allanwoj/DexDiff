@@ -1,11 +1,15 @@
 package patch;
 
 import item.AnnotationItem;
+import item.AnnotationsDirectoryItem;
 import item.EncodedAnnotation;
 import item.EncodedArray;
 import item.EncodedValue;
+import item.FieldAnnotation;
 import item.FieldIdItem;
+import item.MethodAnnotation;
 import item.MethodIdItem;
+import item.ParameterAnnotation;
 import item.ProtoIdItem;
 import item.TypeList;
 
@@ -86,6 +90,9 @@ public class DexOriginalFile extends DexParser {
     
     TypeList[] typeLists;
     int typeListIndex = 0;
+    
+    AnnotationsDirectoryItem[] annotationsDirectoryItems;
+    int annotationsDirectoryItemsIndex = 0;
 
 	@Override
 	public void parse() {
@@ -271,6 +278,45 @@ public class DexOriginalFile extends DexParser {
 	        	typeLists[i] = new TypeList(size, data);
 	        }
 	        
+	        setFilePosition(annotationsDirectoryItemOffset);
+	        annotationsDirectoryItems = new AnnotationsDirectoryItem[(int)annotationsDirectoryItemSize];
+	        long offset = 0;
+	        long fieldsSize = 0;
+	        long methodsSize = 0;
+	        long paramsSize = 0;
+	        // Read annotation_directory_item
+	        for (int i = 0; i < annotationsDirectoryItemSize; ++i) {
+	        	offset = read32Bit();
+	        	fieldsSize = read32Bit();
+	        	methodsSize = read32Bit();
+	        	paramsSize = read32Bit();
+	        	FieldAnnotation[] f = null;
+	        	MethodAnnotation[] m = null;
+	        	ParameterAnnotation[] p = null;
+	        	if (fieldsSize > 0) {
+	        		f = new FieldAnnotation[(int)fieldsSize];
+	        		for (int j = 0; j < fieldsSize; ++j) {
+	        			f[j] = new FieldAnnotation(read32Bit(), read32Bit());
+	        		}
+	        	}
+	        	if (methodsSize > 0) {
+	        		m = new MethodAnnotation[(int)methodsSize];
+	        		for (int j = 0; j < methodsSize; ++j) {
+	        			m[j] = new MethodAnnotation(read32Bit(), read32Bit());
+	        		}
+	        	}
+	        	if (paramsSize > 0) {
+	        		p = new ParameterAnnotation[(int)paramsSize];
+	        		for (int j = 0; j < paramsSize; ++j) {
+	        			p[j] = new ParameterAnnotation(read32Bit(), read32Bit());
+	        		}
+	        	}
+	        	
+	        	annotationsDirectoryItems[i] = new AnnotationsDirectoryItem(offset, fieldsSize, methodsSize, paramsSize, f, m, p);
+	        	
+	        }
+	        
+	        
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -366,6 +412,10 @@ public class DexOriginalFile extends DexParser {
 		return typeLists[typeListIndex++];
 	}
 	
+	public AnnotationsDirectoryItem getAnnotationsDirectoryItem() {
+		return annotationsDirectoryItems[annotationsDirectoryItemsIndex++];
+	}
+	
 	public long getFileSize() {
         return fileSize;
     }
@@ -456,6 +506,14 @@ public class DexOriginalFile extends DexParser {
     
     public long getTypeListOffset() {
         return typeListOffset;
+    }
+    
+    public long getAnnotationsDirectoryItemSize() {
+        return annotationsDirectoryItemSize;
+    }
+    
+    public long getAnnotationsDirectoryItemOffset() {
+        return annotationsDirectoryItemOffset;
     }
     
 }

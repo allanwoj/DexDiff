@@ -1,6 +1,7 @@
 package patch;
 
 import item.AnnotationItem;
+import item.AnnotationsDirectoryItem;
 import item.EncodedAnnotation;
 import item.EncodedValue;
 import item.FieldIdItem;
@@ -35,6 +36,7 @@ public class ApplyPatch {
 		GeneratedFile protoFile = new GeneratedFile("out/proto.dex");
 		GeneratedFile methodFile = new GeneratedFile("out/method.dex");
 		GeneratedFile typeListFile = new GeneratedFile("out/type_list.dex");
+		GeneratedFile annDirItemFile = new GeneratedFile("out/annotations_directory_item.dex");
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
@@ -42,6 +44,7 @@ public class ApplyPatch {
 		long[] protoIndexMap = new long[10000];
 		long[] methodIndexMap = new long[10000];
 		long[] typeListIndexMap = new long[10000];
+		long[] annotationsDirectoryItemMap = new long[10000];
 		long[] annotationItemMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
@@ -236,6 +239,34 @@ public class ApplyPatch {
 				typeListFile.write16bit(0L);
 		}
 		
+		
+		// annotation_directory_item
+		fileIndex = 0;
+		mapIndex = 0;
+		AnnotationsDirectoryItem annItem;
+		int annDirSize = (int)original.getAnnotationsDirectoryItemSize();
+		for (int i = 0; i < annDirSize; ++i) {
+			annItem = original.getAnnotationsDirectoryItem();
+			annDirItemFile.write(0L);
+			annDirItemFile.write(annItem.fieldsSize);
+			annDirItemFile.write(annItem.annMethodsSize);
+			annDirItemFile.write(annItem.annParamsSize);
+			
+			for (int j = 0; j < annItem.fieldsSize; ++j) {
+				annDirItemFile.write(fieldIndexMap[(int)annItem.fieldAnnotations[j].fieldId]);
+				annDirItemFile.write(0L);
+			}
+			
+			for (int j = 0; j < annItem.annMethodsSize; ++j) {
+				annDirItemFile.write(methodIndexMap[(int)annItem.methodAnnotations[j].methodId]);
+				annDirItemFile.write(0L);
+			}
+			
+			for (int j = 0; j < annItem.annParamsSize; ++j) {
+				annDirItemFile.write(methodIndexMap[(int)annItem.parameterAnnotations[j].methodId]);
+				annDirItemFile.write(0L);
+			}
+		}
 		
 		
 		
