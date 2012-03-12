@@ -5,12 +5,16 @@ import item.AnnotationSetItem;
 import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
 import item.ClassDataItem;
+import item.CodeItem;
 import item.DebugByteCode;
 import item.DebugInfoItem;
 import item.EncodedAnnotation;
 import item.EncodedArray;
+import item.EncodedCatchHandler;
+import item.EncodedCatchHandlerList;
 import item.EncodedField;
 import item.EncodedMethod;
+import item.EncodedTypeAddrPair;
 import item.EncodedValue;
 import item.FieldAnnotation;
 import item.FieldIdItem;
@@ -18,6 +22,7 @@ import item.MethodAnnotation;
 import item.MethodIdItem;
 import item.ParameterAnnotation;
 import item.ProtoIdItem;
+import item.TryItem;
 import item.TypeList;
 
 import java.io.IOException;
@@ -119,6 +124,10 @@ public class DexOriginalFile extends DexParser {
     HashMap<Long, Integer> debugInfoOffsetMap;
     DebugInfoItem[] debugInfoItems;
     int debugInfoItemIndex = 0;
+    
+    HashMap<Long, Integer> codeItemOffsetMap;
+    CodeItem[] codeItems;
+    int codeItemIndex = 0;
 
 	@Override
 	public void parse() {
@@ -289,6 +298,58 @@ public class DexOriginalFile extends DexParser {
 	        	}
 	        	debugInfoItems[i] = new DebugInfoItem(lineStart, paramSize, names, byteCode);
 	        }
+	        
+	        
+	        setFilePosition(codeItemOffset);
+	        codeItems = new CodeItem[(int)codeItemSize];
+	        codeItemOffsetMap = new HashMap<Long, Integer>();
+	        codeItemOffsetMap.put(0L, -1);
+	        // Read code_item
+	        for (int i = 0; i < codeItemSize; ++i) {
+	        	codeItemOffsetMap.put(position, i);
+	        	int regSize = read16Bit();
+	        	int insSize = read16Bit();
+	        	int outsSize = read16Bit();
+	        	int triesSize = read16Bit();
+	        	long debugInfoOff = read32Bit();
+	        	long insnsSize = read32Bit();
+	        	int[] insns = new int[(int)insnsSize];
+	        	
+	        	for (int j = 0; j < insnsSize; ++j) {
+	        		insns[j] = read16Bit();
+	        	}
+	        	
+	        	
+	        	int padding = -1;
+	        	if (triesSize > 0 && insnsSize % 2 == 1)
+	        		padding = read16Bit();
+	        	TryItem[] tries = new TryItem[triesSize];
+	        	for (int j = 0; j < triesSize; ++j) {
+	        		tries[j] = new TryItem(read32Bit(), read16Bit(), read16Bit());
+	        	}
+	        	
+	        	int listSize = readULEB128();
+	        	EncodedCatchHandler[] list = new EncodedCatchHandler[listSize];
+	        	for (int j = 0; j < listSize; ++j) {
+	        		int s = readSLEB128();
+	        		EncodedTypeAddrPair[] hand = new EncodedTypeAddrPair[s];
+	        		for (int k = 0; k < s; ++k) {
+	        			hand[k] = new EncodedTypeAddrPair(readULEB128(), readULEB128());
+	        		}
+	        		long catchAllAddr = -1;
+	        		if (s <= 0) {
+	        			catchAllAddr = readULEB128();
+	        		}
+	        		list[j] = new EncodedCatchHandler(s, hand, catchAllAddr);
+	        	}
+	        	EncodedCatchHandlerList l = new EncodedCatchHandlerList(listSize, list);
+	        	codeItems[i] = new CodeItem(regSize, insSize, outsSize, triesSize, debugInfoOffsetMap.get(debugInfoOff),
+	        			insnsSize, insns, padding, tries, l);
+	        }
+	        
+	        
+	        
+	        
 	        
 	        setFilePosition(annotationItemOffset);
 	        annotationItems = new AnnotationItem[(int)annotationItemSize];
@@ -597,6 +658,10 @@ public class DexOriginalFile extends DexParser {
 		return debugInfoItems[debugInfoItemIndex++];
 	}
 	
+	public CodeItem getCodeItem() {
+		return codeItems[codeItemIndex++];
+	}
+	
 	public long getFileSize() {
         return fileSize;
     }
@@ -727,6 +792,14 @@ public class DexOriginalFile extends DexParser {
     
     public long getDebugInfoItemOffset() {
         return debugInfoItemOffset;
+    }
+    
+    public long getCodeItemSize() {
+        return codeItemSize;
+    }
+    
+    public long getCodeItemOffset() {
+        return codeItemOffset;
     }
     
 }

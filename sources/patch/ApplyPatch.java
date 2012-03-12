@@ -5,6 +5,7 @@ import item.AnnotationSetItem;
 import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
 import item.ClassDataItem;
+import item.CodeItem;
 import item.DebugByteCode;
 import item.DebugInfoItem;
 import item.EncodedAnnotation;
@@ -48,6 +49,7 @@ public class ApplyPatch {
 		GeneratedFile annotationSetItemFile = new GeneratedFile("out/annotation_set_item.dex");
 		GeneratedFile annotationSetRefListFile = new GeneratedFile("out/annotation_set_ref_list.dex");
 		GeneratedFile debugInfoItemFile = new GeneratedFile("out/debug_info_item.dex");
+		GeneratedFile codeItemFile = new GeneratedFile("out/code_item.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
 		long[] fieldIndexMap = new long[10000];
@@ -60,6 +62,7 @@ public class ApplyPatch {
 		long[] annotationSetItemMap = new long[10000];
 		long[] annotationSetRefListMap = new long[10000];
 		long[] debugInfoItemMap = new long[10000];
+		long[] codeItemMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
@@ -427,6 +430,46 @@ public class ApplyPatch {
 			
 			debugInfoItemFile.writeULeb128((int)debugInfoItem.lineStart);
 		}
+		
+		
+		fileIndex = 0;
+		mapIndex = 0;
+		CodeItem codeItem;
+		int codeItemSize = (int)original.getCodeItemSize();
+		for (int i = 0; i < codeItemSize; ++i) {
+			codeItem = original.getCodeItem();
+			codeItemFile.write16bit(codeItem.registersSize);
+			codeItemFile.write16bit(codeItem.insSize);
+			codeItemFile.write16bit(codeItem.outsSize);
+			codeItemFile.write16bit(codeItem.triesSize);
+			codeItemFile.write(0L);
+			codeItemFile.write(codeItem.insnsSize);
+			for (int j = 0; j < codeItem.insnsSize; ++j) {
+				codeItemFile.write16bit(codeItem.insns[j]);
+			}
+			if (codeItem.triesSize > 0 && codeItem.insnsSize % 2 == 1)
+				codeItemFile.write16bit(0);
+			
+			for (int j = 0; j < codeItem.triesSize; ++j) {
+				codeItemFile.write(codeItem.tries[j].startAddr);
+				codeItemFile.write16bit(codeItem.tries[j].insnCount);
+				codeItemFile.write16bit(codeItem.tries[j].handlerOffset);
+			}
+			
+			codeItemFile.writeULeb128((int)codeItem.handlers.size);
+			
+			for (int j = 0; j < codeItem.handlers.size; ++j) {
+				codeItemFile.writeSLeb128((int)codeItem.handlers.list[j].size);
+				for (int k = 0; k < codeItem.handlers.list[j].size; ++k) {
+					codeItemFile.writeULeb128((int)typeIndexMap[(int)codeItem.handlers.list[j].handlers[k].type]);
+					codeItemFile.writeULeb128((int)codeItem.handlers.list[j].handlers[k].addr);
+				}
+				if (codeItem.handlers.list[j].size <= 0)
+					codeItemFile.writeULeb128((int)codeItem.handlers.list[j].catchAllAddr);
+			}
+		}
+		
+		
 	}
 	
 	
