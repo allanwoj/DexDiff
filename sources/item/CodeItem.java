@@ -12,10 +12,12 @@ public class CodeItem {
 	public int padding;
 	public TryItem[] tries;
 	public EncodedCatchHandlerList handlers;
+	public int times;
 
 	public CodeItem(int registersSize, int insSize, int outsSize,
 			int triesSize, int debugInfoIndex, long insnsSize, int[] insns,
-			int padding, TryItem[] tries, EncodedCatchHandlerList handlers) {
+			int padding, TryItem[] tries, EncodedCatchHandlerList handlers,
+			int times) {
 		this.registersSize = registersSize;
 		this.insSize = insSize;
 		this.outsSize = outsSize;
@@ -26,6 +28,7 @@ public class CodeItem {
 		this.padding = padding;
 		this.tries = tries;
 		this.handlers = handlers;
+		this.times = times;
 	}
 	
 	

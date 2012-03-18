@@ -306,6 +306,8 @@ public class DexOriginalFile extends DexParser {
 	        codeItemOffsetMap.put(0L, -1);
 	        // Read code_item
 	        for (int i = 0; i < codeItemSize; ++i) {
+	        	if(i == 108)
+	        		System.out.print("hi");
 	        	codeItemOffsetMap.put(position, i);
 	        	int regSize = read16Bit();
 	        	int insSize = read16Bit();
@@ -321,30 +323,40 @@ public class DexOriginalFile extends DexParser {
 	        	
 	        	
 	        	int padding = -1;
-	        	if (triesSize > 0 && insnsSize % 2 == 1)
+	        	if (insnsSize % 2 == 1)
 	        		padding = read16Bit();
 	        	TryItem[] tries = new TryItem[triesSize];
 	        	for (int j = 0; j < triesSize; ++j) {
 	        		tries[j] = new TryItem(read32Bit(), read16Bit(), read16Bit());
 	        	}
 	        	
-	        	int listSize = readULEB128();
-	        	EncodedCatchHandler[] list = new EncodedCatchHandler[listSize];
-	        	for (int j = 0; j < listSize; ++j) {
-	        		int s = readSLEB128();
-	        		EncodedTypeAddrPair[] hand = new EncodedTypeAddrPair[s];
-	        		for (int k = 0; k < s; ++k) {
-	        			hand[k] = new EncodedTypeAddrPair(readULEB128(), readULEB128());
-	        		}
-	        		long catchAllAddr = -1;
-	        		if (s <= 0) {
-	        			catchAllAddr = readULEB128();
-	        		}
-	        		list[j] = new EncodedCatchHandler(s, hand, catchAllAddr);
+	        	EncodedCatchHandlerList l = null;
+	        	long currPos = position;
+	        	if (triesSize > 0) {
+	        		int listSize = readULEB128();
+		        	EncodedCatchHandler[] list = new EncodedCatchHandler[listSize];
+		        	for (int j = 0; j < listSize; ++j) {
+		        		int s = readSLEB128();
+		        		int ss = Math.abs(s);
+		        		EncodedTypeAddrPair[] hand = new EncodedTypeAddrPair[ss];
+		        		for (int k = 0; k < ss; ++k) {
+		        			hand[k] = new EncodedTypeAddrPair(readULEB128(), readULEB128());
+		        		}
+		        		long catchAllAddr = -1;
+		        		if (s <= 0) {
+		        			catchAllAddr = readULEB128();
+		        		}
+		        		list[j] = new EncodedCatchHandler(s, hand, catchAllAddr);
+		        	}
+		        	l = new EncodedCatchHandlerList(listSize, list);
 	        	}
-	        	EncodedCatchHandlerList l = new EncodedCatchHandlerList(listSize, list);
+	        	
+	        	long times = (4 - ((position - currPos) % 4)) % 4;
+	        	for (int j = 0; j < times; ++j)
+	        		read8Bit();
+	        	
 	        	codeItems[i] = new CodeItem(regSize, insSize, outsSize, triesSize, debugInfoOffsetMap.get(debugInfoOff),
-	        			insnsSize, insns, padding, tries, l);
+	        			insnsSize, insns, padding, tries, l, (int)times);
 	        }
 	        
 	        

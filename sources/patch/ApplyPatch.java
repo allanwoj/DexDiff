@@ -447,7 +447,7 @@ public class ApplyPatch {
 			for (int j = 0; j < codeItem.insnsSize; ++j) {
 				codeItemFile.write16bit(codeItem.insns[j]);
 			}
-			if (codeItem.triesSize > 0 && codeItem.insnsSize % 2 == 1)
+			if (codeItem.insnsSize % 2 == 1)
 				codeItemFile.write16bit(0);
 			
 			for (int j = 0; j < codeItem.triesSize; ++j) {
@@ -456,17 +456,25 @@ public class ApplyPatch {
 				codeItemFile.write16bit(codeItem.tries[j].handlerOffset);
 			}
 			
-			codeItemFile.writeULeb128((int)codeItem.handlers.size);
+			if (codeItem.triesSize > 0) {
+				codeItemFile.writeULeb128((int)codeItem.handlers.size);
 			
-			for (int j = 0; j < codeItem.handlers.size; ++j) {
-				codeItemFile.writeSLeb128((int)codeItem.handlers.list[j].size);
-				for (int k = 0; k < codeItem.handlers.list[j].size; ++k) {
-					codeItemFile.writeULeb128((int)typeIndexMap[(int)codeItem.handlers.list[j].handlers[k].type]);
-					codeItemFile.writeULeb128((int)codeItem.handlers.list[j].handlers[k].addr);
+				for (int j = 0; j < codeItem.handlers.size; ++j) {
+					codeItemFile.writeSLeb128((int)codeItem.handlers.list[j].size);
+					for (int k = 0; k < Math.abs(codeItem.handlers.list[j].size); ++k) {
+						codeItemFile.writeULeb128((int)typeIndexMap[(int)codeItem.handlers.list[j].handlers[k].type]);
+						codeItemFile.writeULeb128((int)codeItem.handlers.list[j].handlers[k].addr);
+					}
+					if (codeItem.handlers.list[j].size <= 0)
+						codeItemFile.writeULeb128((int)codeItem.handlers.list[j].catchAllAddr);
 				}
-				if (codeItem.handlers.list[j].size <= 0)
-					codeItemFile.writeULeb128((int)codeItem.handlers.list[j].catchAllAddr);
+				
+				for (int j = 0; j < codeItem.times; ++j) {
+					codeItemFile.write(0);
+				}
 			}
+			
+			
 		}
 		
 		
