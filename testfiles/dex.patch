@@ -64,6 +64,13 @@
 1 2
 0 182
 8
+0 442
+1 1
+0 10
+2 1
+1 2
+0 53
+9
 Landroid/text/AndroidCharacter;
 Lorg/connectbot/util/EastAsianWidth$1;
 Lorg/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder;
@@ -153,3 +160,17 @@ measurer
 635
 729
 3925
+1
+630
+4
+661
+4
+4
+660
+6
+661
+4
+4
+660
+63
+4

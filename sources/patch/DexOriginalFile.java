@@ -25,7 +25,10 @@ import item.ProtoIdItem;
 import item.TryItem;
 import item.TypeList;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -128,9 +131,29 @@ public class DexOriginalFile extends DexParser {
     HashMap<Long, Integer> codeItemOffsetMap;
     CodeItem[] codeItems;
     int codeItemIndex = 0;
+    
+    OutputStream outStream = null;
+    
+    private void doWrite(String data) {
+    	byte[] b = new byte[data.length()];
+		data.getBytes(0, data.length(), b, 0);
+    	try {
+			outStream.write(b);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
 
 	@Override
 	public void parse() {
+		try {
+			outStream = new FileOutputStream("out/log.log");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		try {
 			setFilePosition(0x20L);
 			fileSize = read32Bit();
@@ -249,6 +272,27 @@ public class DexOriginalFile extends DexParser {
 		        		read32Bit();
 		        		read32Bit();
 	        	}
+	        }
+	        
+	        setFilePosition(typeListOffset);
+	        typeLists = new TypeList[(int)typeListSize];
+	        typeListOffsetMap = new HashMap<Long, Integer>();
+	        typeListOffsetMap.put(0L, -1);
+	        int tlsize = 0;
+	        int[] data = null;
+	        // Read type_list
+	        for (int i = 0; i < typeListSize; ++i) {
+	        	typeListOffsetMap.put(position, i);
+	        	doWrite("typeList[" + i + "]: \n");
+	        	tlsize = (int)read32Bit();
+	        	data = new int[tlsize];
+	        	for (int j = 0; j < tlsize; ++j) {
+	        		data[j] = read16Bit();
+	        		doWrite(data[j] + ": " + stringData[typeIds[data[j]]] + "\n");
+	        	}
+	        	if (tlsize % 2 == 1)
+	        		read16Bit();
+	        	typeLists[i] = new TypeList(tlsize, data);
 	        }
 	        
 	        setFilePosition(debugInfoItemOffset);
@@ -439,24 +483,7 @@ public class DexOriginalFile extends DexParser {
 	        }
 	        
 	        
-	        setFilePosition(typeListOffset);
-	        typeLists = new TypeList[(int)typeListSize];
-	        typeListOffsetMap = new HashMap<Long, Integer>();
-	        typeListOffsetMap.put(0L, -1);
-	        int size = 0;
-	        int[] data = null;
-	        // Read type_list
-	        for (int i = 0; i < typeListSize; ++i) {
-	        	typeListOffsetMap.put(position, i);
-	        	size = (int)read32Bit();
-	        	data = new int[size];
-	        	for (int j = 0; j < size; ++j) {
-	        		data[j] = read16Bit();
-	        	}
-	        	if (size % 2 == 1)
-	        		read16Bit();
-	        	typeLists[i] = new TypeList(size, data);
-	        }
+	        
 	        
 	        setFilePosition(protoIdsOffset);
 	        protoIds = new ProtoIdItem[(int) protoIdsSize];

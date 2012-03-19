@@ -29,6 +29,7 @@ public class ApplyPatch {
 		RandomAccessFile raf = null;
 		try {
 			raf = new RandomAccessFile(args[0], "r");
+			//raf = new RandomAccessFile("testfiles/connect3.dex", "r");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -56,6 +57,7 @@ public class ApplyPatch {
 		long[] protoIndexMap = new long[10000];
 		long[] methodIndexMap = new long[10000];
 		long[] typeListIndexMap = new long[10000];
+		long[] typeListPointerMap = new long[10000];
 		long[] annotationsDirectoryItemMap = new long[10000];
 		long[] classDataItemMap = new long[10000];
 		long[] annotationItemMap = new long[10000];
@@ -139,6 +141,9 @@ public class ApplyPatch {
 				}
 			}
 		}
+		
+		
+		
 		
 		fileIndex = 0;
 		mapIndex = 0;
@@ -238,23 +243,57 @@ public class ApplyPatch {
 			}
 		}
 		
-		
-		
 		// type_list
 		fileIndex = 0;
 		mapIndex = 0;
 		TypeList typeList;
-		int typeListSize = (int)original.getTypeListSize();
-		for (int i = 0; i < typeListSize; ++i) {
-			typeList = original.getTypeList();
-			typeListFile.write(typeList.size);
-			
-			for (int j = 0; j < typeList.size; ++j) {
-				typeListFile.write16bit(typeIndexMap[typeList.types[j]]);
+		long tempPointer = 0; // TODO change to new offset in update file
+		int pointerIndex = 0;
+		while(patch.hasTypeListCommands()) {
+			command = patch.getNextTypeListCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					typeListIndexMap[mapIndex++] = fileIndex++;
+					typeListPointerMap[pointerIndex++] = tempPointer;
+					typeList = original.getTypeList();
+					typeListFile.write(typeList.size);
+					for (int j = 0; j < typeList.size; ++j) {
+						typeListFile.write16bit(typeIndexMap[typeList.types[j]]);
+					}
+					if (typeList.size % 2 == 1) {
+						typeListFile.write16bit(0L);
+						tempPointer += 2;
+					}
+					tempPointer += 4 + typeList.size * 2;
+					
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					++fileIndex;
+					typeListPointerMap[pointerIndex++] = tempPointer;
+					long tlsize = Long.parseLong(patch.getNextData());
+					typeListFile.write(tlsize);
+					for (int j = 0; j < tlsize; ++j) {
+						typeListFile.write16bit(Long.parseLong(patch.getNextData()));
+					}
+					if (tlsize % 2 == 1) {
+						typeListFile.write16bit(0L);
+						tempPointer += 2;
+					}
+					tempPointer += 4 + tlsize * 2;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getTypeList();
+					typeListIndexMap[mapIndex++] = -1;
+				}
 			}
-			if (typeList.size % 2 == 1)
-				typeListFile.write16bit(0L);
 		}
+		
+		
 		
 		
 		// annotations_directory_item

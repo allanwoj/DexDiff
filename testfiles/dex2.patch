@@ -63,6 +63,14 @@
 2 1 //2650
 1 2
 0 182 //2832
+8
+0 442 //441
+1 1
+0 10 //451
+2 1 //452
+1 2
+0 53 //505
+
 
 Landroid/text/AndroidCharacter;
 Lorg/connectbot/util/EastAsianWidth$1;
@@ -75,22 +83,28 @@ VLIILLI
 getEastAsianWidths
 mWidths
 measurer
-932 //string
+
+//string
+932 
 1489
 1490
 1491
 1492
 1493
-631 //type
+//type
+631
 632
 4613
 633
 634
 4613
-634 //field
+
+//field
+634
 662
 3863
-798 //proto
+//proto
+798
 632
 0
 798
@@ -108,7 +122,8 @@ measurer
 2046
 658
 408092
-104 //method
+//method
+104
 728
 3173
 
@@ -167,6 +182,26 @@ measurer
 635
 729
 3925
+
+//type list
+1
+630
+
+4
+661
+4
+4
+660
+
+6
+661
+4
+4
+660
+63
+4
+
+
 
 //fields
 77 02 78 02 

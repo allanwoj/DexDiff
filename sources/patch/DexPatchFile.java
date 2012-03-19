@@ -14,11 +14,13 @@ public class DexPatchFile {
 	private List<PatchCommand> fieldCommands;
 	private List<PatchCommand> protoCommands;
 	private List<PatchCommand> methodCommands;
+	private List<PatchCommand> typeListCommands;
 	private Iterator<PatchCommand> stringIt;
 	private Iterator<PatchCommand> typeIt;
 	private Iterator<PatchCommand> fieldIt;
 	private Iterator<PatchCommand> protoIt;
 	private Iterator<PatchCommand> methodIt;
+	private Iterator<PatchCommand> typeListIt;
 	private List<String> data;
 	private Iterator<String> dataIt;
 	private long stringOffset;
@@ -29,6 +31,7 @@ public class DexPatchFile {
 		fieldCommands = new LinkedList<PatchCommand>();
 		protoCommands = new LinkedList<PatchCommand>();
 		methodCommands = new LinkedList<PatchCommand>();
+		typeListCommands = new LinkedList<PatchCommand>();
 		data = new LinkedList<String>();
 		try {
 			BufferedReader file = new BufferedReader(new FileReader(fileName));
@@ -93,6 +96,17 @@ public class DexPatchFile {
 				methodCommands.add(new PatchCommand(type, size));
 			}
 			
+			// Read type_list commands
+			while(true) {
+				buf = file.readLine();
+				if (buf.equals("9")) {
+					break;
+				}
+				type = buf.charAt(0) - 48;
+				size = Integer.parseInt(buf.substring(2));
+				typeListCommands.add(new PatchCommand(type, size));
+			}
+			
 			// Read patch data
 			while(true) {
 				String buff = file.readLine();
@@ -107,6 +121,7 @@ public class DexPatchFile {
 			fieldIt = fieldCommands.iterator();
 			protoIt = protoCommands.iterator();
 			methodIt = methodCommands.iterator();
+			typeListIt = typeListCommands.iterator();
 			dataIt = data.iterator();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -155,6 +170,14 @@ public class DexPatchFile {
 	
 	boolean hasMethodCommands() {
 		return methodIt.hasNext();
+	}
+	
+	PatchCommand getNextTypeListCommand() {
+		return typeListIt.next();
+	}
+	
+	boolean hasTypeListCommands() {
+		return typeListIt.hasNext();
 	}
 	
 	String getNextData() {
