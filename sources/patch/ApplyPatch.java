@@ -68,8 +68,8 @@ public class ApplyPatch {
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
-		long current = patch.getOffset();
-		stringIdsFile.write(current);
+		long currentStringOffset = patch.getStringOffset();
+		stringIdsFile.write(currentStringOffset);
 		String buf;
 		
 		// Generate patched string_ids and string_data_items
@@ -80,8 +80,8 @@ public class ApplyPatch {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
 					buf = original.getStringData();
-					current += buf.length() + 1;
-					stringIdsFile.write(current);
+					currentStringOffset += buf.length() + 1;
+					stringIdsFile.write(currentStringOffset);
 					stringFile.write(buf);
 					stringFile.write(0);
 					stringIndexMap[mapIndex++] = fileIndex++;
@@ -96,9 +96,9 @@ public class ApplyPatch {
 						size = size >> 8;
 						++size_buf;
 					}
-					current += buf.length() + size_buf;
+					currentStringOffset += buf.length() + size_buf;
 					// TODO Handle cases when length is larger than 127.
-					stringIdsFile.write(current);
+					stringIdsFile.write(currentStringOffset);
 					stringFile.write(buf.length());
 					stringFile.write(buf);
 					stringFile.write((char)0);
@@ -117,7 +117,6 @@ public class ApplyPatch {
 		System.out.println("DONE");
 		fileIndex = 0;
 		mapIndex = 0;
-		
 		// Generate patched type_ids
 		while(patch.hasTypeCommands()) {
 			command = patch.getNextTypeCommand();
@@ -177,37 +176,7 @@ public class ApplyPatch {
 			}
 		}
 		
-		fileIndex = 0;
-		mapIndex = 0;
-		ProtoIdItem protoItem = null;
-		// Generate patched proto_ids
-		while(patch.hasProtoCommands()) {
-			command = patch.getNextProtoCommand();
-			if (command.type == 0) {
-				// KEEP
-				for(int i = 0; i < command.size; ++i) {
-					protoItem = original.getProtoIdData();
-					protoFile.write(stringIndexMap[(int)protoItem.shorty]);
-					protoFile.write(typeIndexMap[(int)protoItem.type]);
-					protoFile.write(0L);
-					protoIndexMap[mapIndex++] = fileIndex++;
-				}
-			} else if (command.type == 1) {
-				// ADD
-				for(int i = 0; i < command.size; ++i) {
-					protoFile.write(Long.parseLong(patch.getNextData()));
-					protoFile.write(Long.parseLong(patch.getNextData()));
-					protoFile.write(Long.parseLong(patch.getNextData()));
-					++fileIndex;
-				}
-			} else if (command.type == 2) {
-				// DELETE
-				for(int i = 0; i < command.size; ++i) {
-					original.getProtoIdData();
-					protoIndexMap[mapIndex++] = -1;
-				}
-			}
-		}
+		
 		
 		
 		
@@ -247,7 +216,7 @@ public class ApplyPatch {
 		fileIndex = 0;
 		mapIndex = 0;
 		TypeList typeList;
-		long tempPointer = 0; // TODO change to new offset in update file
+		long tempPointer = patch.getTypeListOffset();
 		int pointerIndex = 0;
 		while(patch.hasTypeListCommands()) {
 			command = patch.getNextTypeListCommand();
@@ -294,7 +263,41 @@ public class ApplyPatch {
 		}
 		
 		
-		
+		fileIndex = 0;
+		mapIndex = 0;
+		ProtoIdItem protoItem = null;
+		// Generate patched proto_ids
+		while(patch.hasProtoCommands()) {
+			command = patch.getNextProtoCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					protoItem = original.getProtoIdData();
+					protoFile.write(stringIndexMap[(int)protoItem.shorty]);
+					protoFile.write(typeIndexMap[(int)protoItem.type]);
+					if (protoItem.typeListIndex == -1) {
+						protoFile.write(0L);
+					} else {
+						protoFile.write(typeListPointerMap[(int) typeListIndexMap[protoItem.typeListIndex]]);
+					}
+					protoIndexMap[mapIndex++] = fileIndex++;
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					protoFile.write(Long.parseLong(patch.getNextData()));
+					protoFile.write(Long.parseLong(patch.getNextData()));
+					protoFile.write(Long.parseLong(patch.getNextData()));
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getProtoIdData();
+					protoIndexMap[mapIndex++] = -1;
+				}
+			}
+		}
 		
 		// annotations_directory_item
 		fileIndex = 0;

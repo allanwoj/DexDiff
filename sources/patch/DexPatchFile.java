@@ -24,6 +24,7 @@ public class DexPatchFile {
 	private List<String> data;
 	private Iterator<String> dataIt;
 	private long stringOffset;
+	private long typeListOffset;
 	
 	public DexPatchFile(String fileName) {
 		stringCommands = new LinkedList<PatchCommand>();
@@ -40,6 +41,7 @@ public class DexPatchFile {
 			int type;
 			
 			stringOffset = Long.parseLong(file.readLine());
+			typeListOffset = Long.parseLong(file.readLine());
 			
 			// Read string table commands
 			while(true) {
@@ -188,7 +190,11 @@ public class DexPatchFile {
 		return dataIt.hasNext();
 	}
 	
-	long getOffset() {
+	long getStringOffset() {
 		return stringOffset;
+	}
+	
+	long getTypeListOffset() {
+		return typeListOffset;
 	}
 }
