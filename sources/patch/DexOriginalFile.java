@@ -90,7 +90,7 @@ public class DexOriginalFile extends DexParser {
     public String[] stringData;
     int stringDataIndex = 0;
     
-    int[] typeIds;
+    public int[] typeIds;
     int typeIdsIndex = 0;
     
     FieldIdItem[] fieldIds;
