@@ -87,7 +87,7 @@ public class DexOriginalFile extends DexParser {
     private long annotationsDirectoryItemSize;
     private long annotationsDirectoryItemOffset;
     
-    String[] stringData;
+    public String[] stringData;
     int stringDataIndex = 0;
     
     int[] typeIds;
@@ -302,12 +302,18 @@ public class DexOriginalFile extends DexParser {
 	        // Read debug_info_item
 	        for (int i = 0; i < debugInfoItemSize; ++i) {
 	        	debugInfoOffsetMap.put(position, i);
+	        	
 	        	long lineStart = readULEB128();
 	        	long paramSize = readULEB128();
-	        	
+	        	doWrite("debugInfoItem[" + i + "]:" + lineStart + " " + paramSize + "\n");
 	        	long[] names = new long[(int)paramSize];
 	        	for (int j = 0; j < paramSize; ++j) {
 	        		names[j] = readULEB128p1();
+	        		if(names[j] == -1) {
+	        			doWrite("NO_NAME\n");
+	        		} else {
+	        			doWrite(stringData[(int)names[j]] + "\n");
+	        		}
 	        	}
 	        	ArrayList<DebugByteCode> byteCode = new ArrayList<DebugByteCode>();
 	        	int instruction = read8Bit();
@@ -839,6 +845,14 @@ public class DexOriginalFile extends DexParser {
     
     public long getCodeItemOffset() {
         return codeItemOffset;
+    }
+    
+    public long getStringDataItemSize() {
+        return stringDataItemSize;
+    }
+    
+    public long getStringDataItemOffset() {
+        return stringDataItemOffset;
     }
     
 }

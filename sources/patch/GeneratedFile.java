@@ -38,6 +38,17 @@ public class GeneratedFile {
 		}
 	}
 	
+	public void write(byte[] data) {
+		try {
+			for (int i = 0; i < data.length; ++i) {
+				out.write(data[i]);				
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public int writeSLeb128(int value) {
         int remaining = value >> 7;
         int count = 0;
