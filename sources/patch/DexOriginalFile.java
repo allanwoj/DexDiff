@@ -115,7 +115,7 @@ public class DexOriginalFile extends DexParser {
     int annotationSetRefListIndex = 0;
     
     HashMap<Long, Integer> typeListOffsetMap;
-    TypeList[] typeLists;
+    public TypeList[] typeLists;
     int typeListIndex = 0;
     
     AnnotationsDirectoryItem[] annotationsDirectoryItems;
