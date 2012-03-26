@@ -1,5 +1,7 @@
 package generate;
 
+import item.FieldIdItem;
+
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
@@ -42,7 +44,7 @@ public class GeneratePatch {
 		List<PCommand> l = lcs2(original.stringData, update.stringData);
 		//List<PCommand> l = lcs2(data1, data2);
 		
-		
+		// string_data_item
 		ListIterator<PCommand> it = l.listIterator(l.size());
 		PCommand c = it.previous();
 		while (true) {
@@ -79,6 +81,7 @@ public class GeneratePatch {
 		
 		patchFile.write("4\n");
 		
+		// type_id
 		l = lcs2(original.typeIds, update.typeIds, original.stringData, update.stringData);
 		it = l.listIterator(l.size());
 		c = it.previous();
@@ -115,6 +118,42 @@ public class GeneratePatch {
 			}
 		}
 		
+		patchFile.write("5\n");
+		
+		// field_id_item
+		l = lcs2(original.fieldIds, update.fieldIds, original.typeIds, update.typeIds, original.stringData, update.stringData);
+		it = l.listIterator(l.size());
+		c = it.previous();
+		while (true) {
+			int val = c.type;
+			int nx = c.type;
+			int count = 0;
+			while (nx == val) {
+				if(nx == 1) {
+					dataFile.write(c.data);
+				}
+				
+				++count;
+				
+				if (!it.hasPrevious())
+					break;
+				
+				c = it.previous();
+				nx = c.type;
+			}
+			
+			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			
+			if (!it.hasPrevious()) {
+				if(nx != val) {
+					if(nx == 1) {
+						dataFile.write(c.data);
+					}
+					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+				}
+				break;
+			}
+		}
 		
 		System.out.print("done");
 	}
@@ -179,6 +218,50 @@ public class GeneratePatch {
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1]));
+	        	y--;
+	            
+	        } else {
+	        	l.add(new PCommand(0, null));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
+	
+	public static List<PCommand> lcs2(FieldIdItem[] a, FieldIdItem[] b, int[] aTypes, int[] bTypes, String[] aData, String[] bData) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++)
+	        for (int j = 0; j < b.length; j++)
+	            if (aData[a[i].nameId].equals(bData[b[j].nameId])
+	            		&& aData[aTypes[a[i].classId]].equals(bData[bTypes[b[j].classId]])
+	            		&& aData[aTypes[a[i].typeId]].equals(bData[bTypes[b[j].typeId]])) {
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	 
+	    // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 && y != 0; ) {
+	        if (lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2, null));
+	        	x--;
+	        } else if (lengths[x][y] == lengths[x][y-1]) {
+	        	String s = ((Integer)b[y-1].classId).toString() + "\n" +
+	        		((Integer)b[y-1].typeId).toString() + "\n" +
+	        		((Integer)b[y-1].nameId).toString() + "\n";
+	        	byte[] by = new byte[s.length() - 1];
+	        	s.getBytes(1, s.length(), by, 0);
+	        	
+	        	l.add(new PCommand(1, by));
 	        	y--;
 	            
 	        } else {
