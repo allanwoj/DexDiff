@@ -1,6 +1,7 @@
 package generate;
 
 import item.FieldIdItem;
+import item.ProtoIdItem;
 import item.TypeList;
 
 import java.io.FileNotFoundException;
@@ -48,14 +49,22 @@ public class GeneratePatch {
 		// string_data_item
 		ListIterator<PCommand> it = l.listIterator(l.size());
 		PCommand c = it.previous();
+		long[] stringIndexMap = new long[10000];
+		int fileIndex = 0;
+		int mapIndex = 0;
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
 			int count = 0;
 			while (nx == val) {
-				if(nx == 1) {
+				if (nx == 0) {
+					stringIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
 					dataFile.write(c.data);
 					dataFile.write("\n");
+					++fileIndex;
+				} else if (nx == 2) {
+					stringIndexMap[mapIndex++] = -1;
 				}
 				++count;
 				
@@ -70,9 +79,14 @@ public class GeneratePatch {
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
-					if(nx == 1) {
+					if (nx == 0) {
+						stringIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
 						dataFile.write(c.data);
 						dataFile.write("\n");
+						++fileIndex;
+					} else if (nx == 2) {
+						stringIndexMap[mapIndex++] = -1;
 					}
 					patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
@@ -86,14 +100,22 @@ public class GeneratePatch {
 		l = lcs2(original.typeIds, update.typeIds, original.stringData, update.stringData);
 		it = l.listIterator(l.size());
 		c = it.previous();
+		long[] typeIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
 			int count = 0;
 			while (nx == val) {
-				if(nx == 1) {
+				if (nx == 0) {
+					typeIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
 					dataFile.write(((Integer)c.index).toString());
 					dataFile.write("\n");
+					++fileIndex;
+				} else if (nx == 2) {
+					typeIndexMap[mapIndex++] = -1;
 				}
 				
 				++count;
@@ -109,9 +131,14 @@ public class GeneratePatch {
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
-					if(nx == 1) {
+					if (nx == 0) {
+						typeIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
 						dataFile.write(((Integer)c.index).toString());
 						dataFile.write("\n");
+						++fileIndex;
+					} else if (nx == 2) {
+						typeIndexMap[mapIndex++] = -1;
 					}
 					patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
@@ -160,6 +187,55 @@ public class GeneratePatch {
 		
 		// type_list
 		l = lcs2(original.typeLists, update.typeLists, original.typeIds, update.typeIds, original.stringData, update.stringData);
+		it = l.listIterator(l.size());
+		c = it.previous();
+		long[] typeListIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
+		while (true) {
+			int val = c.type;
+			int nx = c.type;
+			int count = 0;
+			while (nx == val) {
+				if(nx == 0) {
+					typeListIndexMap[mapIndex++] = fileIndex++;
+				} else if(nx == 1) {
+					dataFile.write(c.data);
+					++fileIndex;
+				} else if(nx == 2) {
+					typeListIndexMap[mapIndex++] = -1;
+				}
+				
+				++count;
+				
+				if (!it.hasPrevious())
+					break;
+				
+				c = it.previous();
+				nx = c.type;
+			}
+			
+			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			
+			if (!it.hasPrevious()) {
+				if(nx != val) {
+					if(nx == 0) {
+						typeListIndexMap[mapIndex++] = fileIndex++;
+					} else if(nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if(nx == 2) {
+						typeListIndexMap[mapIndex++] = -1;
+					}
+					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+				}
+				break;
+			}
+		}
+		
+		patchFile.write("7\n");
+		// proto_id
+		l = lcs2(original.protoIds, update.protoIds, typeListIndexMap, typeIndexMap, stringIndexMap);
 		it = l.listIterator(l.size());
 		c = it.previous();
 		while (true) {
@@ -353,6 +429,67 @@ public class GeneratePatch {
 	        	for (int i = 0; i < b[y-1].size; ++i) {
 	        		s += ((Integer)b[y-1].types[i]).toString() + "\n";
 	        	}
+	        	byte[] by = new byte[s.length()];
+	        	s.getBytes(0, s.length(), by, 0);
+	        	
+	        	l.add(new PCommand(1, by));
+	        	y--;
+	            
+	        } else {
+	        	l.add(new PCommand(0, null));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
+	
+	public static List<PCommand> lcs2(ProtoIdItem[] a, ProtoIdItem[] b, long[] typeListIndexMap, long[] typeIndexMap, long[] stringIndexMap) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++) {
+	        for (int j = 0; j < b.length; j++) {
+	        	boolean isEqual = true;
+	        	
+	        	if (stringIndexMap[(int)a[i].shorty] != b[j].shorty ||
+	        			typeIndexMap[(int)a[i].type] != b[j].type) {
+	        		isEqual = false;
+	        	}
+	        	
+	        	if (a[i].typeListIndex == -1 || b[j].typeListIndex == -1) {
+	        		if(a[i].typeListIndex != b[j].typeListIndex) {
+	        			isEqual = false;
+	        		}
+	        	} else if (typeListIndexMap[(int)a[i].typeListIndex] != b[j].typeListIndex) {
+	        		isEqual = false;
+	        	}
+	        	
+	        	
+	        	
+	        	if (isEqual) {
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	        }
+	    }
+	 
+	    // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 && y != 0; ) {
+	        if (lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2, null));
+	        	x--;
+	        } else if (lengths[x][y] == lengths[x][y-1]) {
+	        	String s = ((Long)b[y-1].shorty).toString() + "\n" +
+	        		((Long)b[y-1].type).toString() + "\n" +
+	        		((Long)b[y-1].typeListOffset).toString() + "\n";
 	        	byte[] by = new byte[s.length()];
 	        	s.getBytes(0, s.length(), by, 0);
 	        	

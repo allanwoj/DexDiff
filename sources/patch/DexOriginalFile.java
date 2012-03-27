@@ -96,7 +96,7 @@ public class DexOriginalFile extends DexParser {
     public FieldIdItem[] fieldIds;
     int fieldIdsIndex = 0;
     
-    ProtoIdItem[] protoIds;
+    public ProtoIdItem[] protoIds;
     int protoIdsIndex = 0;
     
     MethodIdItem[] methodIds;
@@ -495,7 +495,10 @@ public class DexOriginalFile extends DexParser {
 	        protoIds = new ProtoIdItem[(int) protoIdsSize];
 	        // Read proto_ids
 	        for (int i = 0; i < protoIdsSize; ++i) {
-				protoIds[i] = new ProtoIdItem(read32Bit(), read32Bit(), typeListOffsetMap.get(read32Bit()));
+	        	long name = read32Bit();
+	        	long type = read32Bit();
+	        	long off = read32Bit();
+				protoIds[i] = new ProtoIdItem(name, type, typeListOffsetMap.get(off), off);
 			}
 	        
 	        setFilePosition(annotationsDirectoryItemOffset);
