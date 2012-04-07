@@ -406,7 +406,7 @@ public class DexOriginalFile extends DexParser {
 	        		read8Bit();
 	        	
 	        	codeItems[i] = new CodeItem(regSize, insSize, outsSize, triesSize, debugInfoOffsetMap.get(debugInfoOff),
-	        			insnsSize, insns, padding, tries, l, (int)times);
+	        			debugInfoOff, insnsSize, insns, padding, tries, l, (int)times);
 	        }
 	        
 	        

@@ -7,6 +7,7 @@ public class CodeItem {
 	public int outsSize;
 	public int triesSize;
 	public int debugInfoIndex;
+	public long debugInfoOffset;
 	public long insnsSize;
 	public int[] insns;
 	public int padding;
@@ -15,7 +16,7 @@ public class CodeItem {
 	public int times;
 
 	public CodeItem(int registersSize, int insSize, int outsSize,
-			int triesSize, int debugInfoIndex, long insnsSize, int[] insns,
+			int triesSize, int debugInfoIndex, long debugInfoOffset, long insnsSize, int[] insns,
 			int padding, TryItem[] tries, EncodedCatchHandlerList handlers,
 			int times) {
 		this.registersSize = registersSize;
@@ -23,6 +24,7 @@ public class CodeItem {
 		this.outsSize = outsSize;
 		this.triesSize = triesSize;
 		this.debugInfoIndex = debugInfoIndex;
+		this.debugInfoOffset = debugInfoOffset;
 		this.insnsSize = insnsSize;
 		this.insns = insns;
 		this.padding = padding;
