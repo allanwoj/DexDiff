@@ -66,6 +66,7 @@ public class ApplyPatch {
 		long[] annotationSetItemMap = new long[10000];
 		long[] annotationSetRefListMap = new long[10000];
 		long[] debugInfoItemMap = new long[10000];
+		long[] debugInfoItemPointerMap = new long[10000];
 		long[] codeItemMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
@@ -303,6 +304,8 @@ public class ApplyPatch {
 		fileIndex = 0;
 		mapIndex = 0;
 		DebugInfoItem debugInfoItem = null;
+		tempPointer = patch.getDebugInfoItemOffset();
+		pointerIndex = 0;
 		int debugInfoItemSize = (int)original.getDebugInfoItemSize();
 		while(patch.hasDebugInfoCommands()) {
 			command = patch.getNextDebugInfoCommand();
@@ -310,7 +313,16 @@ public class ApplyPatch {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
 					debugInfoItem = original.getDebugInfoItem();
-					debugInfoItemFile.writeULeb128((int)debugInfoItem.lineStart);
+					
+					debugInfoItemMap[mapIndex++] = fileIndex++;
+					typeListPointerMap[pointerIndex++] = tempPointer;
+					
+					byte[] temp = debugInfoItem.getByteCode(stringIndexMap, typeIndexMap);
+					tempPointer += temp.length;
+					
+					debugInfoItemFile.write(temp);
+					
+					/*debugInfoItemFile.writeULeb128((int)debugInfoItem.lineStart);
 					debugInfoItemFile.writeULeb128((int)debugInfoItem.parametersSize);
 					for (int j = 0; j < debugInfoItem.parametersSize; ++j) {
 						if (debugInfoItem.parameterNames[j] == -1) {
@@ -344,15 +356,18 @@ public class ApplyPatch {
 		        			debugInfoItemFile.writeULeb128(1 + (int)stringIndexMap[(int)code.name]);
 		        		}
 					}
-					debugInfoItemFile.write(0);
-					debugInfoItemMap[mapIndex++] = fileIndex++;
+					debugInfoItemFile.write(0);*/
 				}
 				
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					debugInfoItemFile.write(patch.getNextData());
+					typeListPointerMap[pointerIndex++] = tempPointer;
+					List<Byte> temp = patch.getNextData();
+					tempPointer += temp.size();
+					debugInfoItemFile.write(temp);
 					++fileIndex;
+					
 				}
 			} else if (command.type == 2) {
 				// DELETE
@@ -364,6 +379,34 @@ public class ApplyPatch {
 			
 		}
 		
+		
+		fileIndex = 0;
+		mapIndex = 0;
+		CodeItem codeItem = null;
+		// Generate patched code_items
+		while(patch.hasCodeItemCommands()) {
+			command = patch.getNextCodeItemCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					codeItem = original.getCodeItem();
+					codeItemFile.write(codeItem.getNaiveOutput(typeIndexMap, debugInfoItemMap, debugInfoItemPointerMap));
+					codeItemMap[mapIndex++] = fileIndex++;
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					codeItemFile.write(patch.getNextData());
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getCodeItem();
+					codeItemMap[mapIndex++] = -1;
+				}
+			}
+		}
 		
 		
 		// annotations_directory_item

@@ -88,6 +88,30 @@ public class DebugByteCode {
 		return l;
 	}
 	
+	public Collection<Byte> getBytecode(long[] stringIndexMap, long[] typeIndexMap) {
+		ArrayList<Byte> l = new ArrayList<Byte>();
+		l.add(write(value));
+		if (value == 1) {
+			l.addAll(writeULeb128((int)addrDiff));
+		} else if (value == 2) {
+			l.addAll(writeSLeb128((int)lineDiff));
+		} else if (value == 3) {
+			l.addAll(writeULeb128((int)registerNum));
+			l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)name]));
+			l.addAll(writeULeb128(1 + (int)typeIndexMap[(int)type]));
+		} else if (value == 4) {
+			l.addAll(writeULeb128((int)registerNum));
+			l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)name]));
+			l.addAll(writeULeb128(1 + (int)typeIndexMap[(int)type]));
+			l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)sig]));
+		} else if (value == 5 || value == 6) {
+			l.addAll(writeULeb128((int)registerNum));
+		} else if (value == 9) {
+			l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)name]));
+		}
+		return l;
+	}
+	
 	Byte write(int value) {
 		return (Byte)(byte)value;
 	}

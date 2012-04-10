@@ -10,4 +10,8 @@ public class EncodedTypeAddrPair {
 		this.addr = addr;
 	}
 	
+	public boolean isEqual(EncodedTypeAddrPair update, long[] typeIndexMap) {
+		return typeIndexMap[(int)type] == update.type && addr == update.addr;
+	}
+	
 }

@@ -10,4 +10,17 @@ public class EncodedCatchHandlerList {
 		this.list = list;
 	}
 	
+	public boolean isEqual(EncodedCatchHandlerList update, long[] typeIndexMap) {
+		if (size != update.size) {
+			return false;
+		}
+		
+		for (int i = 0; i < size; ++i) {
+			if (!list[i].isEqual(update.list[i], typeIndexMap)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 }

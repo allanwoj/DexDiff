@@ -49,6 +49,40 @@ public class DebugInfoItem {
 		return ret;
 	}
 	
+	
+	
+	public byte[] getByteCode(long[] stringIndexMap, long[] typeIndexMap) {
+		ArrayList<Byte> l = new ArrayList<Byte>();
+		l.addAll(writeULeb128((int)lineStart));
+		l.addAll(writeULeb128((int)parametersSize));
+		for (int j = 0; j < parametersSize; ++j) {
+			if (parameterNames[j] == -1) {
+				l.addAll(writeULeb128(0));
+			} else {
+				l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)parameterNames[j]]));
+			}
+		}
+		
+		Iterator<DebugByteCode> it = debugByteCode.iterator();
+		while (it.hasNext()) {
+			l.addAll(it.next().getBytecode(stringIndexMap, typeIndexMap));
+		}
+		l.add((byte)0);
+		
+		byte[] ret = new byte[l.size()];
+		Iterator<Byte> iter = l.iterator();
+		int count = 0;
+		
+		while (iter.hasNext()) {
+			ret[count++] = iter.next();
+		}
+		
+		return ret;
+	}
+	
+	
+	
+	
 	Collection<Byte> writeULeb128(int value) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		long remaining = (value & 0xFFFFFFFFL) >> 7;

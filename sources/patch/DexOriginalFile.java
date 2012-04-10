@@ -130,7 +130,7 @@ public class DexOriginalFile extends DexParser {
     int debugInfoItemIndex = 0;
     
     HashMap<Long, Integer> codeItemOffsetMap;
-    CodeItem[] codeItems;
+    public CodeItem[] codeItems;
     int codeItemIndex = 0;
     
     OutputStream outStream = null;

@@ -20,7 +20,7 @@ public class CodeItem {
 	public EncodedCatchHandlerList handlers;
 	public int times;
 	public Collection<ByteCode> byteCode;
-	byte[] instructions;
+	public byte[] instructions;
 
 	public CodeItem(int registersSize, int insSize, int outsSize,
 			int triesSize, int debugInfoIndex, long debugInfoOffset, long insnsSize,
@@ -42,13 +42,13 @@ public class CodeItem {
 		this.instructions = instructions;
 	}
 	
-	public byte[] getNaiveOutput(long[] typeIndexMap, long[] debugInfoPointerMap) {
+	public byte[] getNaiveOutput(long[] typeIndexMap, long[] debugInfoItemMap, long[] debugInfoPointerMap) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(write16bit(registersSize));
 		l.addAll(write16bit(insSize));
 		l.addAll(write16bit(outsSize));
 		l.addAll(write16bit(triesSize));
-		l.addAll(write32bit(debugInfoPointerMap[debugInfoIndex]));
+		l.addAll(write32bit(debugInfoPointerMap[(int)debugInfoItemMap[debugInfoIndex]]));
 		l.addAll(write32bit(insnsSize));
 		for (int i = 0; i < instructions.length; ++i) {
 			l.add(instructions[i]);
@@ -89,13 +89,13 @@ public class CodeItem {
 		return ret;
 	}
 	
-	public byte[] getNaiveOutput() {
+	public byte[] getNaiveOutput(boolean withSize) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(write16bit(registersSize));
 		l.addAll(write16bit(insSize));
 		l.addAll(write16bit(outsSize));
 		l.addAll(write16bit(triesSize));
-		l.addAll(write32bit(debugInfoIndex));
+		l.addAll(write32bit(debugInfoOffset));
 		l.addAll(write32bit(insnsSize));
 		for (int i = 0; i < instructions.length; ++i) {
 			l.add(instructions[i]);
@@ -126,9 +126,15 @@ public class CodeItem {
 			}
 		}
 		
-		byte[] ret = new byte[l.size()];
+		byte[] ret = new byte[withSize ? 4 + l.size() : l.size()];
 		Iterator<Byte> iter = l.iterator();
 		int count = 0;
+		if (withSize) {
+			byte[] temp = write32bita(l.size());
+			for (int i = 0; i < 4; ++i)
+				ret[count++] = temp[i];
+		}
+		
 		while (iter.hasNext()) {
 			ret[count++] = iter.next();
 		}
@@ -238,6 +244,16 @@ public class CodeItem {
 		
 		for(int i = 0; i < 4; ++i) {
 			output.add((byte)((data >> (i*8)) & 0xFF));
+		}
+
+		return output;
+	}
+	
+	public byte[] write32bita(long data) {
+		byte[] output = new byte[4];
+		
+		for(int i = 0; i < 4; ++i) {
+			output[i] = (byte)((data >> (i*8)) & 0xFF);
 		}
 
 		return output;

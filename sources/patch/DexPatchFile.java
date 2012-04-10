@@ -18,6 +18,7 @@ public class DexPatchFile {
 	private List<PatchCommand> methodCommands;
 	private List<PatchCommand> typeListCommands;
 	private List<PatchCommand> debugInfoCommands;
+	private List<PatchCommand> codeItemCommands;
 	private Iterator<PatchCommand> stringIt;
 	private Iterator<PatchCommand> typeIt;
 	private Iterator<PatchCommand> fieldIt;
@@ -25,10 +26,12 @@ public class DexPatchFile {
 	private Iterator<PatchCommand> methodIt;
 	private Iterator<PatchCommand> typeListIt;
 	private Iterator<PatchCommand> debugInfoIt;
+	private Iterator<PatchCommand> codeItemIt;
 	private LinkedList<List<Byte>> data;
 	private Iterator<List<Byte>> dataIt;
 	private long stringOffset;
 	private long typeListOffset;
+	private long debugInfoItemOffset;
 	RandomAccessFile file;
 	
 	public DexPatchFile(String fileName) {
@@ -39,6 +42,7 @@ public class DexPatchFile {
 		methodCommands = new LinkedList<PatchCommand>();
 		typeListCommands = new LinkedList<PatchCommand>();
 		debugInfoCommands = new LinkedList<PatchCommand>();
+		codeItemCommands = new LinkedList<PatchCommand>();
 		data = new LinkedList<List<Byte>>();
 		try {
 			//BufferedReader file = new BufferedReader(new FileReader(fileName));
@@ -48,6 +52,7 @@ public class DexPatchFile {
 			
 			stringOffset = Long.parseLong(file.readLine());
 			typeListOffset = Long.parseLong(file.readLine());
+			debugInfoItemOffset = Long.parseLong(file.readLine());
 			
 			// Read string table commands
 			while(true) {
@@ -119,6 +124,16 @@ public class DexPatchFile {
 				debugInfoCommands.add(new PatchCommand(type, size));
 			}
 			
+			// Read code_item commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				codeItemCommands.add(new PatchCommand(type, size));
+			}
+			
 			long range;
 			// Read patch data
 			while(true) {
@@ -142,6 +157,7 @@ public class DexPatchFile {
 			methodIt = methodCommands.iterator();
 			typeListIt = typeListCommands.iterator();
 			debugInfoIt = debugInfoCommands.iterator();
+			codeItemIt = codeItemCommands.iterator();
 			dataIt = data.iterator();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -208,6 +224,14 @@ public class DexPatchFile {
 		return debugInfoIt.hasNext();
 	}
 	
+	PatchCommand getNextCodeItemCommand() {
+		return codeItemIt.next();
+	}
+	
+	boolean hasCodeItemCommands() {
+		return codeItemIt.hasNext();
+	}
+	
 	List<Byte> getNextData() {
 		return dataIt.next();
 	}
@@ -222,6 +246,10 @@ public class DexPatchFile {
 	
 	long getTypeListOffset() {
 		return typeListOffset;
+	}
+	
+	long getDebugInfoItemOffset() {
+		return debugInfoItemOffset;
 	}
 	
 	public int read8Bit() throws IOException {

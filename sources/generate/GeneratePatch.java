@@ -1,6 +1,7 @@
 package generate;
 
 import item.ClassDataItem;
+import item.CodeItem;
 import item.DebugByteCode;
 import item.DebugInfoItem;
 import item.FieldIdItem;
@@ -52,6 +53,7 @@ public class GeneratePatch {
 		
 		patchFile.write(((Long)update.getStringDataItemOffset()).toString() +"\n");
 		patchFile.write(((Long)update.getTypeListOffset()).toString() +"\n");
+		patchFile.write(((Long)update.getDebugInfoItemOffset()).toString() +"\n");
 		
 		String[] data1 = { "a", "b", "c", "d", "e", "f", "g" };
 		String[] data2 = { "a", "f", "b", "c", "e", "f", "g", "s" };
@@ -431,6 +433,63 @@ public class GeneratePatch {
 		
 		patchFile.write(4);
 		
+		
+		
+		// code_item
+		l = lcs2(original.codeItems, update.codeItems, debugInfoIndexMap, typeIndexMap);
+		it = l.listIterator(l.size());
+		c = it.previous();
+		long[] codeItemIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
+		while (true) {
+			int val = c.type;
+			int nx = c.type;
+			long count = 0;
+			while (nx == val) {
+				if (nx == 0) {
+					codeItemIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
+					dataFile.write(c.data);
+					++fileIndex;
+				} else if (nx == 2) {
+					codeItemIndexMap[mapIndex++] = -1;
+				}
+				
+				++count;
+				
+				if (!it.hasPrevious())
+					break;
+				
+				c = it.previous();
+				nx = c.type;
+			}
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			
+			if (!it.hasPrevious()) {
+				if(nx != val) {
+					if (nx == 0) {
+						codeItemIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if (nx == 2) {
+						codeItemIndexMap[mapIndex++] = -1;
+					}
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
+				}
+				break;
+			}
+		}
+		
+		patchFile.write(4);
+		
+		
+		
 		//~~~~~//
 		dataFile.write(0L);
 		patchFile.close();
@@ -766,6 +825,78 @@ public class GeneratePatch {
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1].getByteCode(true)));
+	        	y--;
+	            
+	        } else {
+	        	l.add(new PCommand(0));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
+    
+    
+    // code_item TOOODOOO
+    public static List<PCommand> lcs2(CodeItem[] a, CodeItem[] b, long[] debugInfoIndexMap, long[] typeIndexMap) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++) {
+	        for (int j = 0; j < b.length; j++) {
+	        	boolean isEqual = true;
+	        	
+	        	if (a[i].registersSize != b[j].registersSize || a[i].insSize != b[j].insSize ||
+	        			a[i].outsSize != b[j].outsSize || a[i].triesSize != b[j].triesSize ||
+	        			a[i].insnsSize != b[j].insnsSize || a[i].padding != b[j].padding ||
+	        			a[i].times != b[j].times ||	debugInfoIndexMap[a[i].debugInfoIndex] != b[j].debugInfoIndex) {
+	        		isEqual = false;
+	        	} else {
+	        		for (int k = 0; k < a[i].triesSize; ++k) {
+	        			if (!a[i].tries[k].isEqual(b[j].tries[k])) {
+	        				isEqual = false;
+	        				break;
+	        			}
+	        		}
+	        		
+	        		if (isEqual && a[i].triesSize > 0) {
+	        			if (!a[i].handlers.isEqual(b[j].handlers, typeIndexMap)) {
+	        				isEqual = false;
+	        			}
+	        		}
+	        		
+	        		if (isEqual) {
+	        			for (int k = 0; k < a[i].instructions.length; ++k) {
+	        				if (a[i].instructions[k] != b[j].instructions[k]) {
+	        					isEqual = false;
+	        				}
+	        			}
+	        		}
+	        	}
+	        	
+	        	if (isEqual) {
+	        		System.out.println(i + " " + j);
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	        }
+	    }
+	 // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 || y != 0; ) {
+	    	if ( x == 4 || y == 4)
+	    		System.out.print("hi");
+	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2));
+	        	x--;
+	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
+	        	l.add(new PCommand(1, b[y-1].getNaiveOutput(true)));
 	        	y--;
 	            
 	        } else {
