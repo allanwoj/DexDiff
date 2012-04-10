@@ -19,7 +19,7 @@ public class DebugInfoItem {
 		this.debugByteCode = debugByteCode;
 	}
 	
-	public byte[] getByteCode() {
+	public byte[] getByteCode(boolean withSize) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(writeULeb128((int)lineStart));
 		l.addAll(writeULeb128((int)parametersSize));
@@ -31,10 +31,17 @@ public class DebugInfoItem {
 		while (it.hasNext()) {
 			l.addAll(it.next().getBytecode());
 		}
+		l.add((byte)0);
 		
-		byte[] ret = new byte[l.size()];
+		byte[] ret = new byte[withSize ? 4 + l.size() : l.size()];
 		Iterator<Byte> iter = l.iterator();
 		int count = 0;
+		if (withSize) {
+			byte[] temp = write32bit(l.size());
+			for (int i = 0; i < 4; ++i)
+				ret[count++] = temp[i];
+		}
+		
 		while (iter.hasNext()) {
 			ret[count++] = iter.next();
 		}
@@ -60,5 +67,14 @@ public class DebugInfoItem {
         return l;
 	}
 	
+	public byte[] write32bit(long data) {
+		byte[] output = new byte[4];
+		
+		for(int i = 0; i < 4; ++i) {
+			output[i] = (byte)((data >> (i*8)) & 0xFF);
+		}
+
+		return output;
+	}
 	
 }

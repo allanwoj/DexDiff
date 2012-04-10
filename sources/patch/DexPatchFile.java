@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,16 +17,19 @@ public class DexPatchFile {
 	private List<PatchCommand> protoCommands;
 	private List<PatchCommand> methodCommands;
 	private List<PatchCommand> typeListCommands;
+	private List<PatchCommand> debugInfoCommands;
 	private Iterator<PatchCommand> stringIt;
 	private Iterator<PatchCommand> typeIt;
 	private Iterator<PatchCommand> fieldIt;
 	private Iterator<PatchCommand> protoIt;
 	private Iterator<PatchCommand> methodIt;
 	private Iterator<PatchCommand> typeListIt;
-	private List<String> data;
-	private Iterator<String> dataIt;
+	private Iterator<PatchCommand> debugInfoIt;
+	private LinkedList<List<Byte>> data;
+	private Iterator<List<Byte>> dataIt;
 	private long stringOffset;
 	private long typeListOffset;
+	RandomAccessFile file;
 	
 	public DexPatchFile(String fileName) {
 		stringCommands = new LinkedList<PatchCommand>();
@@ -33,10 +38,11 @@ public class DexPatchFile {
 		protoCommands = new LinkedList<PatchCommand>();
 		methodCommands = new LinkedList<PatchCommand>();
 		typeListCommands = new LinkedList<PatchCommand>();
-		data = new LinkedList<String>();
+		debugInfoCommands = new LinkedList<PatchCommand>();
+		data = new LinkedList<List<Byte>>();
 		try {
-			BufferedReader file = new BufferedReader(new FileReader(fileName));
-			String buf;
+			//BufferedReader file = new BufferedReader(new FileReader(fileName));
+			file = new RandomAccessFile("out/connect.patch", "r");
 			int size = 0;
 			int type;
 			
@@ -45,76 +51,87 @@ public class DexPatchFile {
 			
 			// Read string table commands
 			while(true) {
-				buf = file.readLine();
-				if (buf.equals("4")) {
+				type = read8Bit();
+				if (type == 4) {
 					break;
 				}
-				type = buf.charAt(0) - 48;
-				size = Integer.parseInt(buf.substring(2));
+				size = read16Bit();
 				stringCommands.add(new PatchCommand(type, size));
 			}
 			
 			// Read type_id commands
 			while(true) {
-				buf = file.readLine();
-				if (buf.equals("5")) {
+				type = read8Bit();
+				if (type == 4) {
 					break;
 				}
-				type = buf.charAt(0) - 48;
-				size = Integer.parseInt(buf.substring(2));
+				size = read16Bit();
 				typeCommands.add(new PatchCommand(type, size));
 			}
 			
 			// Read field_id commands
 			while(true) {
-				buf = file.readLine();
-				if (buf.equals("6")) {
+				type = read8Bit();
+				if (type == 4) {
 					break;
 				}
-				type = buf.charAt(0) - 48;
-				size = Integer.parseInt(buf.substring(2));
+				size = read16Bit();
 				fieldCommands.add(new PatchCommand(type, size));
+			}
+			
+			// Read type_list commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				typeListCommands.add(new PatchCommand(type, size));
 			}
 			
 			// Read proto_id commands
 			while(true) {
-				buf = file.readLine();
-				if (buf.equals("7")) {
+				type = read8Bit();
+				if (type == 4) {
 					break;
 				}
-				type = buf.charAt(0) - 48;
-				size = Integer.parseInt(buf.substring(2));
+				size = read16Bit();
 				protoCommands.add(new PatchCommand(type, size));
 			}
 			
 			// Read method_id commands
 			while(true) {
-				buf = file.readLine();
-				if (buf.equals("8")) {
+				type = read8Bit();
+				if (type == 4) {
 					break;
 				}
-				type = buf.charAt(0) - 48;
-				size = Integer.parseInt(buf.substring(2));
+				size = read16Bit();
 				methodCommands.add(new PatchCommand(type, size));
 			}
 			
-			// Read type_list commands
+			// Read debug_info_item commands
 			while(true) {
-				buf = file.readLine();
-				if (buf.equals("9")) {
+				type = read8Bit();
+				if (type == 4) {
 					break;
 				}
-				type = buf.charAt(0) - 48;
-				size = Integer.parseInt(buf.substring(2));
-				typeListCommands.add(new PatchCommand(type, size));
+				size = read16Bit();
+				debugInfoCommands.add(new PatchCommand(type, size));
 			}
 			
+			long range;
 			// Read patch data
 			while(true) {
-				String buff = file.readLine();
-				if (buff == null)
+				range = read32Bit();
+				if (range == 0) {
 					break;
-				data.add(buff);
+				}
+				LinkedList<Byte> by = new LinkedList<Byte>();
+				for (long i = 0; i < range; ++i) {
+					by.add((byte)read8Bit());
+				}
+				
+				data.add(by);
 			}
 			
 			file.close();
@@ -124,6 +141,7 @@ public class DexPatchFile {
 			protoIt = protoCommands.iterator();
 			methodIt = methodCommands.iterator();
 			typeListIt = typeListCommands.iterator();
+			debugInfoIt = debugInfoCommands.iterator();
 			dataIt = data.iterator();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -182,7 +200,15 @@ public class DexPatchFile {
 		return typeListIt.hasNext();
 	}
 	
-	String getNextData() {
+	PatchCommand getNextDebugInfoCommand() {
+		return debugInfoIt.next();
+	}
+	
+	boolean hasDebugInfoCommands() {
+		return debugInfoIt.hasNext();
+	}
+	
+	List<Byte> getNextData() {
 		return dataIt.next();
 	}
 	
@@ -197,4 +223,21 @@ public class DexPatchFile {
 	long getTypeListOffset() {
 		return typeListOffset;
 	}
+	
+	public int read8Bit() throws IOException {
+        int result = file.read();
+        return result;
+    }
+	
+	public int read16Bit() throws IOException {
+        int result = read8Bit();
+        result |= ( read8Bit() << 8 );
+        return result;
+    }
+	
+	public long read32Bit() throws IOException {
+        long result = (long)read16Bit();
+        result |= ((long)read16Bit()) << 16;
+        return result;
+    }
 }

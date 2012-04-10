@@ -72,7 +72,7 @@
 1 2
 0 53 //505
 
-
+//string
 Landroid/text/AndroidCharacter;
 Lorg/connectbot/util/EastAsianWidth$1;
 Lorg/connectbot/util/EastAsianWidth$FroyoAndBeyond$Holder;
@@ -85,22 +85,21 @@ getEastAsianWidths
 mWidths
 measurer
 
-//string
+//type
 932 
 1489
 1490
 1491
 1492
 1493
-//type
+
+//field
 631
 632
 4613
 633
 634
 4613
-
-//field
 634
 662
 3863

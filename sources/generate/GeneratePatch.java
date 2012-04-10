@@ -8,7 +8,13 @@ import item.MethodIdItem;
 import item.ProtoIdItem;
 import item.TypeList;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -43,6 +49,7 @@ public class GeneratePatch {
 		
 		GeneratedFile patchFile = new GeneratedFile("out/connect.patch");
 		GeneratedFile dataFile = new GeneratedFile("out/data.patch");
+		
 		patchFile.write(((Long)update.getStringDataItemOffset()).toString() +"\n");
 		patchFile.write(((Long)update.getTypeListOffset()).toString() +"\n");
 		
@@ -60,13 +67,12 @@ public class GeneratePatch {
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
-			int count = 0;
+			long count = 0;
 			while (nx == val) {
 				if (nx == 0) {
 					stringIndexMap[mapIndex++] = fileIndex++;
 				} else if (nx == 1) {
 					dataFile.write(c.data);
-					dataFile.write("\n");
 					++fileIndex;
 				} else if (nx == 2) {
 					stringIndexMap[mapIndex++] = -1;
@@ -80,7 +86,10 @@ public class GeneratePatch {
 				nx = c.type;
 			}
 			
-			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
@@ -88,18 +97,19 @@ public class GeneratePatch {
 						stringIndexMap[mapIndex++] = fileIndex++;
 					} else if (nx == 1) {
 						dataFile.write(c.data);
-						dataFile.write("\n");
 						++fileIndex;
 					} else if (nx == 2) {
 						stringIndexMap[mapIndex++] = -1;
 					}
-					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
 				break;
 			}
 		}
 		
-		patchFile.write("4\n");
+		patchFile.write(4);
 		
 		// type_id
 		l = lcs2(original.typeIds, update.typeIds, original.stringData, update.stringData);
@@ -111,13 +121,13 @@ public class GeneratePatch {
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
-			int count = 0;
+			long count = 0;
 			while (nx == val) {
 				if (nx == 0) {
 					typeIndexMap[mapIndex++] = fileIndex++;
 				} else if (nx == 1) {
-					dataFile.write(((Integer)c.index).toString());
-					dataFile.write("\n");
+					dataFile.write(4L);
+					dataFile.write((long)c.index);
 					++fileIndex;
 				} else if (nx == 2) {
 					typeIndexMap[mapIndex++] = -1;
@@ -132,26 +142,30 @@ public class GeneratePatch {
 				nx = c.type;
 			}
 			
-			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
 					if (nx == 0) {
 						typeIndexMap[mapIndex++] = fileIndex++;
 					} else if (nx == 1) {
-						dataFile.write(((Integer)c.index).toString());
-						dataFile.write("\n");
+						dataFile.write(4L);
+						dataFile.write((long)c.index);
 						++fileIndex;
 					} else if (nx == 2) {
 						typeIndexMap[mapIndex++] = -1;
 					}
-					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
 				break;
 			}
 		}
 		
-		patchFile.write("5\n");
+		patchFile.write(4);
 		
 		// field_id_item
 		l = lcs2(original.fieldIds, update.fieldIds, original.typeIds, update.typeIds, original.stringData, update.stringData);
@@ -163,7 +177,7 @@ public class GeneratePatch {
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
-			int count = 0;
+			long count = 0;
 			while (nx == val) {
 				if (nx == 0) {
 					fieldIndexMap[mapIndex++] = fileIndex++;
@@ -181,8 +195,9 @@ public class GeneratePatch {
 				c = it.previous();
 				nx = c.type;
 			}
-			
-			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
@@ -193,13 +208,15 @@ public class GeneratePatch {
 					} else if (nx == 2) {
 						fieldIndexMap[mapIndex++] = -1;
 					}
-					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
 				break;
 			}
 		}
 		
-		patchFile.write("6\n");
+		patchFile.write(4);
 		
 		// type_list
 		l = lcs2(original.typeLists, update.typeLists, original.typeIds, update.typeIds, original.stringData, update.stringData);
@@ -211,7 +228,7 @@ public class GeneratePatch {
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
-			int count = 0;
+			long count = 0;
 			while (nx == val) {
 				if(nx == 0) {
 					typeListIndexMap[mapIndex++] = fileIndex++;
@@ -230,8 +247,9 @@ public class GeneratePatch {
 				c = it.previous();
 				nx = c.type;
 			}
-			
-			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
@@ -243,13 +261,16 @@ public class GeneratePatch {
 					} else if(nx == 2) {
 						typeListIndexMap[mapIndex++] = -1;
 					}
-					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
 				break;
 			}
 		}
 		
-		patchFile.write("7\n");
+		patchFile.write(4);
+		
 		// proto_id
 		l = lcs2(original.protoIds, update.protoIds, typeListIndexMap, typeIndexMap, stringIndexMap);
 		it = l.listIterator(l.size());
@@ -260,7 +281,7 @@ public class GeneratePatch {
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
-			int count = 0;
+			long count = 0;
 			while (nx == val) {
 				if (nx == 0) {
 					protoIndexMap[mapIndex++] = fileIndex++;
@@ -279,8 +300,9 @@ public class GeneratePatch {
 				c = it.previous();
 				nx = c.type;
 			}
-			
-			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
@@ -292,13 +314,16 @@ public class GeneratePatch {
 					} else if (nx == 2) {
 						protoIndexMap[mapIndex++] = -1;
 					}
-					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
 				break;
 			}
 		}
 		
-		patchFile.write("7\n");
+		patchFile.write(4);
+		
 		// method_id
 		l = lcs2(original.methodIds, update.methodIds, typeIndexMap, protoIndexMap, stringIndexMap);
 		it = l.listIterator(l.size());
@@ -309,7 +334,7 @@ public class GeneratePatch {
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
-			int count = 0;
+			long count = 0;
 			while (nx == val) {
 				if (nx == 0) {
 					methodIndexMap[mapIndex++] = fileIndex++;
@@ -328,8 +353,9 @@ public class GeneratePatch {
 				c = it.previous();
 				nx = c.type;
 			}
-			
-			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
@@ -341,14 +367,17 @@ public class GeneratePatch {
 					} else if (nx == 2) {
 						methodIndexMap[mapIndex++] = -1;
 					}
-					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
 				break;
 			}
 		}
 		
 		
-		patchFile.write("7\n");
+		patchFile.write(4);
+		
 		// debug_info_item
 		l = lcs2(original.debugInfoItems, update.debugInfoItems, typeIndexMap, stringIndexMap);
 		it = l.listIterator(l.size());
@@ -359,7 +388,7 @@ public class GeneratePatch {
 		while (true) {
 			int val = c.type;
 			int nx = c.type;
-			int count = 0;
+			long count = 0;
 			while (nx == val) {
 				if (nx == 0) {
 					debugInfoIndexMap[mapIndex++] = fileIndex++;
@@ -378,8 +407,9 @@ public class GeneratePatch {
 				c = it.previous();
 				nx = c.type;
 			}
-			
-			patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
 			
 			if (!it.hasPrevious()) {
 				if(nx != val) {
@@ -391,11 +421,22 @@ public class GeneratePatch {
 					} else if (nx == 2) {
 						debugInfoIndexMap[mapIndex++] = -1;
 					}
-					patchFile.write(((Integer)nx).toString() + " " + "1\n");
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
 				}
 				break;
 			}
 		}
+		
+		patchFile.write(4);
+		
+		//~~~~~//
+		dataFile.write(0L);
+		patchFile.close();
+		dataFile.close();
+		writeCompleteFile("out/connect.patch", "out/data.patch");
+		//~~~~~//
 		
 		System.out.print("done");
 	}
@@ -422,8 +463,13 @@ public class GeneratePatch {
 	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	byte[] by = new byte[b[y-1].length() - 1];
-	        	b[y-1].getBytes(1, b[y-1].length(), by, 0);
+	        	byte[] by = new byte[b[y-1].length() + 3];
+	        	int size = b[y-1].length() - 1;
+	        	by[0] = (byte) size;
+	        	by[1] = (byte) (size >> 8);
+	        	by[2] = (byte) (size >> 16);
+	        	by[3] = (byte) (size >> 24);
+	        	b[y-1].getBytes(1, b[y-1].length(), by, 4);
 	        	l.add(new PCommand(1, by));
 	        	y--;
 	            
@@ -480,7 +526,7 @@ public class GeneratePatch {
 	 
 	    for (int i = 0; i < a.length; i++)
 	        for (int j = 0; j < b.length; j++)
-	            if (aData[a[i].nameId].equals(bData[b[j].nameId])
+	            if (aData[(int) a[i].nameId].equals(bData[(int) b[j].nameId])
 	            		&& aData[aTypes[a[i].classId]].equals(bData[bTypes[b[j].classId]])
 	            		&& aData[aTypes[a[i].typeId]].equals(bData[bTypes[b[j].typeId]])) {
 	                lengths[i+1][j+1] = lengths[i][j] + 1;
@@ -497,11 +543,7 @@ public class GeneratePatch {
 	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	String s = ((Integer)b[y-1].classId).toString() + "\n" +
-	        		((Integer)b[y-1].typeId).toString() + "\n" +
-	        		((Integer)b[y-1].nameId).toString() + "\n";
-	        	byte[] by = new byte[s.length() - 1];
-	        	s.getBytes(1, s.length(), by, 0);
+	        	byte[] by = b[y-1].getOutput(true);
 	        	
 	        	l.add(new PCommand(1, by));
 	        	y--;
@@ -553,13 +595,7 @@ public class GeneratePatch {
 	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	String s = ((Long)b[y-1].size).toString() + "\n";
-	        	for (int i = 0; i < b[y-1].size; ++i) {
-	        		s += ((Integer)b[y-1].types[i]).toString() + "\n";
-	        	}
-	        	byte[] by = new byte[s.length()];
-	        	s.getBytes(0, s.length(), by, 0);
-	        	
+	        	byte[] by = b[y-1].getOutput(true);
 	        	l.add(new PCommand(1, by));
 	        	y--;
 	            
@@ -615,12 +651,7 @@ public class GeneratePatch {
 	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	String s = ((Long)b[y-1].shorty).toString() + "\n" +
-        		((Long)b[y-1].type).toString() + "\n" +
-        		((Long)b[y-1].typeListOffset).toString() + "\n";
-	        	byte[] by = new byte[s.length()];
-	        	s.getBytes(0, s.length(), by, 0);
-        	
+	        	byte[] by = b[y-1].getOutput(true);
 	        	l.add(new PCommand(1, by));
 	        	y--;
 	        } else {
@@ -666,12 +697,7 @@ public class GeneratePatch {
 	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	String s = ((Long)b[y-1].classId).toString() + "\n" +
-	        		((Long)b[y-1].proto).toString() + "\n" +
-	        		((Long)b[y-1].name).toString() + "\n";
-	        	byte[] by = new byte[s.length()];
-	        	s.getBytes(0, s.length(), by, 0);
-	        	
+	        	byte[] by = b[y-1].getOutput(true);
 	        	l.add(new PCommand(1, by));
 	        	y--;
 	            
@@ -739,7 +765,7 @@ public class GeneratePatch {
 	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getByteCode()));
+	        	l.add(new PCommand(1, b[y-1].getByteCode(true)));
 	        	y--;
 	            
 	        } else {
@@ -780,5 +806,35 @@ public class GeneratePatch {
 			this.type = type;
 			this.index = index;
 		}
+	}
+	
+	static void writeCompleteFile(String patchFile, String dataFile) {
+		try {
+			//GeneratedFile completeFile = new GeneratedFile("out/complete.patch");
+			File f1 = new File(patchFile);
+			File f2 = new File(dataFile);
+		
+			InputStream in = new FileInputStream(f2);
+			OutputStream out = new FileOutputStream(f1, true);
+			
+			byte[] buf = new byte[1024];
+			  
+			int len;
+			 
+			while ((len = in.read(buf)) > 0){
+				out.write(buf, 0, len);
+			}
+			in.close();
+
+			out.close();
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

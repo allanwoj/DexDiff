@@ -4,6 +4,7 @@ import item.AnnotationItem;
 import item.AnnotationSetItem;
 import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
+import item.ByteCode;
 import item.ClassDataItem;
 import item.CodeItem;
 import item.DebugByteCode;
@@ -124,7 +125,7 @@ public class DexOriginalFile extends DexParser {
     ClassDataItem[] classDataItems;
     int classDataItemsIndex = 0;
     
-    HashMap<Long, Integer> debugInfoOffsetMap;
+    public HashMap<Long, Integer> debugInfoOffsetMap;
     public DebugInfoItem[] debugInfoItems;
     int debugInfoItemIndex = 0;
     
@@ -356,7 +357,7 @@ public class DexOriginalFile extends DexParser {
 	        codeItemOffsetMap.put(0L, -1);
 	        // Read code_item
 	        for (int i = 0; i < codeItemSize; ++i) {
-	        	if(i == 108)
+	        	if(i == 52)
 	        		System.out.print("hi");
 	        	codeItemOffsetMap.put(position, i);
 	        	int regSize = read16Bit();
@@ -365,11 +366,350 @@ public class DexOriginalFile extends DexParser {
 	        	int triesSize = read16Bit();
 	        	long debugInfoOff = read32Bit();
 	        	long insnsSize = read32Bit();
-	        	int[] insns = new int[(int)insnsSize];
+	        	byte[] insns = new byte[2 * (int)insnsSize];
 	        	
-	        	for (int j = 0; j < insnsSize; ++j) {
-	        		insns[j] = read16Bit();
+	        	for (int j = 0; j < 2 * insnsSize; ++j) {
+	        		insns[j] = (byte)read8Bit();
 	        	}
+	        	
+	        	/// Alt implementation ///
+	        	
+	        	long insCount = 0;
+	        	ArrayList<ByteCode> code = new ArrayList<ByteCode>();
+	        	/*while (insCount < 2 * insnsSize) {
+	        		int op = read8Bit();
+	        		++insCount;
+	        		ArrayList<Byte> args = new ArrayList<Byte>();
+	        		args.add((byte)op);
+	        		long buff;
+	        		if (op == 0x00) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x01) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x02) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x03) { //?
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x04) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x05) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x06) { //?
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x07) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x08) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x09) { //?
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x0A) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x0B) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x0C) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x0D) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x0E) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x0F) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x10) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x11) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x12) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x13) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x14) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x15) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x16) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x17) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x18) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 9;
+	        		} else if (op == 0x19) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x1A) {
+	        			args.add((byte)read8Bit());
+	        			// string_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x1B) {
+	        			args.add((byte)read8Bit());
+	        			// string_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x1C) {
+	        			args.add((byte)read8Bit());
+	        			// type_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x1D) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x1E) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x1F) {
+	        			args.add((byte)read8Bit());
+	        			// type_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x20) { //
+	        			args.add((byte)read8Bit());
+	        			// type_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x21) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x22) { //??????
+	        			args.add((byte)read8Bit());
+	        			// type_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x23) { //??????
+	        			args.add((byte)read8Bit());
+	        			//type_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x24) { //??????
+	        			int b = read8Bit();
+	        			args.add((byte)b);
+	        			int regno = (b & 0xF0) >> 4;
+	        			for (int j = 0 ; j < (1+regno)/2 ; ++j) {
+	        				args.add((byte)read8Bit());
+	        				++insCount;
+	        			}
+	        			if ((1+regno)/2 % 2 != 0) {
+	        				args.add((byte)read8Bit());
+	        				++insCount;
+	        			}
+	        			// type_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x25) {
+	        			args.add((byte)read8Bit());
+	        			// type_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x26) { //TODO test this further
+	        			args.add((byte)read8Bit());
+	        			// Offset
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x27) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x28) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op == 0x29) { // Padded
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0x2A) { //?
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x2B) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op == 0x2C) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op >= 0x2D && op <= 0x31) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0x32 && op <= 0x37) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0x38 && op <= 0x3D) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0x3E && op <= 0x43) {
+	        			System.out.print(":(");
+	        		} else if (op >= 0x44 && op <= 0x51) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0x52 && op <= 0x5F) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0x60 && op <= 0x6D) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0x6E && op <= 0x72) {
+	        			int b = read8Bit();
+	        			args.add((byte)b);
+	        			
+	        			// method_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			
+	        			insCount += 3;
+	        			
+	        			int regno = (b & 0xF0) >> 4;
+	        			for (int j = 0 ; j < (1+regno)/2 ; ++j) {
+	        				args.add((byte)read8Bit());
+	        				++insCount;
+	        			}
+	        			if ((1+regno)/2 % 2 != 0) {
+	        				args.add((byte)read8Bit());
+	        				++insCount;
+	        			}
+	        		} else if (op == 0x73) {
+	        			System.out.print(":(");
+	        		} else if (op >= 0x74 && op <= 0x78) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 5;
+	        		} else if (op >= 0x79 && op <= 0x7A) {
+	        			System.out.print(":(");
+	        		} else if (op >= 0x7B && op <= 0x8F) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op >= 0x90 && op <= 0xAF) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0xB0 && op <= 0xCF) {
+	        			args.add((byte)read8Bit());
+	        			++insCount;
+	        		} else if (op >= 0xD0 && op <= 0xD7) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0xD8 && op <= 0xE2) {
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op >= 0xE3 && op <= 0xFF) {
+	        			System.out.print(":(");
+	        		}
+	        		
+	        		code.add(new ByteCode(op, args));
+	        		
+	        	}
+	        	*/
+	        	//////////////////////////
 	        	
 	        	
 	        	int padding = -1;
@@ -406,7 +746,7 @@ public class DexOriginalFile extends DexParser {
 	        		read8Bit();
 	        	
 	        	codeItems[i] = new CodeItem(regSize, insSize, outsSize, triesSize, debugInfoOffsetMap.get(debugInfoOff),
-	        			debugInfoOff, insnsSize, insns, padding, tries, l, (int)times);
+	        			debugInfoOff, insnsSize, code, insns, padding, tries, l, (int)times);
 	        }
 	        
 	        

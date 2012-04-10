@@ -18,6 +18,15 @@ public class GeneratedFile {
 		}
 	}
 	
+	public void close() {
+		try {
+			out.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void write(int data) {
 		try {
 			out.write(data);
