@@ -40,6 +40,62 @@ public class EncodedValue {
 		this.array = array;
 	}
 	
+	public boolean isEqual(EncodedValue other, long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+		if (valueType != other.valueType || name != other.name || valueArg != other.valueArg)
+			return false;
+		
+		/*if (value != null) {
+			if (value.length != other.value.length)
+				return false;
+			for (int i = 0; i < value.length; ++i) {
+				if (value[i] != other.value[i]) {
+					return false;
+				}
+			}
+		}*/
+		
+		
+		if (valueType == 0x17) {
+			long val = readUint(value);
+			if (stringMap[(int)val] != (int)readUint(other.value)) {
+				return false;
+			}
+		} else if (valueType == 0x18) {
+			long val = readUint(value);
+			if (typeMap[(int)val] != (int)readUint(other.value)) {
+				return false;
+			}
+		} else if (valueType == 0x19 || valueType == 0x1B) {
+			long val = readUint(value);
+			if (fieldMap[(int)val] != (int)readUint(other.value)) {
+				return false;
+			}
+		} else if (valueType == 0x1A) {
+			long val = readUint(value);
+			if (methodMap[(int)val] != (int)readUint(other.value)) {
+				return false;
+			}
+		} else if (value != null) {
+			if (value.length != other.value.length)
+				return false;
+			for (int i = 0; i < value.length; ++i) {
+				if (value[i] != other.value[i]) {
+					return false;
+				}
+			}
+		}
+		
+		if (annotation != null && !annotation.isEqual(other.annotation, fieldMap, methodMap, stringMap, typeMap)) {
+			return false;
+		}
+		
+		if (array != null && !array.isEqual(other.array, fieldMap, methodMap, stringMap, typeMap)) {
+			return false;
+		}
+		
+		return true;
+	}
+	
 	public Collection<Byte> getData(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
 		int ret = (valueArg << 5) | valueType;
 		ArrayList<Byte> byteRet = new ArrayList<Byte>();
@@ -81,6 +137,47 @@ public class EncodedValue {
 			byteRet.addAll(annotation.getData(fieldMap, methodMap, stringMap, typeMap));
 		} else if (array != null){
 			byteRet.addAll(array.getData(fieldMap, methodMap, stringMap, typeMap));
+		}
+		return byteRet;
+	}
+	
+	public Collection<Byte> getOutput() {
+		int ret = (valueArg << 5) | valueType;
+		ArrayList<Byte> byteRet = new ArrayList<Byte>();
+		byteRet.add((byte)ret);
+		
+		if (valueType == 0x17) {
+			long val = readUint(value);
+			Byte[] blah = writeUint(val);
+			for (int i = 0; i < blah.length; ++i) {
+				byteRet.add(blah[i]);
+			}
+		} else if (valueType == 0x18) {
+			long val = readUint(value);
+			Byte[] blah = writeUint(val);
+			for (int i = 0; i < blah.length; ++i) {
+				byteRet.add(blah[i]);
+			}
+		} else if (valueType == 0x19 || valueType == 0x1B) {
+			long val = readUint(value);
+			Byte[] blah = writeUint(val);
+			for (int i = 0; i < blah.length; ++i) {
+				byteRet.add(blah[i]);
+			}
+		} else if (valueType == 0x1A) {
+			long val = readUint(value);
+			Byte[] blah = writeUint(val);
+			for (int i = 0; i < blah.length; ++i) {
+				byteRet.add(blah[i]);
+			}
+		} else if (value != null) {
+			for (int i = 0; i < value.length; ++i) {
+				byteRet.add(value[i]);
+			}
+		} else if (annotation != null) {
+			byteRet.addAll(annotation.getOutput());
+		} else if (array != null){
+			byteRet.addAll(array.getOutput());
 		}
 		return byteRet;
 	}

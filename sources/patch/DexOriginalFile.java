@@ -104,7 +104,7 @@ public class DexOriginalFile extends DexParser {
     int methodIdsIndex = 0;
     
     HashMap<Long, Integer> annotationOffsetMap;
-    AnnotationItem[] annotationItems;
+    public AnnotationItem[] annotationItems;
     int annotationItemsIndex = 0;
     
     HashMap<Long, Integer> annotationSetOffsetMap;

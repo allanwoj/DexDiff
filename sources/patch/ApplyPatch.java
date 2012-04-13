@@ -315,7 +315,7 @@ public class ApplyPatch {
 					debugInfoItem = original.getDebugInfoItem();
 					
 					debugInfoItemMap[mapIndex++] = fileIndex++;
-					typeListPointerMap[pointerIndex++] = tempPointer;
+					debugInfoItemPointerMap[pointerIndex++] = tempPointer;
 					
 					byte[] temp = debugInfoItem.getByteCode(stringIndexMap, typeIndexMap);
 					tempPointer += temp.length;
@@ -362,7 +362,7 @@ public class ApplyPatch {
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					typeListPointerMap[pointerIndex++] = tempPointer;
+					debugInfoItemPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					debugInfoItemFile.write(temp);
@@ -408,6 +408,35 @@ public class ApplyPatch {
 			}
 		}
 		
+		
+		// annotation_item
+		fileIndex = 0;
+		mapIndex = 0;
+		AnnotationItem annotationItem = null ;
+		// Generate patched annotation_items
+		while(patch.hasAnnotationItemCommands()) {
+			command = patch.getNextAnnotationItemCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					annotationItem = original.getAnnotationItem();
+					annotationItemFile.write(annotationItem.getBytes(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap));
+					annotationItemMap[mapIndex++] = fileIndex++;
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					annotationItemFile.write(patch.getNextData());
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getAnnotationItem();
+					annotationItemMap[mapIndex++] = -1;
+				}
+			}
+		}
 		
 		// annotations_directory_item
 		fileIndex = 0;
@@ -498,18 +527,7 @@ public class ApplyPatch {
 			
 		}
 		
-		// annotation_item
-		fileIndex = 0;
-		mapIndex = 0;
-		AnnotationItem annotationItem;
-		EncodedAnnotation enAnn;
-		int annSize = (int)original.getAnnotationItemSize();
-		for (int i = 0; i < annSize; ++i) {
-			annotationItem = original.getAnnotationItem();
-			annotationItemFile.write(annotationItem.getVisibility());
-			enAnn = annotationItem.getAnnotation();
-			annotationItemFile.write(enAnn.getData(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap));
-		}
+		
 		
 		// annotation_set_item
 		fileIndex = 0;
@@ -540,50 +558,6 @@ public class ApplyPatch {
 		
 		
 		
-		fileIndex = 0;
-		mapIndex = 0;
-		CodeItem codeItem;
-		int codeItemSize = (int)original.getCodeItemSize();
-		for (int i = 0; i < codeItemSize; ++i) {
-			codeItem = original.getCodeItem();
-			codeItemFile.write16bit(codeItem.registersSize);
-			codeItemFile.write16bit(codeItem.insSize);
-			codeItemFile.write16bit(codeItem.outsSize);
-			codeItemFile.write16bit(codeItem.triesSize);
-			codeItemFile.write(0L);
-			codeItemFile.write(codeItem.insnsSize);
-			for (Iterator<ByteCode> it = codeItem.byteCode.iterator(); j < codeItem.insnsSize; ++j) {
-				codeItemFile.write16bit(codeItem.insns[j]);
-			}
-			if (codeItem.insnsSize % 2 == 1)
-				codeItemFile.write16bit(0);
-			
-			for (int j = 0; j < codeItem.triesSize; ++j) {
-				codeItemFile.write(codeItem.tries[j].startAddr);
-				codeItemFile.write16bit(codeItem.tries[j].insnCount);
-				codeItemFile.write16bit(codeItem.tries[j].handlerOffset);
-			}
-			
-			if (codeItem.triesSize > 0) {
-				codeItemFile.writeULeb128((int)codeItem.handlers.size);
-			
-				for (int j = 0; j < codeItem.handlers.size; ++j) {
-					codeItemFile.writeSLeb128((int)codeItem.handlers.list[j].size);
-					for (int k = 0; k < Math.abs(codeItem.handlers.list[j].size); ++k) {
-						codeItemFile.writeULeb128((int)typeIndexMap[(int)codeItem.handlers.list[j].handlers[k].type]);
-						codeItemFile.writeULeb128((int)codeItem.handlers.list[j].handlers[k].addr);
-					}
-					if (codeItem.handlers.list[j].size <= 0)
-						codeItemFile.writeULeb128((int)codeItem.handlers.list[j].catchAllAddr);
-				}
-				
-				for (int j = 0; j < codeItem.times; ++j) {
-					codeItemFile.write(0);
-				}
-			}
-			
-			
-		}
 		
 		*/
 	}

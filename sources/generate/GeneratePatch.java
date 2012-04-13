@@ -1,5 +1,6 @@
 package generate;
 
+import item.AnnotationItem;
 import item.ClassDataItem;
 import item.CodeItem;
 import item.DebugByteCode;
@@ -489,6 +490,60 @@ public class GeneratePatch {
 		patchFile.write(4);
 		
 		
+		// annotation_item
+		l = lcs2(original.annotationItems, update.annotationItems, fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap);
+		it = l.listIterator(l.size());
+		c = it.previous();
+		long[] annotationsItemIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
+		while (true) {
+			int val = c.type;
+			int nx = c.type;
+			long count = 0;
+			while (nx == val) {
+				if (nx == 0) {
+					annotationsItemIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
+					dataFile.write(c.data);
+					++fileIndex;
+				} else if (nx == 2) {
+					annotationsItemIndexMap[mapIndex++] = -1;
+				}
+				
+				++count;
+				
+				if (!it.hasPrevious())
+					break;
+				
+				c = it.previous();
+				nx = c.type;
+			}
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			
+			if (!it.hasPrevious()) {
+				if(nx != val) {
+					if (nx == 0) {
+						annotationsItemIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if (nx == 2) {
+						annotationsItemIndexMap[mapIndex++] = -1;
+					}
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
+				}
+				break;
+			}
+		}
+		
+		patchFile.write(4);
+		
+		
 		
 		//~~~~~//
 		dataFile.write(0L);
@@ -839,7 +894,7 @@ public class GeneratePatch {
 	}
     
     
-    // code_item TOOODOOO
+    // code_item
     public static List<PCommand> lcs2(CodeItem[] a, CodeItem[] b, long[] debugInfoIndexMap, long[] typeIndexMap) {
 	    int[][] lengths = new int[a.length+1][b.length+1];
 	 
@@ -897,6 +952,46 @@ public class GeneratePatch {
 	        	x--;
 	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1].getNaiveOutput(true)));
+	        	y--;
+	            
+	        } else {
+	        	l.add(new PCommand(0));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
+    
+    // annotation_item
+    public static List<PCommand> lcs2(AnnotationItem[] a, AnnotationItem[] b, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++) {
+	        for (int j = 0; j < b.length; j++) {
+	        	if (a[i].isEqual(b[j], fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap)) {
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	        }
+	    }
+	 // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 || y != 0; ) {
+	    	if ( x == 4 || y == 4)
+	    		System.out.print("hi");
+	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2));
+	        	x--;
+	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
+	        	l.add(new PCommand(1, b[y-1].getOutput()));
 	        	y--;
 	            
 	        } else {

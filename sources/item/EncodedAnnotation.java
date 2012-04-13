@@ -22,6 +22,19 @@ public class EncodedAnnotation {
 		return size;
 	}
 	
+	public boolean isEqual(EncodedAnnotation other, long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+		if (size != other.size || typeMap[type] != other.type)
+			return false;
+		
+		for (int i = 0; i < size; ++i) {
+			if (!values[i].isEqual(other.values[i], fieldMap, methodMap, stringMap, typeMap)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	public Collection<Byte> getData(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
 		ret.addAll(getULeb128((int)typeMap[type]));
@@ -31,6 +44,19 @@ public class EncodedAnnotation {
 			name = (int)stringMap[values[i].name];
 			ret.addAll(getULeb128(name));
 			ret.addAll(values[i].getData(fieldMap, methodMap, stringMap, typeMap));
+		}
+		return ret;
+	}
+	
+	public Collection<Byte> getOutput() {
+		ArrayList<Byte> ret = new ArrayList<Byte>();
+		ret.addAll(getULeb128(type));
+		ret.addAll(getULeb128(size));
+		int name = 0;
+		for (int i = 0; i < size; ++i) {
+			name = values[i].name;
+			ret.addAll(getULeb128(name));
+			ret.addAll(values[i].getOutput());
 		}
 		return ret;
 	}

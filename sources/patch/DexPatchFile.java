@@ -19,6 +19,7 @@ public class DexPatchFile {
 	private List<PatchCommand> typeListCommands;
 	private List<PatchCommand> debugInfoCommands;
 	private List<PatchCommand> codeItemCommands;
+	private List<PatchCommand> annotationItemCommands;
 	private Iterator<PatchCommand> stringIt;
 	private Iterator<PatchCommand> typeIt;
 	private Iterator<PatchCommand> fieldIt;
@@ -27,6 +28,7 @@ public class DexPatchFile {
 	private Iterator<PatchCommand> typeListIt;
 	private Iterator<PatchCommand> debugInfoIt;
 	private Iterator<PatchCommand> codeItemIt;
+	private Iterator<PatchCommand> annotationItemIt;
 	private LinkedList<List<Byte>> data;
 	private Iterator<List<Byte>> dataIt;
 	private long stringOffset;
@@ -43,6 +45,7 @@ public class DexPatchFile {
 		typeListCommands = new LinkedList<PatchCommand>();
 		debugInfoCommands = new LinkedList<PatchCommand>();
 		codeItemCommands = new LinkedList<PatchCommand>();
+		annotationItemCommands = new LinkedList<PatchCommand>();
 		data = new LinkedList<List<Byte>>();
 		try {
 			//BufferedReader file = new BufferedReader(new FileReader(fileName));
@@ -134,6 +137,16 @@ public class DexPatchFile {
 				codeItemCommands.add(new PatchCommand(type, size));
 			}
 			
+			// Read annotation_commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				annotationItemCommands.add(new PatchCommand(type, size));
+			}
+			
 			long range;
 			// Read patch data
 			while(true) {
@@ -158,6 +171,7 @@ public class DexPatchFile {
 			typeListIt = typeListCommands.iterator();
 			debugInfoIt = debugInfoCommands.iterator();
 			codeItemIt = codeItemCommands.iterator();
+			annotationItemIt = annotationItemCommands.iterator();
 			dataIt = data.iterator();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -230,6 +244,14 @@ public class DexPatchFile {
 	
 	boolean hasCodeItemCommands() {
 		return codeItemIt.hasNext();
+	}
+	
+	PatchCommand getNextAnnotationItemCommand() {
+		return annotationItemIt.next();
+	}
+	
+	boolean hasAnnotationItemCommands() {
+		return annotationItemIt.hasNext();
 	}
 	
 	List<Byte> getNextData() {

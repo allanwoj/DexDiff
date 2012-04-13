@@ -12,12 +12,35 @@ public class EncodedArray {
 		this.values = values;
 	}
 	
+	public boolean isEqual(EncodedArray other, long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+		if (size != other.size)
+			return false;
+		
+		for (int i = 0; i < values.length; ++i) {
+			if (!values[i].isEqual(other.values[i], fieldMap, methodMap, stringMap, typeMap)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	Collection<Byte> getData(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
 		ret.addAll(getULeb128(size));
 		
 		for(int i = 0; i < size; ++i) {
 			ret.addAll(values[i].getData(fieldMap, methodMap, stringMap, typeMap));
+		}
+		return ret;
+	}
+	
+	Collection<Byte> getOutput() {
+		ArrayList<Byte> ret = new ArrayList<Byte>();
+		ret.addAll(getULeb128(size));
+		
+		for(int i = 0; i < size; ++i) {
+			ret.addAll(values[i].getOutput());
 		}
 		return ret;
 	}
