@@ -1,11 +1,8 @@
 package patch;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +17,9 @@ public class DexPatchFile {
 	private List<PatchCommand> debugInfoCommands;
 	private List<PatchCommand> codeItemCommands;
 	private List<PatchCommand> annotationItemCommands;
+	private List<PatchCommand> annotationSetItemCommands;
+	private List<PatchCommand> annotationSetRefListCommands;
+	private List<PatchCommand> annotationsDirectoryItemCommands;
 	private Iterator<PatchCommand> stringIt;
 	private Iterator<PatchCommand> typeIt;
 	private Iterator<PatchCommand> fieldIt;
@@ -29,11 +29,19 @@ public class DexPatchFile {
 	private Iterator<PatchCommand> debugInfoIt;
 	private Iterator<PatchCommand> codeItemIt;
 	private Iterator<PatchCommand> annotationItemIt;
+	private Iterator<PatchCommand> annotationSetItemIt;
+	private Iterator<PatchCommand> annotationSetRefListIt;
+	private Iterator<PatchCommand> annotationsDirectoryItemIt;
 	private LinkedList<List<Byte>> data;
 	private Iterator<List<Byte>> dataIt;
 	private long stringOffset;
 	private long typeListOffset;
 	private long debugInfoItemOffset;
+	private long annotationItemOffset;
+	private long annotationSetItemOffset;
+	private long annotationSetRefListOffset;
+	private long annotationsDirectoryItemOffset;
+	private long codeItemOffset;
 	RandomAccessFile file;
 	
 	public DexPatchFile(String fileName) {
@@ -46,6 +54,9 @@ public class DexPatchFile {
 		debugInfoCommands = new LinkedList<PatchCommand>();
 		codeItemCommands = new LinkedList<PatchCommand>();
 		annotationItemCommands = new LinkedList<PatchCommand>();
+		annotationSetItemCommands = new LinkedList<PatchCommand>();
+		annotationSetRefListCommands = new LinkedList<PatchCommand>();
+		annotationsDirectoryItemCommands = new LinkedList<PatchCommand>();
 		data = new LinkedList<List<Byte>>();
 		try {
 			//BufferedReader file = new BufferedReader(new FileReader(fileName));
@@ -56,6 +67,11 @@ public class DexPatchFile {
 			stringOffset = Long.parseLong(file.readLine());
 			typeListOffset = Long.parseLong(file.readLine());
 			debugInfoItemOffset = Long.parseLong(file.readLine());
+			codeItemOffset = Long.parseLong(file.readLine());
+			annotationItemOffset = Long.parseLong(file.readLine());
+			annotationSetItemOffset = Long.parseLong(file.readLine());
+			annotationSetRefListOffset = Long.parseLong(file.readLine());
+			annotationsDirectoryItemOffset = Long.parseLong(file.readLine());
 			
 			// Read string table commands
 			while(true) {
@@ -137,7 +153,7 @@ public class DexPatchFile {
 				codeItemCommands.add(new PatchCommand(type, size));
 			}
 			
-			// Read annotation_commands
+			// Read annotation_item commands
 			while(true) {
 				type = read8Bit();
 				if (type == 4) {
@@ -145,6 +161,36 @@ public class DexPatchFile {
 				}
 				size = read16Bit();
 				annotationItemCommands.add(new PatchCommand(type, size));
+			}
+			
+			// Read annotation_set_item commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				annotationSetItemCommands.add(new PatchCommand(type, size));
+			}
+			
+			// Read annotation_set_ref_list commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				annotationSetRefListCommands.add(new PatchCommand(type, size));
+			}
+			
+			// Read annotations_directory_item commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				annotationsDirectoryItemCommands.add(new PatchCommand(type, size));
 			}
 			
 			long range;
@@ -172,6 +218,9 @@ public class DexPatchFile {
 			debugInfoIt = debugInfoCommands.iterator();
 			codeItemIt = codeItemCommands.iterator();
 			annotationItemIt = annotationItemCommands.iterator();
+			annotationSetItemIt = annotationSetItemCommands.iterator();
+			annotationSetRefListIt = annotationSetRefListCommands.iterator();
+			annotationsDirectoryItemIt = annotationsDirectoryItemCommands.iterator();
 			dataIt = data.iterator();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -254,6 +303,30 @@ public class DexPatchFile {
 		return annotationItemIt.hasNext();
 	}
 	
+	PatchCommand getNextAnnotationSetItemCommand() {
+		return annotationSetItemIt.next();
+	}
+	
+	boolean hasAnnotationSetItemCommands() {
+		return annotationSetItemIt.hasNext();
+	}
+	
+	PatchCommand getNextAnnotationSetRefListCommand() {
+		return annotationSetRefListIt.next();
+	}
+	
+	boolean hasAnnotationSetRefListCommands() {
+		return annotationSetRefListIt.hasNext();
+	}
+	
+	PatchCommand getNextAnnotationsDirectoryItemCommand() {
+		return annotationsDirectoryItemIt.next();
+	}
+	
+	boolean hasAnnotationsDirectoryItemCommands() {
+		return annotationsDirectoryItemIt.hasNext();
+	}
+	
 	List<Byte> getNextData() {
 		return dataIt.next();
 	}
@@ -272,6 +345,26 @@ public class DexPatchFile {
 	
 	long getDebugInfoItemOffset() {
 		return debugInfoItemOffset;
+	}
+	
+	long getCodeItemOffset() {
+		return codeItemOffset;
+	}
+	
+	long getAnnotationItemOffset() {
+		return annotationItemOffset;
+	}
+	
+	long getAnnotationSetItemOffset() {
+		return annotationSetItemOffset;
+	}
+	
+	long getAnnotationSetRefListOffset() {
+		return annotationSetRefListOffset;
+	}
+	
+	long getAnnotationsDirectoryItemOffset() {
+		return annotationsDirectoryItemOffset;
 	}
 	
 	public int read8Bit() throws IOException {

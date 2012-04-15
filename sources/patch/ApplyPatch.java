@@ -46,7 +46,7 @@ public class ApplyPatch {
 		GeneratedFile protoFile = new GeneratedFile("out/proto.dex");
 		GeneratedFile methodFile = new GeneratedFile("out/method.dex");
 		GeneratedFile typeListFile = new GeneratedFile("out/type_list.dex");
-		GeneratedFile annDirItemFile = new GeneratedFile("out/annotations_directory_item.dex");
+		GeneratedFile annotationsDirectoryItemFile = new GeneratedFile("out/annotations_directory_item.dex");
 		GeneratedFile classDataItemFile = new GeneratedFile("out/class_data_item.dex");
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		GeneratedFile annotationSetItemFile = new GeneratedFile("out/annotation_set_item.dex");
@@ -60,14 +60,19 @@ public class ApplyPatch {
 		long[] methodIndexMap = new long[10000];
 		long[] typeListIndexMap = new long[10000];
 		long[] typeListPointerMap = new long[10000];
-		long[] annotationsDirectoryItemMap = new long[10000];
 		long[] classDataItemMap = new long[10000];
-		long[] annotationItemMap = new long[10000];
-		long[] annotationSetItemMap = new long[10000];
-		long[] annotationSetRefListMap = new long[10000];
+		long[] annotationItemIndexMap = new long[10000];
+		long[] annotationItemPointerMap = new long[10000];
+		long[] annotationSetItemIndexMap = new long[10000];
+		long[] annotationSetItemPointerMap = new long[10000];
+		long[] annotationSetRefListIndexMap = new long[10000];
+		long[] annotationSetRefListPointerMap = new long[10000];
+		long[] annotationsDirectoryItemIndexMap = new long[10000];
+		long[] annotationsDirectoryItemPointerMap = new long[10000];
 		long[] debugInfoItemMap = new long[10000];
 		long[] debugInfoItemPointerMap = new long[10000];
 		long[] codeItemMap = new long[10000];
+		long[] codeItemPointerMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
@@ -383,20 +388,28 @@ public class ApplyPatch {
 		fileIndex = 0;
 		mapIndex = 0;
 		CodeItem codeItem = null;
+		tempPointer = patch.getCodeItemOffset();
+		pointerIndex = 0;
 		// Generate patched code_items
 		while(patch.hasCodeItemCommands()) {
 			command = patch.getNextCodeItemCommand();
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					codeItem = original.getCodeItem();
-					codeItemFile.write(codeItem.getNaiveOutput(typeIndexMap, debugInfoItemMap, debugInfoItemPointerMap));
 					codeItemMap[mapIndex++] = fileIndex++;
+					codeItemPointerMap[pointerIndex++] = tempPointer;
+					codeItem = original.getCodeItem();
+					byte[] temp = codeItem.getNaiveOutput(typeIndexMap, debugInfoItemMap, debugInfoItemPointerMap);
+					tempPointer += temp.length;
+					codeItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					codeItemFile.write(patch.getNextData());
+					codeItemPointerMap[pointerIndex++] = tempPointer;
+					List<Byte> temp = patch.getNextData();
+					tempPointer += temp.size();
+					codeItemFile.write(temp);
 					++fileIndex;
 				}
 			} else if (command.type == 2) {
@@ -412,63 +425,159 @@ public class ApplyPatch {
 		// annotation_item
 		fileIndex = 0;
 		mapIndex = 0;
-		AnnotationItem annotationItem = null ;
+		AnnotationItem annotationItem = null;
+		tempPointer = patch.getAnnotationItemOffset();
+		pointerIndex = 0;
 		// Generate patched annotation_items
 		while(patch.hasAnnotationItemCommands()) {
 			command = patch.getNextAnnotationItemCommand();
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
+					annotationItemIndexMap[mapIndex++] = fileIndex++;
+					annotationItemPointerMap[pointerIndex++] = tempPointer;
 					annotationItem = original.getAnnotationItem();
-					annotationItemFile.write(annotationItem.getBytes(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap));
-					annotationItemMap[mapIndex++] = fileIndex++;
+					byte[] temp = annotationItem.getBytes(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap);
+					tempPointer += temp.length;
+					annotationItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					annotationItemFile.write(patch.getNextData());
+					annotationItemPointerMap[pointerIndex++] = tempPointer;
+					List<Byte> temp = patch.getNextData();
+					tempPointer += temp.size();
+					annotationItemFile.write(temp);
 					++fileIndex;
 				}
 			} else if (command.type == 2) {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getAnnotationItem();
-					annotationItemMap[mapIndex++] = -1;
+					annotationItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
 		
+		
+		// annotation_set_item
+		fileIndex = 0;
+		mapIndex = 0;
+		AnnotationSetItem annotationSetItem = null;
+		tempPointer = patch.getAnnotationSetItemOffset();
+		pointerIndex = 0;
+		// Generate patched annotation_items
+		while(patch.hasAnnotationSetItemCommands()) {
+			command = patch.getNextAnnotationSetItemCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					annotationSetItemIndexMap[mapIndex++] = fileIndex++;
+					annotationSetItemPointerMap[pointerIndex++] = tempPointer;
+					annotationSetItem = original.getAnnotationSetItem();
+					byte[] temp = annotationSetItem.getBytes(annotationItemIndexMap, annotationItemPointerMap);
+					tempPointer += temp.length;
+					annotationSetItemFile.write(temp);
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					annotationSetItemPointerMap[pointerIndex++] = tempPointer;
+					List<Byte> temp = patch.getNextData();
+					tempPointer += temp.size();
+					annotationSetItemFile.write(temp);
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getAnnotationSetItem();
+					annotationSetItemIndexMap[mapIndex++] = -1;
+				}
+			}
+		}
+		
+		
+		// annotation_set_ref_list
+		fileIndex = 0;
+		mapIndex = 0;
+		AnnotationSetRefList annotationSetRefList = null;
+		tempPointer = patch.getAnnotationSetRefListOffset();
+		pointerIndex = 0;
+		// Generate patched annotation_items
+		while(patch.hasAnnotationSetRefListCommands()) {
+			command = patch.getNextAnnotationSetRefListCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					annotationSetRefListIndexMap[mapIndex++] = fileIndex++;
+					annotationSetRefListPointerMap[pointerIndex++] = tempPointer;
+					annotationSetRefList= original.getAnnotationSetRefList();
+					byte[] temp = annotationSetRefList.getBytes(annotationSetItemIndexMap, annotationSetItemPointerMap);
+					tempPointer += temp.length;
+					annotationSetRefListFile.write(temp);
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					annotationSetRefListPointerMap[pointerIndex++] = tempPointer;
+					List<Byte> temp = patch.getNextData();
+					tempPointer += temp.size();
+					annotationSetRefListFile.write(temp);
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getAnnotationSetRefList();
+					annotationSetRefListIndexMap[mapIndex++] = -1;
+				}
+			}
+		}
+		
+		
 		// annotations_directory_item
 		fileIndex = 0;
-		/*mapIndex = 0;
-		AnnotationsDirectoryItem annItem;
-		int annDirSize = (int)original.getAnnotationsDirectoryItemSize();
-		for (int i = 0; i < annDirSize; ++i) {
-			annItem = original.getAnnotationsDirectoryItem();
-			annDirItemFile.write(0L);
-			annDirItemFile.write(annItem.fieldsSize);
-			annDirItemFile.write(annItem.annMethodsSize);
-			annDirItemFile.write(annItem.annParamsSize);
-			
-			for (int j = 0; j < annItem.fieldsSize; ++j) {
-				annDirItemFile.write(fieldIndexMap[(int)annItem.fieldAnnotations[j].fieldId]);
-				annDirItemFile.write(0L);
-			}
-			
-			for (int j = 0; j < annItem.annMethodsSize; ++j) {
-				annDirItemFile.write(methodIndexMap[(int)annItem.methodAnnotations[j].methodId]);
-				annDirItemFile.write(0L);
-			}
-			
-			for (int j = 0; j < annItem.annParamsSize; ++j) {
-				annDirItemFile.write(methodIndexMap[(int)annItem.parameterAnnotations[j].methodId]);
-				annDirItemFile.write(0L);
+		mapIndex = 0;
+		AnnotationsDirectoryItem annotationsDirectoryItem = null;
+		tempPointer = patch.getAnnotationsDirectoryItemOffset();
+		pointerIndex = 0;
+		// Generate patched annotations_directory_items
+		while(patch.hasAnnotationsDirectoryItemCommands()) {
+			command = patch.getNextAnnotationsDirectoryItemCommand();
+			if (tempPointer > 403264)
+				System.out.print("hmmm");
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex++;
+					annotationsDirectoryItemPointerMap[pointerIndex++] = tempPointer;
+					annotationsDirectoryItem = original.getAnnotationsDirectoryItem();
+					byte[] temp = annotationsDirectoryItem.getBytes(fieldIndexMap, methodIndexMap, annotationSetItemIndexMap, annotationSetItemPointerMap, annotationSetRefListIndexMap, annotationSetRefListPointerMap);
+					tempPointer += temp.length;
+					annotationsDirectoryItemFile.write(temp);
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					annotationsDirectoryItemPointerMap[pointerIndex++] = tempPointer;
+					List<Byte> temp = patch.getNextData();
+					tempPointer += temp.size();
+					annotationsDirectoryItemFile.write(temp);
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getAnnotationsDirectoryItem();
+					annotationsDirectoryItemIndexMap[mapIndex++] = -1;
+				}
 			}
 		}
 		
 		// class_data_item
 		fileIndex = 0;
-		mapIndex = 0;
+		/*mapIndex = 0;
 		ClassDataItem classDataItem;
 		int classDataItemSize = (int)original.getClassDataItemSize();
 		for (int i = 0; i < classDataItemSize; ++i) {

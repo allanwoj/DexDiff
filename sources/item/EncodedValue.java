@@ -41,7 +41,10 @@ public class EncodedValue {
 	}
 	
 	public boolean isEqual(EncodedValue other, long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
-		if (valueType != other.valueType || name != other.name || valueArg != other.valueArg)
+		if (valueType != other.valueType || valueArg != other.valueArg)
+			return false;
+		
+		if (name != -1 && stringMap[name] != other.name)
 			return false;
 		
 		/*if (value != null) {

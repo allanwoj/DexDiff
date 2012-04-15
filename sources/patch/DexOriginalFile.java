@@ -108,18 +108,19 @@ public class DexOriginalFile extends DexParser {
     int annotationItemsIndex = 0;
     
     HashMap<Long, Integer> annotationSetOffsetMap;
-    AnnotationSetItem[] annotationSetItems;
+    public AnnotationSetItem[] annotationSetItems;
     int annotationSetItemsIndex = 0;
     
     HashMap<Long, Integer> annotationSetRefListOffsetMap;
-    AnnotationSetRefList[] annotationSetRefList;
+    public AnnotationSetRefList[] annotationSetRefList;
     int annotationSetRefListIndex = 0;
     
     HashMap<Long, Integer> typeListOffsetMap;
     public TypeList[] typeLists;
     int typeListIndex = 0;
     
-    AnnotationsDirectoryItem[] annotationsDirectoryItems;
+    HashMap<Long, Integer> annotationsDirectoryItemOffsetMap;
+    public AnnotationsDirectoryItem[] annotationsDirectoryItems;
     int annotationsDirectoryItemsIndex = 0;
     
     ClassDataItem[] classDataItems;
@@ -766,6 +767,9 @@ public class DexOriginalFile extends DexParser {
 	        	annotationItems[i] = new AnnotationItem(visibility, new EncodedAnnotation(type, size));
 	        	for (int j = 0; j < size; ++j) {
 	        		int name = readULEB128();
+	        		if (name == -1) {
+	        			System.out.print("oo");
+	        		}
 	        		Byte b = (byte) read8Bit();
 	        		int valueType = b & 0x1F;
 	        		int valueArg = (b & 0xFF) >> 5;
@@ -806,11 +810,13 @@ public class DexOriginalFile extends DexParser {
 	        for (int i = 0; i < annotationSetItemSize; ++i) {
 	        	annotationSetOffsetMap.put(position, i);
 	        	long size = read32Bit();
+	        	long[] entriesOffsets = new long[(int)size];
 	        	int[] offsetIndex = new int[(int)size];
 	        	for (int j = 0; j < size; ++j) {
-	        		offsetIndex[j] = annotationOffsetMap.get(read32Bit());
+	        		entriesOffsets[j] = read32Bit();
+	        		offsetIndex[j] = annotationOffsetMap.get(entriesOffsets[j]);
 	        	}
-	        	annotationSetItems[i] = new AnnotationSetItem(size, offsetIndex);
+	        	annotationSetItems[i] = new AnnotationSetItem(size, entriesOffsets, offsetIndex);
 	        }
 	        
 	        setFilePosition(annotationSetRefListOffset);
@@ -821,11 +827,13 @@ public class DexOriginalFile extends DexParser {
 	        for (int i = 0; i < annotationSetRefListSize; ++i) {
 	        	annotationSetRefListOffsetMap.put(position, i);
 	        	long size = read32Bit();
+	        	long[] offsets = new long[(int)size];
 	        	int[] offsetIndex = new int[(int)size];
 	        	for (int j = 0; j < size; ++j) {
-	        		offsetIndex[j] = annotationSetOffsetMap.get(read32Bit());
+	        		offsets[j] = read32Bit();
+	        		offsetIndex[j] = annotationSetOffsetMap.get(offsets[j]);
 	        	}
-	        	annotationSetRefList[i] = new AnnotationSetRefList(size, offsetIndex);
+	        	annotationSetRefList[i] = new AnnotationSetRefList(size, offsets, offsetIndex);
 	        }
 	        
 	        
@@ -843,12 +851,15 @@ public class DexOriginalFile extends DexParser {
 	        
 	        setFilePosition(annotationsDirectoryItemOffset);
 	        annotationsDirectoryItems = new AnnotationsDirectoryItem[(int)annotationsDirectoryItemSize];
+	        annotationsDirectoryItemOffsetMap = new HashMap<Long, Integer>();
+	        annotationsDirectoryItemOffsetMap.put(0L, -1);
 	        long offset = 0;
 	        long fieldsSize = 0;
 	        long methodsSize = 0;
 	        long paramsSize = 0;
 	        // Read annotation_directory_item
 	        for (int i = 0; i < annotationsDirectoryItemSize; ++i) {
+	        	annotationsDirectoryItemOffsetMap.put(position, i);
 	        	offset = read32Bit();
 	        	fieldsSize = read32Bit();
 	        	methodsSize = read32Bit();
@@ -859,23 +870,29 @@ public class DexOriginalFile extends DexParser {
 	        	if (fieldsSize > 0) {
 	        		f = new FieldAnnotation[(int)fieldsSize];
 	        		for (int j = 0; j < fieldsSize; ++j) {
-	        			f[j] = new FieldAnnotation(read32Bit(), annotationSetOffsetMap.get(read32Bit()));
+	        			long fieldId = read32Bit();
+	        			long off = read32Bit();
+	        			f[j] = new FieldAnnotation(fieldId, annotationSetOffsetMap.get(off), off);
 	        		}
 	        	}
 	        	if (methodsSize > 0) {
 	        		m = new MethodAnnotation[(int)methodsSize];
 	        		for (int j = 0; j < methodsSize; ++j) {
-	        			m[j] = new MethodAnnotation(read32Bit(), annotationSetOffsetMap.get(read32Bit()));
+	        			long methId = read32Bit();
+	        			long off = read32Bit();
+	        			m[j] = new MethodAnnotation(methId, annotationSetOffsetMap.get(off), off);
 	        		}
 	        	}
 	        	if (paramsSize > 0) {
 	        		p = new ParameterAnnotation[(int)paramsSize];
 	        		for (int j = 0; j < paramsSize; ++j) {
-	        			p[j] = new ParameterAnnotation(read32Bit(), annotationSetRefListOffsetMap.get(read32Bit()));
+	        			long methId = read32Bit();
+	        			long off = read32Bit();
+	        			p[j] = new ParameterAnnotation(methId, annotationSetRefListOffsetMap.get(off), off);
 	        		}
 	        	}
 	        	
-	        	annotationsDirectoryItems[i] = new AnnotationsDirectoryItem(offset, fieldsSize, methodsSize, paramsSize, f, m, p);
+	        	annotationsDirectoryItems[i] = new AnnotationsDirectoryItem(offset, annotationSetOffsetMap.get(offset), fieldsSize, methodsSize, paramsSize, f, m, p);
 	        	
 	        }
 	        

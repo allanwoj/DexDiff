@@ -1,8 +1,13 @@
 package item;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+
 public class AnnotationsDirectoryItem {
 
 	public long classOffset;
+	public int classIndex;
 	public long fieldsSize;
 	public long annMethodsSize;
 	public long annParamsSize;
@@ -11,18 +16,153 @@ public class AnnotationsDirectoryItem {
 	public MethodAnnotation[] methodAnnotations;
 	public ParameterAnnotation[] parameterAnnotations;
 
-	public AnnotationsDirectoryItem(long classOffset, long fieldsSize,
+	public AnnotationsDirectoryItem(long classOffset, int classIndex, long fieldsSize,
 			long annMethodsSize, long annParamsSize,
 			FieldAnnotation[] fieldAnnotations,
 			MethodAnnotation[] methodAnnotations,
 			ParameterAnnotation[] parameterAnnotations) {
 		this.classOffset = classOffset;
+		this.classIndex = classIndex;
 		this.fieldsSize = fieldsSize;
 		this.annMethodsSize = annMethodsSize;
 		this.annParamsSize = annParamsSize;
 		this.fieldAnnotations = fieldAnnotations;
 		this.methodAnnotations = methodAnnotations;
 		this.parameterAnnotations = parameterAnnotations;
+	}
+	
+	
+	public byte[] getBytes(long[]fieldIndexMap, long[] methodIndexMap, long[] annotationSetItemIndexMap, long[] annotationSetItemPointerMap, long[] annotationSetRefListIndexMap, long[] annotationSetRefListPointerMap) {
+		ArrayList<Byte> l = new ArrayList<Byte>();
+		byte[] temp;
+		
+		if (classIndex != - 1) {
+			temp = write32bit(annotationSetItemPointerMap[(int)annotationSetItemIndexMap[classIndex]]);
+			for (int i = 0; i < temp.length; ++i)
+				l.add(temp[i]);
+		} else {
+			temp = write32bit(0);
+			for (int i = 0; i < temp.length; ++i)
+				l.add(temp[i]);
+		}
+		
+		temp = write32bit(fieldsSize);
+		for (int i = 0; i < temp.length; ++i)
+			l.add(temp[i]);
+		
+		temp = write32bit(annMethodsSize);
+		for (int i = 0; i < temp.length; ++i)
+			l.add(temp[i]);
+		
+		temp = write32bit(annParamsSize);
+		for (int i = 0; i < temp.length; ++i)
+			l.add(temp[i]);
+		
+		for (int i = 0; i < fieldsSize; ++i) {
+			l.addAll(fieldAnnotations[i].getBytes(fieldIndexMap, annotationSetItemIndexMap, annotationSetItemPointerMap));
+		}
+		
+		for (int i = 0; i < annMethodsSize; ++i) {
+			l.addAll(methodAnnotations[i].getBytes(methodIndexMap, annotationSetItemIndexMap, annotationSetItemPointerMap));
+		}
+		
+		for (int i = 0; i < annParamsSize; ++i) {
+			l.addAll(parameterAnnotations[i].getBytes(methodIndexMap, annotationSetRefListIndexMap, annotationSetRefListPointerMap));
+		}
+		
+		byte[] ret = new byte[l.size()];
+		Iterator<Byte> iter = l.iterator();
+		int count = 0;
+		
+		while (iter.hasNext()) {
+			ret[count++] = iter.next();
+		}
+		
+		return ret;
+	}
+	
+	public boolean isEqual(AnnotationsDirectoryItem other, long[] fieldIndexMap, long[] methodIndexMap, long[] annotationSetItemIndexMap, long[] annotationSetRefListIndexMap) {
+		if (fieldsSize != other.fieldsSize ||
+				annMethodsSize != other.annMethodsSize || annParamsSize != other.annParamsSize) {
+			return false;
+		}
+		
+		if (classIndex != -1 && annotationSetItemIndexMap[classIndex] != other.classIndex)
+			return false;
+		
+		for (int i = 0; i < fieldsSize; ++i) {
+			if (!fieldAnnotations[i].isEqual(other.fieldAnnotations[i], fieldIndexMap, annotationSetItemIndexMap)) {
+				return false;
+			}
+		}
+		
+		for (int i = 0; i < annMethodsSize; ++i) {
+			if (!methodAnnotations[i].isEqual(other.methodAnnotations[i], methodIndexMap, annotationSetItemIndexMap)) {
+				return false;
+			}
+		}
+		
+		for (int i = 0; i < annParamsSize; ++i) {
+			if (!parameterAnnotations[i].isEqual(other.parameterAnnotations[i], methodIndexMap, annotationSetRefListIndexMap)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	public byte[] getOutput() {
+		ArrayList<Byte> l = new ArrayList<Byte>();
+		byte[] temp = write32bit(classOffset);
+		for (int i = 0; i < temp.length; ++i)
+			l.add(temp[i]);
+		
+		temp = write32bit(fieldsSize);
+		for (int i = 0; i < temp.length; ++i)
+			l.add(temp[i]);
+		
+		temp = write32bit(annMethodsSize);
+		for (int i = 0; i < temp.length; ++i)
+			l.add(temp[i]);
+		
+		temp = write32bit(annParamsSize);
+		for (int i = 0; i < temp.length; ++i)
+			l.add(temp[i]);
+		
+		for (int i = 0; i < fieldsSize; ++i) {
+			l.addAll(fieldAnnotations[i].getOutput());
+		}
+		
+		for (int i = 0; i < annMethodsSize; ++i) {
+			l.addAll(methodAnnotations[i].getOutput());
+		}
+		
+		for (int i = 0; i < annParamsSize; ++i) {
+			l.addAll(parameterAnnotations[i].getOutput());
+		}
+		
+		byte[] ret = new byte[4 + l.size()];
+		Iterator<Byte> iter = l.iterator();
+		int count = 0;
+		temp = write32bit(l.size());
+		for (int i = 0; i < 4; ++i)
+			ret[count++] = temp[i];
+		
+		while (iter.hasNext()) {
+			ret[count++] = iter.next();
+		}
+		
+		return ret;
+	}
+	
+	public byte[] write32bit(long data) {
+		byte[] output = new byte[4];
+		
+		for(int i = 0; i < 4; ++i) {
+			output[i] = (byte)((data >> (i*8)) & 0xFF);
+		}
+
+		return output;
 	}
 	
 	
