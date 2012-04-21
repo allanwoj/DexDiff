@@ -31,7 +31,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+
+import android.DecodedInstruction;
+import android.InstructionCodec;
 
 import hu.uw.pallergabor.dedexer.DexParser;
 
@@ -123,7 +127,7 @@ public class DexOriginalFile extends DexParser {
     public AnnotationsDirectoryItem[] annotationsDirectoryItems;
     int annotationsDirectoryItemsIndex = 0;
     
-    ClassDataItem[] classDataItems;
+    public ClassDataItem[] classDataItems;
     int classDataItemsIndex = 0;
     
     public HashMap<Long, Integer> debugInfoOffsetMap;
@@ -356,9 +360,10 @@ public class DexOriginalFile extends DexParser {
 	        codeItems = new CodeItem[(int)codeItemSize];
 	        codeItemOffsetMap = new HashMap<Long, Integer>();
 	        codeItemOffsetMap.put(0L, -1);
+	        AndroidCodeInput codeInput = new AndroidCodeInput(this);
 	        // Read code_item
 	        for (int i = 0; i < codeItemSize; ++i) {
-	        	if(i == 52)
+	        	if(i == 775)
 	        		System.out.print("hi");
 	        	codeItemOffsetMap.put(position, i);
 	        	int regSize = read16Bit();
@@ -369,23 +374,30 @@ public class DexOriginalFile extends DexParser {
 	        	long insnsSize = read32Bit();
 	        	byte[] insns = new byte[2 * (int)insnsSize];
 	        	
+	        	
 	        	for (int j = 0; j < 2 * insnsSize; ++j) {
 	        		insns[j] = (byte)read8Bit();
 	        	}
 	        	
-	        	/// Alt implementation ///
+	        	System.out.print("hi");
+	        	Collection<DecodedInstruction> decodedInstructions =
+	                DecodedInstruction.decodeAll(insns);
 	        	
+	        	
+	        	/// Alt implementation ///
+	        	/*
 	        	long insCount = 0;
 	        	ArrayList<ByteCode> code = new ArrayList<ByteCode>();
-	        	/*while (insCount < 2 * insnsSize) {
+	        	while (insCount < 2 * insnsSize) {
 	        		int op = read8Bit();
 	        		++insCount;
 	        		ArrayList<Byte> args = new ArrayList<Byte>();
 	        		args.add((byte)op);
 	        		long buff;
 	        		if (op == 0x00) {
-	        			args.add((byte)read8Bit());
-	        			++insCount;
+	        			System.out.println("nop");
+	        			//args.add((byte)read8Bit());
+	        			//++insCount;
 	        		} else if (op == 0x01) {
 	        			args.add((byte)read8Bit());
 	        			++insCount;
@@ -444,8 +456,9 @@ public class DexOriginalFile extends DexParser {
 	        			args.add((byte)read8Bit());
 	        			++insCount;
 	        		} else if (op == 0x0E) {
-	        			args.add((byte)read8Bit());
-	        			++insCount;
+	        			System.out.println("void");
+	        			//args.add((byte)read8Bit());
+	        			//++insCount;
 	        		} else if (op == 0x0F) {
 	        			args.add((byte)read8Bit());
 	        			++insCount;
@@ -635,7 +648,9 @@ public class DexOriginalFile extends DexParser {
 	        			args.add((byte)read8Bit());
 	        			insCount += 3;
 	        		} else if (op >= 0x3E && op <= 0x43) {
-	        			System.out.print(":(");
+	        			System.out.println(":(");
+	        			args.add((byte)read8Bit());
+	        			insCount += 1;
 	        		} else if (op >= 0x44 && op <= 0x51) {
 	        			args.add((byte)read8Bit());
 	        			args.add((byte)read8Bit());
@@ -671,7 +686,9 @@ public class DexOriginalFile extends DexParser {
 	        				++insCount;
 	        			}
 	        		} else if (op == 0x73) {
-	        			System.out.print(":(");
+	        			System.out.println(":(");
+	        			args.add((byte)read8Bit());
+	        			insCount += 1;
 	        		} else if (op >= 0x74 && op <= 0x78) {
 	        			args.add((byte)read8Bit());
 	        			args.add((byte)read8Bit());
@@ -680,7 +697,9 @@ public class DexOriginalFile extends DexParser {
 	        			args.add((byte)read8Bit());
 	        			insCount += 5;
 	        		} else if (op >= 0x79 && op <= 0x7A) {
-	        			System.out.print(":(");
+	        			System.out.println(":(");
+	        			args.add((byte)read8Bit());
+	        			insCount += 1;
 	        		} else if (op >= 0x7B && op <= 0x8F) {
 	        			args.add((byte)read8Bit());
 	        			++insCount;
@@ -702,8 +721,247 @@ public class DexOriginalFile extends DexParser {
 	        			args.add((byte)read8Bit());
 	        			args.add((byte)read8Bit());
 	        			insCount += 3;
-	        		} else if (op >= 0xE3 && op <= 0xFF) {
-	        			System.out.print(":(");
+	        		} else if (op == 0xE3) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xE4) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xE5) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xE6) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xE7) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xE8) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xE9) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xEA) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xEB) {
+	        			args.add((byte)read8Bit());
+	        			// field_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			insCount += 3;
+	        		} else if (op == 0xEC) {
+	        			System.out.println(":(");
+	        		} else if (op == 0xED) {
+	        			System.out.println(":( ED");
+	        		} else if (op == 0xEE) {
+	        			System.out.println(":( EE");
+	        		} else if (op == 0xEF) {
+	        			System.out.println(":( EF");
+	        		} else if (op == 0xF0) {
+	        			System.out.println(":( F0");
+	        			int b = read8Bit();
+	        			args.add((byte)b);
+	        			
+	        			// method_index
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			
+	        			insCount += 3;
+	        			
+	        			int regno = (b & 0xF0) >> 4;
+	        			for (int j = 0 ; j < (1+regno)/2 ; ++j) {
+	        				args.add((byte)read8Bit());
+	        				++insCount;
+	        			}
+	        			if ((1+regno)/2 % 2 != 0) {
+	        				args.add((byte)read8Bit());
+	        				++insCount;
+	        			}
+	        		} else if (op == 0xF1) {
+	        			System.out.println(":( F1");
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        		} else if (op == 0xF2) {
+	        			System.out.println(":( F2");
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        		} else if (op == 0xF3) {
+	        			System.out.println(":( F3");
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        		} else if (op == 0xF4) {
+	        			System.out.println(":( F4");
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        		} else if (op == 0xF5) {
+	        			System.out.println(":( F5");
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        		} else if (op == 0xF6) {
+	        			System.out.println(":( F6");
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        		} else if (op == 0xF7) {
+	        			System.out.println(":( F7");
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        			args.add((byte)read8Bit());
+	        		} else if (op == 0xF8) {
+	        			System.out.println(":( F8");
+	        		} else if (op == 0xF9) {
+	        			System.out.println(":( F9");
+	        		} else if (op == 0xFA) {
+	        			System.out.println(":( FA");
+	        		} else if (op == 0xFB) {
+	        			System.out.println(":( FB");
+	        		} else if (op == 0xFC) {
+	        			System.out.println(":( FC");
+	        		} else if (op == 0xFD) {
+	        			System.out.println(":( FD");
+	        		} else if (op == 0xFE) {
+	        			System.out.println(":( FE");
+	        		} else if (op == 0xFF) {
+	        			System.out.println(":( FF");
+	        			int nextOp = read8Bit();
+	        			args.add((byte)nextOp);
+		        		++insCount;
+		        		if (nextOp == 0x00) {
+		        			System.out.println(":( FF00");
+		        		} else if (nextOp == 0x01) {
+		        			System.out.println(":( FF01");
+		        		} else if (nextOp == 0x02) {
+		        			System.out.println(":( FF02");
+		        		} else if (nextOp == 0x03) {
+		        			System.out.println(":( FF03");
+		        		} else if (nextOp == 0x04) {
+		        			System.out.println(":( FF04");
+		        		} else if (nextOp == 0x05) {
+		        			System.out.println(":( FF05");
+		        		} else if (nextOp == 0x06) {
+		        			System.out.println(":( FF06");
+		        		} else if (nextOp == 0x07) {
+		        			System.out.println(":( FF07");
+		        		} else if (nextOp == 0x08) {
+		        			System.out.println(":( FF08");
+		        		} else if (nextOp == 0x09) {
+		        			System.out.println(":( FF09");
+		        		} else if (nextOp == 0x0A) {
+		        			System.out.println(":( FF0A");
+		        		} else if (nextOp == 0x0B) {
+		        			System.out.println(":( FF0B");
+		        		} else if (nextOp == 0x0C) {
+		        			System.out.println(":( FF0C");
+		        		} else if (nextOp == 0x0D) {
+		        			System.out.println(":( FF0D");
+		        		} else if (nextOp == 0x0E) {
+		        			System.out.println(":( FF0E");
+		        		} else if (nextOp == 0x0F) {
+		        			System.out.println(":( FF0F");
+		        		} else if (nextOp == 0x10) {
+		        			System.out.println(":( FF10");
+		        		} else if (nextOp == 0x11) {
+		        			System.out.println(":( FF11");
+		        		} else if (nextOp == 0x12) {
+		        			System.out.println(":( FF12");
+		        		} else if (nextOp == 0x13) {
+		        			System.out.println(":( FF13");
+		        		} else if (nextOp == 0x14) {
+		        			System.out.println(":( FF14");
+		        		} else if (nextOp == 0x15) {
+		        			System.out.println(":( FF15");
+		        		} else if (nextOp == 0x16) {
+		        			System.out.println(":( FF16");
+		        		} else if (nextOp == 0x17) {
+		        			System.out.println(":( FF17");
+		        		} else if (nextOp == 0x18) {
+		        			System.out.println(":( FF18");
+		        		} else if (nextOp == 0x19) {
+		        			System.out.println(":( FF19");
+		        		} else if (nextOp == 0x1A) {
+		        			System.out.println(":( FF1A");
+		        		} else if (nextOp == 0x1B) {
+		        			System.out.println(":( FF1B");
+		        		} else if (nextOp == 0x1C) {
+		        			System.out.println(":( FF1C");
+		        		} else if (nextOp == 0x1D) {
+		        			System.out.println(":( FF1D");
+		        		} else if (nextOp == 0x1E) {
+		        			System.out.println(":( FF1E");
+		        		} else if (nextOp == 0x1F) {
+		        			System.out.println(":( FF1F");
+		        		} else if (nextOp == 0x20) {
+		        			System.out.println(":( FF20");
+		        		} else if (nextOp == 0x21) {
+		        			System.out.println(":( FF21");
+		        		} else if (nextOp == 0x22) {
+		        			System.out.println(":( FF22");
+		        		} else if (nextOp == 0x23) {
+		        			System.out.println(":( FF23");
+		        		} else if (nextOp == 0x24) {
+		        			System.out.println(":( FF24");
+		        		} else if (nextOp == 0x25) {
+		        			System.out.println(":( FF25");
+		        		} else if (nextOp == 0x26) {
+		        			System.out.println(":( FF26");
+		        		} else if (nextOp == 0xF2) {
+		        			System.out.println(":( FFF2");
+		        		} else if (nextOp == 0xF3) {
+		        			System.out.println(":( FFF3");
+		        		} else if (nextOp == 0xF4) {
+		        			System.out.println(":( FFF4");
+		        		} else if (nextOp == 0xF5) {
+		        			System.out.println(":( FFF5");
+		        		} else if (nextOp == 0xF6) {
+		        			System.out.println(":( FFF6");
+		        		} else if (nextOp == 0xF7) {
+		        			System.out.println(":( FFF7");
+		        		} else if (nextOp == 0xF8) {
+		        			System.out.println(":( FFF8");
+		        		} else if (nextOp == 0xF9) {
+		        			System.out.println(":( FFF9");
+		        		} else if (nextOp == 0xFA) {
+		        			System.out.println(":( FFFA");
+		        		} else if (nextOp == 0xFB) {
+		        			System.out.println(":( FFFB");
+		        		} else if (nextOp == 0xFC) {
+		        			System.out.println(":( FFFC");
+		        		} else if (nextOp == 0xFD) {
+		        			System.out.println(":( FFFD");
+		        		} else if (nextOp == 0xFE) {
+		        			System.out.println(":( FFFE");
+		        		}
 	        		}
 	        		
 	        		code.add(new ByteCode(op, args));
@@ -747,7 +1005,7 @@ public class DexOriginalFile extends DexParser {
 	        		read8Bit();
 	        	
 	        	codeItems[i] = new CodeItem(regSize, insSize, outsSize, triesSize, debugInfoOffsetMap.get(debugInfoOff),
-	        			debugInfoOff, insnsSize, code, insns, padding, tries, l, (int)times);
+	        			debugInfoOff, insnsSize, null, insns, padding, tries, l, (int)times, decodedInstructions);
 	        }
 	        
 	        
@@ -931,14 +1189,20 @@ public class DexOriginalFile extends DexParser {
 	        	if (dMethodsSize > 0) {
 	        		directMethods = new EncodedMethod[(int)dMethodsSize];
 	        		for (int j = 0; j < dMethodsSize; ++j) {
-	        			directMethods[j] = new EncodedMethod(readULEB128(), readULEB128(), readULEB128());
+	        			long diff = readULEB128();
+	        			long flags = readULEB128();
+	        			long codeOff = readULEB128();
+	        			directMethods[j] = new EncodedMethod(diff, flags, codeItemOffsetMap.get(codeOff), codeOff);
 	        		}
 	        	}
 	        	
 	        	if (vMethodsSize > 0) {
 	        		virtualMethods = new EncodedMethod[(int)vMethodsSize];
 	        		for (int j = 0; j < vMethodsSize; ++j) {
-	        			virtualMethods[j] = new EncodedMethod(readULEB128(), readULEB128(), readULEB128());
+	        			long diff = readULEB128();
+	        			long flags = readULEB128();
+	        			long codeOff = readULEB128();
+	        			virtualMethods[j] = new EncodedMethod(diff, flags, codeItemOffsetMap.get(codeOff), codeOff);
 	        		}
 	        	}
 	        	

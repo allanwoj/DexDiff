@@ -637,37 +637,6 @@ public class ApplyPatch {
 		}
 		
 		
-		
-		// annotation_set_item
-		fileIndex = 0;
-		mapIndex = 0;
-		AnnotationSetItem annotationSetItem;
-		int annSetSize = (int)original.getAnnotationSetItemSize();
-		for (int i = 0; i < annSetSize; ++i) {
-			annotationSetItem = original.getAnnotationSetItem();
-			annotationSetItemFile.write(annotationSetItem.size);
-			for (int j = 0 ; j < annotationSetItem.size; ++j) {
-				annotationSetItemFile.write(0L);
-			}
-		}
-		
-		// annotation_set_ref_list
-		fileIndex = 0;
-		mapIndex = 0;
-		AnnotationSetRefList annotationSetRefList;
-		int annSetRefListSize = (int)original.getAnnotationSetRefListSize();
-		for (int i = 0; i < annSetRefListSize; ++i) {
-			annotationSetRefList = original.getAnnotationSetRefList();
-			annotationSetRefListFile.write(annotationSetRefList.size);
-			for (int j = 0 ; j < annotationSetRefList.size; ++j) {
-				annotationSetRefListFile.write(0L);
-			}
-		}
-		
-		
-		
-		
-		
 		*/
 	}
 	

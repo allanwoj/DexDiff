@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import android.DecodedInstruction;
+
 public class CodeItem {
 
 	public int registersSize;
@@ -21,12 +23,13 @@ public class CodeItem {
 	public int times;
 	public Collection<ByteCode> byteCode;
 	public byte[] instructions;
+	public Collection<DecodedInstruction> ins;
 
 	public CodeItem(int registersSize, int insSize, int outsSize,
 			int triesSize, int debugInfoIndex, long debugInfoOffset, long insnsSize,
 			Collection<ByteCode> byteCode, byte[] instructions,
 			int padding, TryItem[] tries, EncodedCatchHandlerList handlers,
-			int times) {
+			int times, Collection<DecodedInstruction> ins) {
 		this.registersSize = registersSize;
 		this.insSize = insSize;
 		this.outsSize = outsSize;
@@ -40,6 +43,7 @@ public class CodeItem {
 		this.times = times;
 		this.byteCode = byteCode;
 		this.instructions = instructions;
+		this.ins = ins;
 	}
 	
 	public byte[] getNaiveOutput(long[] typeIndexMap, long[] debugInfoItemMap, long[] debugInfoPointerMap) {
@@ -53,6 +57,7 @@ public class CodeItem {
 		for (int i = 0; i < instructions.length; ++i) {
 			l.add(instructions[i]);
 		}
+		
 		
 		if (insnsSize % 2 == 1)
 			l.addAll(write16bit(0));
@@ -97,8 +102,13 @@ public class CodeItem {
 		l.addAll(write16bit(triesSize));
 		l.addAll(write32bit(debugInfoOffset));
 		l.addAll(write32bit(insnsSize));
-		for (int i = 0; i < instructions.length; ++i) {
+		/*for (int i = 0; i < instructions.length; ++i) {
 			l.add(instructions[i]);
+		}*/
+		
+		Iterator<DecodedInstruction> it = ins.iterator();
+		while (it.hasNext()) {
+			l.addAll(it.next().getData());
 		}
 		
 		if (insnsSize % 2 == 1)
@@ -142,18 +152,57 @@ public class CodeItem {
 		return ret;
 	}
 	
-	public byte[] getOutput(long[] stringIndexMap, long[] typeIndexMap, long[] methodIndexMap, long[] debugInfoPointerMap) {
+	public boolean isEqual(CodeItem other, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap, long[] debugInfoIndexMap) {
+		if (registersSize != other.registersSize || insSize != other.insSize ||
+    			outsSize != other.outsSize || triesSize != other.triesSize ||
+    			insnsSize != other.insnsSize || padding != other.padding || ins.size() != other.ins.size() ||
+    			times != other.times ||	debugInfoIndexMap[debugInfoIndex] != other.debugInfoIndex) {
+    		return false;
+    	}
+		
+		for (int k = 0; k < triesSize; ++k) {
+			if (!tries[k].isEqual(other.tries[k])) {
+				return false;
+			}
+		}
+		
+		if (triesSize > 0) {
+			if (!handlers.isEqual(other.handlers, typeIndexMap)) {
+				return false;
+			}
+		}
+		
+		
+		Iterator<DecodedInstruction> it = ins.iterator();
+		Iterator<DecodedInstruction> otherIt = other.ins.iterator();
+		
+		while (it.hasNext()) {
+			if (!it.next().isEqual(otherIt.next(), fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap)) {
+				return false;
+			}
+		}
+		
+		return true;
+		
+	}
+	
+	public byte[] getOutput(long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap, long[] debugInfoIndexMap, long[] debugInfoPointerMap) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(write16bit(registersSize));
 		l.addAll(write16bit(insSize));
 		l.addAll(write16bit(outsSize));
 		l.addAll(write16bit(triesSize));
-		l.addAll(write32bit(debugInfoPointerMap[debugInfoIndex]));
+		l.addAll(write32bit(debugInfoPointerMap[(int) debugInfoIndexMap[debugInfoIndex]]));
 		l.addAll(write32bit(insnsSize));
 		
-		Iterator<ByteCode> it = byteCode.iterator();
+		/*Iterator<ByteCode> it = byteCode.iterator();
 		while (it.hasNext()) {
 			l.addAll(it.next().getOutput(stringIndexMap, typeIndexMap, methodIndexMap));
+		}*/
+		
+		Iterator<DecodedInstruction> it = ins.iterator();
+		while (it.hasNext()) {
+			l.addAll(it.next().getOutput(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap));
 		}
 		
 		if (insnsSize % 2 == 1)

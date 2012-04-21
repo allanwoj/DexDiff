@@ -445,7 +445,7 @@ public class GeneratePatch {
 		
 		
 		// code_item
-		l = lcs2(original.codeItems, update.codeItems, debugInfoIndexMap, typeIndexMap);
+		l = lcs2(original.codeItems, update.codeItems, fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap, debugInfoIndexMap);
 		it = l.listIterator(l.size());
 		c = it.previous();
 		long[] codeItemIndexMap = new long[10000];
@@ -715,6 +715,59 @@ public class GeneratePatch {
 		
 		patchFile.write(4);
 		
+		
+		// class_data_item
+		/*l = lcs2(original.classDataItems, update.classDataItems, fieldIndexMap, methodIndexMap, codeItemIndexMap);
+		it = l.listIterator(l.size());
+		c = it.previous();
+		long[] classDataItemIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
+		while (true) {
+			int val = c.type;
+			int nx = c.type;
+			long count = 0;
+			while (nx == val) {
+				if (nx == 0) {
+					classDataItemIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
+					dataFile.write(c.data);
+					++fileIndex;
+				} else if (nx == 2) {
+					classDataItemIndexMap[mapIndex++] = -1;
+				}
+				
+				++count;
+				
+				if (!it.hasPrevious())
+					break;
+				
+				c = it.previous();
+				nx = c.type;
+			}
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			
+			if (!it.hasPrevious()) {
+				if(nx != val) {
+					if (nx == 0) {
+						classDataItemIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if (nx == 2) {
+						classDataItemIndexMap[mapIndex++] = -1;
+					}
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
+				}
+				break;
+			}
+		}
+		
+		patchFile.write(4);*/
 		
 		//~~~~~//
 		dataFile.write(0L);
@@ -1066,14 +1119,14 @@ public class GeneratePatch {
     
     
     // code_item
-    public static List<PCommand> lcs2(CodeItem[] a, CodeItem[] b, long[] debugInfoIndexMap, long[] typeIndexMap) {
+    public static List<PCommand> lcs2(CodeItem[] a, CodeItem[] b, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap, long[] debugInfoIndexMap) {
 	    int[][] lengths = new int[a.length+1][b.length+1];
 	 
 	    // row 0 and column 0 are initialized to 0 already
 	 
 	    for (int i = 0; i < a.length; i++) {
 	        for (int j = 0; j < b.length; j++) {
-	        	boolean isEqual = true;
+	        	/*boolean isEqual = true;
 	        	
 	        	if (a[i].registersSize != b[j].registersSize || a[i].insSize != b[j].insSize ||
 	        			a[i].outsSize != b[j].outsSize || a[i].triesSize != b[j].triesSize ||
@@ -1096,14 +1149,14 @@ public class GeneratePatch {
 	        		
 	        		if (isEqual) {
 	        			for (int k = 0; k < a[i].instructions.length; ++k) {
-	        				if (a[i].instructions[k] != b[j].instructions[k]) {
+	        				if (a[i].ins[k] != b[j].instructions[k]) {
 	        					isEqual = false;
 	        				}
 	        			}
 	        		}
-	        	}
+	        	}*/
 	        	
-	        	if (isEqual) {
+	        	if (a[i].isEqual(b[j], fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap, debugInfoIndexMap)) {
 	        		System.out.println(i + " " + j);
 	                lengths[i+1][j+1] = lengths[i][j] + 1;
 	            } else {
@@ -1260,6 +1313,44 @@ public class GeneratePatch {
 	    for (int i = 0; i < a.length; i++) {
 	        for (int j = 0; j < b.length; j++) {
 	        	if (a[i].isEqual(b[j], fieldIndexMap, methodIndexMap, annotationSetItemIndexMap, annotationSetRefListIndexMap)) {
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	        }
+	    }
+	 // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 || y != 0; ) {
+	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2));
+	        	x--;
+	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
+	        	l.add(new PCommand(1, b[y-1].getOutput()));
+	        	y--;
+	            
+	        } else {
+	        	l.add(new PCommand(0));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
+    
+    // class_data_item
+    public static List<PCommand> lcs2(ClassDataItem[] a, ClassDataItem[] b, long[] fieldIndexMap, long[] methodIndexMap, long[] codeItemIndexMap) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++) {
+	        for (int j = 0; j < b.length; j++) {
+	        	if (a[i].isEqual(b[j], fieldIndexMap, methodIndexMap, codeItemIndexMap)) {
 	                lengths[i+1][j+1] = lengths[i][j] + 1;
 	            } else {
 	                lengths[i+1][j+1] =

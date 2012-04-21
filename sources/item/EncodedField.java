@@ -1,13 +1,15 @@
 package item;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class EncodedField {
 
-	public long diff;
+	public long fieldIdDiff;
 	public long flags;
 
-	public EncodedField(long diff, long flags) {
-		this.diff = diff;
+	public EncodedField(long fieldIdDiff, long flags) {
+		this.fieldIdDiff = fieldIdDiff;
 		this.flags = flags;
 	}
-	
 }
