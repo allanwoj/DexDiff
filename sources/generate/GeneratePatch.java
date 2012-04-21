@@ -5,9 +5,11 @@ import item.AnnotationSetItem;
 import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
 import item.ClassDataItem;
+import item.ClassDefItem;
 import item.CodeItem;
 import item.DebugByteCode;
 import item.DebugInfoItem;
+import item.EncodedArray;
 import item.FieldIdItem;
 import item.MethodIdItem;
 import item.ProtoIdItem;
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -194,6 +197,7 @@ public class GeneratePatch {
 					fieldIndexMap[mapIndex++] = fileIndex++;
 				} else if (nx == 1) {
 					dataFile.write(c.data);
+					++fileIndex;
 				} else if (nx == 2) {
 					fieldIndexMap[mapIndex++] = -1;
 				}
@@ -216,6 +220,7 @@ public class GeneratePatch {
 						fieldIndexMap[mapIndex++] = fileIndex++;
 					} else if (nx == 1) {
 						dataFile.write(c.data);
+						++fileIndex;
 					} else if (nx == 2) {
 						fieldIndexMap[mapIndex++] = -1;
 					}
@@ -662,11 +667,11 @@ public class GeneratePatch {
 		
 		patchFile.write(4);
 		
-		// annotation_directory_item
+		// annotations_directory_item
 		l = lcs2(original.annotationsDirectoryItems, update.annotationsDirectoryItems, fieldIndexMap, methodIndexMap, annotationSetItemIndexMap, annotationSetRefListIndexMap);
 		it = l.listIterator(l.size());
 		c = it.previous();
-		long[] annotationDirectoryItemIndexMap = new long[10000];
+		long[] annotationsDirectoryItemIndexMap = new long[10000];
 		fileIndex = 0;
 		mapIndex = 0;
 		while (true) {
@@ -675,12 +680,12 @@ public class GeneratePatch {
 			long count = 0;
 			while (nx == val) {
 				if (nx == 0) {
-					annotationDirectoryItemIndexMap[mapIndex++] = fileIndex++;
+					annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex++;
 				} else if (nx == 1) {
 					dataFile.write(c.data);
 					++fileIndex;
 				} else if (nx == 2) {
-					annotationDirectoryItemIndexMap[mapIndex++] = -1;
+					annotationsDirectoryItemIndexMap[mapIndex++] = -1;
 				}
 				
 				++count;
@@ -698,12 +703,12 @@ public class GeneratePatch {
 			if (!it.hasPrevious()) {
 				if(nx != val) {
 					if (nx == 0) {
-						annotationDirectoryItemIndexMap[mapIndex++] = fileIndex++;
+						annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex++;
 					} else if (nx == 1) {
 						dataFile.write(c.data);
 						++fileIndex;
 					} else if (nx == 2) {
-						annotationDirectoryItemIndexMap[mapIndex++] = -1;
+						annotationsDirectoryItemIndexMap[mapIndex++] = -1;
 					}
 					patchFile.write(val);
 					patchFile.write16bit(1L);
@@ -716,8 +721,9 @@ public class GeneratePatch {
 		patchFile.write(4);
 		
 		
+		
 		// class_data_item
-		/*l = lcs2(original.classDataItems, update.classDataItems, fieldIndexMap, methodIndexMap, codeItemIndexMap);
+		l = lcs2(original.classDataItems, update.classDataItems, fieldIndexMap, methodIndexMap, codeItemIndexMap);
 		it = l.listIterator(l.size());
 		c = it.previous();
 		long[] classDataItemIndexMap = new long[10000];
@@ -767,7 +773,118 @@ public class GeneratePatch {
 			}
 		}
 		
-		patchFile.write(4);*/
+		patchFile.write(4);
+		
+		// encododed_array_item
+		l = lcs2(original.encodedArrayItems, update.encodedArrayItems, fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap);
+		long[] encodedArrayItemIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
+		if (!l.isEmpty()) {
+			it = l.listIterator(l.size());
+			c = it.previous();
+			while (true) {
+				int val = c.type;
+				int nx = c.type;
+				long count = 0;
+				while (nx == val) {
+					if (nx == 0) {
+						encodedArrayItemIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if (nx == 2) {
+						encodedArrayItemIndexMap[mapIndex++] = -1;
+					}
+					
+					++count;
+					
+					if (!it.hasPrevious())
+						break;
+					
+					c = it.previous();
+					nx = c.type;
+				}
+				patchFile.write(val);
+				patchFile.write16bit(count);
+				//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+				
+				if (!it.hasPrevious()) {
+					if(nx != val) {
+						if (nx == 0) {
+							encodedArrayItemIndexMap[mapIndex++] = fileIndex++;
+						} else if (nx == 1) {
+							dataFile.write(c.data);
+							++fileIndex;
+						} else if (nx == 2) {
+							encodedArrayItemIndexMap[mapIndex++] = -1;
+						}
+						patchFile.write(val);
+						patchFile.write16bit(1L);
+						//patchFile.write(((Integer)nx).toString() + " " + "1\n");
+					}
+					break;
+				}
+			}
+		}
+		
+		patchFile.write(4);
+		
+		
+		
+		// class_def_item
+		l = lcs2(original.classDefItems, update.classDefItems, annotationsDirectoryItemIndexMap, classDataItemIndexMap, encodedArrayItemIndexMap, stringIndexMap, typeIndexMap, typeListIndexMap);
+		it = l.listIterator(l.size());
+		c = it.previous();
+		long[] classDefItemIndexMap = new long[10000];
+		fileIndex = 0;
+		mapIndex = 0;
+		while (true) {
+			int val = c.type;
+			int nx = c.type;
+			long count = 0;
+			while (nx == val) {
+				if (nx == 0) {
+					classDefItemIndexMap[mapIndex++] = fileIndex++;
+				} else if (nx == 1) {
+					dataFile.write(c.data);
+					++fileIndex;
+				} else if (nx == 2) {
+					classDefItemIndexMap[mapIndex++] = -1;
+				}
+				
+				++count;
+				
+				if (!it.hasPrevious())
+					break;
+				
+				c = it.previous();
+				nx = c.type;
+			}
+			patchFile.write(val);
+			patchFile.write16bit(count);
+			//patchFile.write(((Integer)val).toString() + " " + ((Integer)count).toString() + "\n");
+			
+			if (!it.hasPrevious()) {
+				if(nx != val) {
+					if (nx == 0) {
+						classDefItemIndexMap[mapIndex++] = fileIndex++;
+					} else if (nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if (nx == 2) {
+						classDefItemIndexMap[mapIndex++] = -1;
+					}
+					patchFile.write(val);
+					patchFile.write16bit(1L);
+					//patchFile.write(((Integer)nx).toString() + " " + "1\n");
+				}
+				break;
+			}
+		}
+		
+		patchFile.write(4);
+		
 		
 		//~~~~~//
 		dataFile.write(0L);
@@ -1059,16 +1176,20 @@ public class GeneratePatch {
 	    for (int i = 0; i < a.length; i++) {
 	        for (int j = 0; j < b.length; j++) {
 	        	boolean isEqual = true;
-	        	
+	        	if (i == 716 && j == 716)
+	        		System.out.println("sup");
 	        	if (a[i].lineStart != b[j].lineStart || a[i].parametersSize != b[j].parametersSize ||
 	        			a[i].debugByteCode.size() != b[j].debugByteCode.size()) {
 	        		isEqual = false;
 	        	} else {
 	        		for (int k = 0; k < a[i].parametersSize; ++k) {
-	        			if (stringIndexMap[(int)a[i].parameterNames[k] + 1] != b[j].parameterNames[k] + 1) {
-	        				isEqual = false;
-	        				break;
+	        			if (a[i].parameterNames[k] != -1 && b[j].parameterNames[k] != -1) {
+		        			if (stringIndexMap[(int)a[i].parameterNames[k]] != b[j].parameterNames[k]) {
+		        				isEqual = false;
+		        				break;
+		        			}
 	        			}
+	        			
 	        		}
 	        		
 	        		if (isEqual) {
@@ -1102,6 +1223,7 @@ public class GeneratePatch {
 	        if (lengths[x][y] == lengths[x-1][y]) {
 	        	l.add(new PCommand(2));
 	        	x--;
+	        	System.out.println("Del deb");
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1].getByteCode(true)));
 	        	y--;
@@ -1156,6 +1278,9 @@ public class GeneratePatch {
 	        		}
 	        	}*/
 	        	
+	        	if (i == 985 && j == 985)
+	        		System.out.println("sup");
+	        	
 	        	if (a[i].isEqual(b[j], fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap, debugInfoIndexMap)) {
 	        		System.out.println(i + " " + j);
 	                lengths[i+1][j+1] = lengths[i][j] + 1;
@@ -1174,6 +1299,7 @@ public class GeneratePatch {
 	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
 	        	l.add(new PCommand(2));
 	        	x--;
+	        	System.out.println("Del");
 	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1].getNaiveOutput(true)));
 	        	y--;
@@ -1379,6 +1505,83 @@ public class GeneratePatch {
 	 
 	    return l;
 	}
+    
+    // encoded_array_item
+    public static List<PCommand> lcs2(EncodedArray[] a, EncodedArray[] b, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++) {
+	        for (int j = 0; j < b.length; j++) {
+	        	if (a[i].isEqual(b[j], fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap)) {
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	        }
+	    }
+	 // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 || y != 0; ) {
+	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2));
+	        	x--;
+	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
+	        	l.add(new PCommand(1, b[y-1].getOutput()));
+	        	y--;
+	            
+	        } else {
+	        	l.add(new PCommand(0));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
+    
+    // class_def_item
+    public static List<PCommand> lcs2(ClassDefItem[] a, ClassDefItem[] b, long[] annotationsDirectoryItemIndexMap, long[] classDataItemIndexMap, long[] encodedArrayItemIndexMap, long[] stringIndexMap, long[] typeIndexMap, long[] typeListIndexMap) {
+	    int[][] lengths = new int[a.length+1][b.length+1];
+	 
+	    // row 0 and column 0 are initialized to 0 already
+	 
+	    for (int i = 0; i < a.length; i++) {
+	        for (int j = 0; j < b.length; j++) {
+	        	if (a[i].isEqual(b[j], annotationsDirectoryItemIndexMap, classDataItemIndexMap, encodedArrayItemIndexMap, stringIndexMap, typeIndexMap, typeListIndexMap)) {
+	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	            } else {
+	                lengths[i+1][j+1] =
+	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
+	            }
+	        }
+	    }
+	    
+	    // read the substring out from the matrix
+	    List<PCommand> l = new LinkedList<PCommand>();
+	    for (int x = a.length, y = b.length;
+	         x != 0 || y != 0; ) {
+	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
+	        	l.add(new PCommand(2));
+	        	x--;
+	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
+	        	l.add(new PCommand(1, b[y-1].getOutput()));
+	        	y--;
+	            
+	        } else {
+	        	l.add(new PCommand(0));
+	        	
+	        	x--;
+	            y--;
+	        }
+	    }
+	 
+	    return l;
+	}
 	
 	private static class PCommand {
 		public int type;
@@ -1400,6 +1603,16 @@ public class GeneratePatch {
 			this.data = new byte[data.length];
 			for (int i = 0; i < data.length; ++i) {
 				this.data[i] = data[i];
+			}
+		}
+		
+		public PCommand(int type, Collection<Byte> data) {
+			this.type = type;
+			this.data = new byte[data.size()];
+			Iterator<Byte> it = data.iterator();
+			int count = 0;
+			while (it.hasNext()) {
+				this.data[count++] = it.next();
 			}
 		}
 		

@@ -12,12 +12,12 @@ public class EncodedArray {
 		this.values = values;
 	}
 	
-	public boolean isEqual(EncodedArray other, long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+	public boolean isEqual(EncodedArray other, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap) {
 		if (size != other.size)
 			return false;
 		
 		for (int i = 0; i < values.length; ++i) {
-			if (!values[i].isEqual(other.values[i], fieldMap, methodMap, stringMap, typeMap)) {
+			if (!values[i].isEqual(other.values[i], fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap)) {
 				return false;
 			}
 		}
@@ -35,7 +35,7 @@ public class EncodedArray {
 		return ret;
 	}
 	
-	Collection<Byte> getOutput() {
+	public Collection<Byte> getOutput() {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
 		ret.addAll(getULeb128(size));
 		

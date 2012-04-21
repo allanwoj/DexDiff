@@ -620,7 +620,10 @@ public class DecodedInstruction {
     			return false;
     	} else if (opcode == 0x25) {
     		System.out.println("eep!");
-    		return false;
+    		index = combine(data.get(3), data.get(2));
+    		otherIndex = combine(other.getData().get(3), other.getData().get(2));
+    		if ((int)typeIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
+    			return false;
     	} else if (opcode >= 0x52 && opcode <= 0x5f) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
@@ -636,9 +639,11 @@ public class DecodedInstruction {
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
     		if ((int)methodIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
     			return false;
-    	} else if (opcode >= 0x6E && opcode <= 0x72) {
-    		System.out.println("eep!");
-    		return false;
+    	} else if (opcode >= 0x74 && opcode <= 0x78) {//
+    		index = combine(data.get(3), data.get(2));
+    		otherIndex = combine(other.getData().get(3), other.getData().get(2));
+    		if ((int)methodIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
+    			return false;
     	} else {
     		Iterator<Byte> it = data.iterator();
     		Iterator<Byte> otherIt = other.getData().iterator();
