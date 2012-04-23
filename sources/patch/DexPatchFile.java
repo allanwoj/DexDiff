@@ -20,6 +20,9 @@ public class DexPatchFile {
 	private List<PatchCommand> annotationSetItemCommands;
 	private List<PatchCommand> annotationSetRefListCommands;
 	private List<PatchCommand> annotationsDirectoryItemCommands;
+	private List<PatchCommand> classDataItemCommands;
+	private List<PatchCommand> encodedArrayItemCommands;
+	private List<PatchCommand> classDefItemCommands;
 	private Iterator<PatchCommand> stringIt;
 	private Iterator<PatchCommand> typeIt;
 	private Iterator<PatchCommand> fieldIt;
@@ -32,6 +35,9 @@ public class DexPatchFile {
 	private Iterator<PatchCommand> annotationSetItemIt;
 	private Iterator<PatchCommand> annotationSetRefListIt;
 	private Iterator<PatchCommand> annotationsDirectoryItemIt;
+	private Iterator<PatchCommand> classDataItemIt;
+	private Iterator<PatchCommand> encodedArrayItemIt;
+	private Iterator<PatchCommand> classDefItemIt;
 	private LinkedList<List<Byte>> data;
 	private Iterator<List<Byte>> dataIt;
 	private long stringOffset;
@@ -41,6 +47,8 @@ public class DexPatchFile {
 	private long annotationSetItemOffset;
 	private long annotationSetRefListOffset;
 	private long annotationsDirectoryItemOffset;
+	private long classDataItemOffset;
+	private long encodedArrayItemOffset;
 	private long codeItemOffset;
 	RandomAccessFile file;
 	
@@ -57,6 +65,9 @@ public class DexPatchFile {
 		annotationSetItemCommands = new LinkedList<PatchCommand>();
 		annotationSetRefListCommands = new LinkedList<PatchCommand>();
 		annotationsDirectoryItemCommands = new LinkedList<PatchCommand>();
+		classDataItemCommands = new LinkedList<PatchCommand>();
+		encodedArrayItemCommands = new LinkedList<PatchCommand>();
+		classDefItemCommands = new LinkedList<PatchCommand>();
 		data = new LinkedList<List<Byte>>();
 		try {
 			//BufferedReader file = new BufferedReader(new FileReader(fileName));
@@ -72,6 +83,8 @@ public class DexPatchFile {
 			annotationSetItemOffset = Long.parseLong(file.readLine());
 			annotationSetRefListOffset = Long.parseLong(file.readLine());
 			annotationsDirectoryItemOffset = Long.parseLong(file.readLine());
+			classDataItemOffset = Long.parseLong(file.readLine());
+			encodedArrayItemOffset = Long.parseLong(file.readLine());
 			
 			// Read string table commands
 			while(true) {
@@ -193,11 +206,41 @@ public class DexPatchFile {
 				annotationsDirectoryItemCommands.add(new PatchCommand(type, size));
 			}
 			
+			// Read class_data_item commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				classDataItemCommands.add(new PatchCommand(type, size));
+			}
+			
+			// Read encoded_array_item commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				encodedArrayItemCommands.add(new PatchCommand(type, size));
+			}
+			
+			// Read class_def_item commands
+			while(true) {
+				type = read8Bit();
+				if (type == 4) {
+					break;
+				}
+				size = read16Bit();
+				classDefItemCommands.add(new PatchCommand(type, size));
+			}
+			
 			long range;
 			// Read patch data
 			while(true) {
 				range = read32Bit();
-				if (range == 0) {
+				if (range == 0x0fffffff) {
 					break;
 				}
 				LinkedList<Byte> by = new LinkedList<Byte>();
@@ -221,6 +264,9 @@ public class DexPatchFile {
 			annotationSetItemIt = annotationSetItemCommands.iterator();
 			annotationSetRefListIt = annotationSetRefListCommands.iterator();
 			annotationsDirectoryItemIt = annotationsDirectoryItemCommands.iterator();
+			classDataItemIt = classDataItemCommands.iterator();
+			encodedArrayItemIt = encodedArrayItemCommands.iterator();
+			classDefItemIt = classDefItemCommands.iterator();
 			dataIt = data.iterator();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -327,6 +373,30 @@ public class DexPatchFile {
 		return annotationsDirectoryItemIt.hasNext();
 	}
 	
+	PatchCommand getNextClassDataItemCommand() {
+		return classDataItemIt.next();
+	}
+	
+	boolean hasClassDataItemCommands() {
+		return classDataItemIt.hasNext();
+	}
+	
+	PatchCommand getNextEncodedArrayItemCommand() {
+		return encodedArrayItemIt.next();
+	}
+	
+	boolean hasEncodedArrayItemCommands() {
+		return encodedArrayItemIt.hasNext();
+	}
+	
+	PatchCommand getNextClassDefItemCommand() {
+		return classDefItemIt.next();
+	}
+	
+	boolean hasClassDefItemCommands() {
+		return classDefItemIt.hasNext();
+	}
+	
 	List<Byte> getNextData() {
 		return dataIt.next();
 	}
@@ -365,6 +435,14 @@ public class DexPatchFile {
 	
 	long getAnnotationsDirectoryItemOffset() {
 		return annotationsDirectoryItemOffset;
+	}
+	
+	long getClassDataItemOffset() {
+		return classDataItemOffset;
+	}
+	
+	long getEncodedArrayItemOffset() {
+		return encodedArrayItemOffset;
 	}
 	
 	public int read8Bit() throws IOException {

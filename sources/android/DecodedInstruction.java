@@ -77,8 +77,8 @@ public class DecodedInstruction {
      * Decodes an instruction from the given input source.
      */
     public static DecodedInstruction decode(CodeInput in) throws EOFException {
-        int opcodeUnit = in.read16Bit();
-        int opcode = Opcodes.extractOpcodeFromUnit(opcodeUnit);
+        long opcodeUnit = in.read16Bit();
+        int opcode = Opcodes.extractOpcodeFromUnit((int)opcodeUnit);
         InstructionCodec format = OpcodeInfo.getFormat(opcode);
 
         return format.decode(opcodeUnit, in);
@@ -505,68 +505,86 @@ public class DecodedInstruction {
     
     public Collection<Byte> getOutput(long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap) {
     	ArrayList<Byte> ret = new ArrayList<Byte>();
-    	Collection<Byte> temp;
     	int index = 0;
     	if (opcode == 0x1A) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(4), data.get(3));
+    		index = combine(data.get(3), data.get(2));
     		ret.addAll(write16bit((int)stringIndexMap[index]));
     	} else if (opcode == 0x1B) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(6), data.get(5), data.get(4), data.get(3));
+    		index = combine(data.get(5), data.get(4), data.get(3), data.get(2));
     		ret.addAll(write32bit((int)stringIndexMap[index]));
     	} else if (opcode == 0x1C) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(4), data.get(3));
+    		index = combine(data.get(3), data.get(2));
     		ret.addAll(write16bit((int)typeIndexMap[index]));
     	} else if (opcode == 0x1f) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(4), data.get(3));
+    		index = combine(data.get(3), data.get(2));
     		ret.addAll(write16bit((int)typeIndexMap[index]));
     	} else if (opcode == 0x20) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(4), data.get(3));
+    		index = combine(data.get(3), data.get(2));
     		ret.addAll(write16bit((int)typeIndexMap[index]));
     	} else if (opcode == 0x22) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(4), data.get(3));
+    		index = combine(data.get(3), data.get(2));
     		ret.addAll(write16bit((int)typeIndexMap[index]));
     	} else if (opcode == 0x23) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(4), data.get(3));
+    		index = combine(data.get(3), data.get(2));
     		ret.addAll(write16bit((int)typeIndexMap[index]));
     	} else if (opcode == 0x24) {
-    		System.out.println("eep!");
-    		return data;
+    		ret.add(data.get(0));
+    		ret.add(data.get(1));
+    		index = combine(data.get(3), data.get(2));
+    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.add(data.get(4));
+    		ret.add(data.get(5));
     	} else if (opcode == 0x25) {
-    		System.out.println("eep!");
+    		ret.add(data.get(0));
+    		ret.add(data.get(1));
+    		index = combine(data.get(3), data.get(2));
+    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.add(data.get(4));
+    		ret.add(data.get(5));
     		return data;
     	} else if (opcode >= 0x52 && opcode <= 0x5f) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(4), data.get(3));
+    		index = combine(data.get(3), data.get(2));
     		ret.addAll(write16bit((int)fieldIndexMap[index]));
     	} else if (opcode >= 0x60 && opcode <= 0x6D) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
-    		index = combine(data.get(4), data.get(3));
+    		index = combine(data.get(3), data.get(2));
     		ret.addAll(write16bit((int)fieldIndexMap[index]));
     	} else if (opcode >= 0x6E && opcode <= 0x72) {
-    		System.out.println("eep!");
-    		return data;
-    	} else if (opcode >= 0x6E && opcode <= 0x72) {
-    		System.out.println("eep!");
-    		return data;
+    		ret.add(data.get(0));
+    		ret.add(data.get(1));
+    		index = combine(data.get(3), data.get(2));
+    		ret.addAll(write16bit((int)methodIndexMap[index]));
+    		ret.add(data.get(4));
+    		ret.add(data.get(5));
+    	} else if (opcode >= 0x74 && opcode <= 0x78) {
+    		ret.add(data.get(0));
+    		ret.add(data.get(1));
+    		index = combine(data.get(3), data.get(2));
+    		ret.addAll(write16bit((int)methodIndexMap[index]));
+    		ret.add(data.get(4));
+    		ret.add(data.get(5));
+    	} else {
+    		ret = data;
     	}
     	
-    	return data;
+    	return ret;
     }
     
     public boolean isEqual(DecodedInstruction other, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap) {

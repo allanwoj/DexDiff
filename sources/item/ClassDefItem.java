@@ -35,58 +35,90 @@ public class ClassDefItem {
 		this.staticValuesOffset = staticValuesOffset;
 	}
 	
-	/*public byte[] getData(long[] annotationsDirectoryItemIndexMap, long[] annotationsDirectoryItemPointerMap, long[] classDataItemIndexMap, long[] classDataItemPointerMap,
+	public byte[] getData(long[] annotationsDirectoryItemIndexMap, long[] annotationsDirectoryItemPointerMap, long[] classDataItemIndexMap, long[] classDataItemPointerMap,
 			long[] encodedArrayItemIndexMap, long[] encodedArrayItemPointerMap,long[] stringIndexMap, long[] typeIndexMap, long[] typeListIndexMap, long[] typeListPointerMap) {
-		if (typeIndexMap[classId] != other.classId || accessFlags != other.accessFlags) {
-			return false;
-		}
+		ArrayList<Byte> l = new ArrayList<Byte>();
+		byte[] temp = write32bit(typeIndexMap[(int)classId]);
+		for (int i = 0; i < 4; ++i)
+			l.add(temp[i]);
+		
+		temp = write32bit(accessFlags);
+		for (int i = 0; i < 4; ++i)
+			l.add(temp[i]);
 		
 		if (superclassId != -1) {
-			if (typeIndexMap[superclassId] != superclassId) {
-				return false;
-			}
+			temp = write32bit(typeIndexMap[(int)superclassId]);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
+		} else {
+			temp = write32bit(0);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
 		}
 		
 		if (interfacesOffset != 0) {
-			if (typeListIndexMap[interfacesIndex] != other.interfacesIndex) {
-				return false;
-			}
+			temp = write32bit(typeListPointerMap[(int)typeListIndexMap[(int)interfacesIndex]]);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
+		} else {
+			temp = write32bit(0);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
 		}
 		
 		if (sourceFileId != -1) {
-			if (stringIndexMap[sourceFileId] != other.sourceFileId) {
-				return false;
-			}
+			temp = write32bit(stringIndexMap[(int)sourceFileId]);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
+		} else {
+			temp = write32bit(0);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
 		}
 		
 		if (annotationsOffset != 0) {
-			if (annotationsDirectoryItemIndexMap[annotationsIndex] != other.annotationsIndex) {
-				return false;
-			}
+			temp = write32bit(annotationsDirectoryItemPointerMap[(int)annotationsDirectoryItemIndexMap[annotationsIndex]]);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
+		} else {
+			temp = write32bit(0);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
 		}
 		
 		if (classDataOffset != 0) {
-			if (classDataItemIndexMap[classDataIndex] != other.classDataIndex) {
-				return false;
-			}
+			temp = write32bit(classDataItemPointerMap[(int)classDataItemIndexMap[classDataIndex]]);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
+		} else {
+			temp = write32bit(0);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
 		}
 		
 		if (staticValuesOffset != 0) {
-			if (encodedArrayItemIndexMap[staticValuesIndex] != other.staticValuesIndex) {
-				return false;
-			}
+			temp = write32bit(encodedArrayItemPointerMap[(int)encodedArrayItemIndexMap[staticValuesIndex]]);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
+		} else {
+			temp = write32bit(0);
+			for (int i = 0; i < 4; ++i)
+				l.add(temp[i]);
 		}
 		
-		return true;
-	}*/
+		byte[] ret = new byte[l.size()];
+		Iterator<Byte> iter = l.iterator();
+		int count = 0;
+		while (iter.hasNext()) {
+			ret[count++] = iter.next();
+		}
+		
+		return ret;
+	}
 	
 	public byte[] getOutput() {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		byte[] temp = write32bit(classId);
-		for (int i = 0; i < 4; ++i)
-			l.add(temp[i]);
-		
-		temp = write32bit(classId);
 		for (int i = 0; i < 4; ++i)
 			l.add(temp[i]);
 		
@@ -138,7 +170,7 @@ public class ClassDefItem {
 		}
 		
 		if (superclassId != -1) {
-			if (typeIndexMap[(int) superclassId] != superclassId) {
+			if (typeIndexMap[(int) superclassId] != other.superclassId) {
 				return false;
 			}
 		}

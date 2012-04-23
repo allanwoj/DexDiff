@@ -122,7 +122,7 @@ public class ClassDataItem {
 			if (i == 0) {
 				l.addAll(writeULeb128((int)fieldIndexMap[(int)staticFields[0].fieldIdDiff]));
 			} else {
-				l.addAll(writeULeb128((int)fieldIndexMap[(int)(staticFields[0].fieldIdDiff + staticFields[i].fieldIdDiff)]));
+				l.addAll(writeULeb128((int)fieldIndexMap[(int)(staticFields[0].fieldIdDiff + staticFields[i].fieldIdDiff)] - (int)fieldIndexMap[(int)staticFields[0].fieldIdDiff]));
 			}
 			l.addAll(writeULeb128((int)staticFields[i].flags));
 		}
@@ -131,7 +131,7 @@ public class ClassDataItem {
 			if (i == 0) {
 				l.addAll(writeULeb128((int)fieldIndexMap[(int)instanceFields[0].fieldIdDiff]));
 			} else {
-				l.addAll(writeULeb128((int)fieldIndexMap[(int)(instanceFields[0].fieldIdDiff + instanceFields[i].fieldIdDiff)]));
+				l.addAll(writeULeb128((int)fieldIndexMap[(int)(instanceFields[0].fieldIdDiff + instanceFields[i].fieldIdDiff)] - (int)fieldIndexMap[(int)instanceFields[0].fieldIdDiff]));
 			}
 			l.addAll(writeULeb128((int)instanceFields[i].flags));
 		}
@@ -141,7 +141,7 @@ public class ClassDataItem {
 			if (i == 0) {
 				l.addAll(writeULeb128((int)methodIndexMap[(int)directMethods[0].methodIdDiff]));
 			} else {
-				l.addAll(writeULeb128((int)methodIndexMap[(int)(directMethods[0].methodIdDiff + directMethods[i].methodIdDiff)]));
+				l.addAll(writeULeb128((int)methodIndexMap[(int)(directMethods[0].methodIdDiff + directMethods[i].methodIdDiff)] - (int)methodIndexMap[(int)directMethods[0].methodIdDiff]));
 			}
 			l.addAll(writeULeb128((int)directMethods[i].flags));
 			if (directMethods[i].codeItemIndex == -1) {
@@ -155,7 +155,7 @@ public class ClassDataItem {
 			if (i == 0) {
 				l.addAll(writeULeb128((int)methodIndexMap[(int)virtualMethods[0].methodIdDiff]));
 			} else {
-				l.addAll(writeULeb128((int)methodIndexMap[(int)(virtualMethods[0].methodIdDiff + virtualMethods[i].methodIdDiff)]));
+				l.addAll(writeULeb128((int)methodIndexMap[(int)(virtualMethods[0].methodIdDiff + virtualMethods[i].methodIdDiff)] - (int)methodIndexMap[(int)virtualMethods[0].methodIdDiff]));
 			}
 			l.addAll(writeULeb128((int)virtualMethods[i].flags));
 			if (virtualMethods[i].codeItemIndex == -1) {

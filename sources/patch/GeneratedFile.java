@@ -49,9 +49,10 @@ public class GeneratedFile {
 	
 	public void write(byte[] data) {
 		try {
-			for (int i = 0; i < data.length; ++i) {
-				out.write(data[i]);				
-			}
+			out.write(data);
+			/*for (int i = 0; i < data.length; ++i) {
+				out.write(data[i]);
+			}*/
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -147,6 +147,9 @@ public class DexOriginalFile extends DexParser {
     public CodeItem[] codeItems;
     int codeItemIndex = 0;
     
+    public byte[] header;
+    Collection<Byte> mapList;
+    
     OutputStream outStream = null;
     
     private void doWrite(String data) {
@@ -170,6 +173,11 @@ public class DexOriginalFile extends DexParser {
 		}
 		
 		try {
+			setFilePosition(0x0L);
+			header = new byte[112];
+			for(int i = 0; i < 112; ++i)
+				header[i] = (byte)read8Bit();
+			
 			setFilePosition(0x20L);
 			fileSize = read32Bit();
 	        headerSize = read32Bit();
@@ -229,11 +237,23 @@ public class DexOriginalFile extends DexParser {
 			}
 	        
 	        setFilePosition(mapOffset);
+	        mapList = new ArrayList<Byte>();
 	        // Read offsets
-	        int mapSize = (int)read32Bit();
+	        long mapSize = read32Bit();
+	        mapList.addAll(write32bit(mapSize));
+	        
 	        for (int i = 0; i < mapSize; ++i) {
 	        	int type = read16Bit();
-	        	read16Bit();
+	        	int unused = read16Bit();
+	        	long size = read32Bit();
+	        	long offset = read32Bit();
+	        	
+	        	mapList.addAll(write16bit(type));
+	        	mapList.addAll(write16bit(unused));
+	        	mapList.addAll(write32bit(size));
+	        	mapList.addAll(write32bit(offset));
+	        	
+	        	
 	        	switch (type) {
 		        	/*case 0:break;
 		        	case 1:break;
@@ -244,48 +264,48 @@ public class DexOriginalFile extends DexParser {
 		        	case 6:break;
 		        	case 4096:break;*/
 		        	case 4097:
-		        		typeListSize = read32Bit();
-		        		typeListOffset = read32Bit();
+		        		typeListSize = size;
+		        		typeListOffset = offset;
 		        		break;
 		        	case 4098:
-		        		annotationSetRefListSize = read32Bit();
-		        		annotationSetRefListOffset = read32Bit();
+		        		annotationSetRefListSize = size;
+		        		annotationSetRefListOffset = offset;
 		        		break;
 		        	case 4099:
-		        		annotationSetItemSize = read32Bit();
-		        		annotationSetItemOffset = read32Bit();
+		        		annotationSetItemSize = size;
+		        		annotationSetItemOffset = offset;
 		        		break;
 		        	case 8192:
-		        		classDataItemSize = read32Bit();
-		        		classDataItemOffset = read32Bit();
+		        		classDataItemSize = size;
+		        		classDataItemOffset = offset;
 		        		break;
 		        	case 8193:
-		        		codeItemSize = read32Bit();
-		        		codeItemOffset = read32Bit();
+		        		codeItemSize = size;
+		        		codeItemOffset = offset;
 		        		break;
 		        	case 8194:
-		        		stringDataItemSize = read32Bit();
-		        		stringDataItemOffset = read32Bit();
+		        		stringDataItemSize = size;
+		        		stringDataItemOffset = offset;
 		        		break;
 		        	case 8195:
-		        		debugInfoItemSize = read32Bit();
-		        		debugInfoItemOffset = read32Bit();
+		        		debugInfoItemSize = size;
+		        		debugInfoItemOffset = offset;
 		        		break;
 		        	case 8196:
-		        		annotationItemSize = read32Bit();
-		        		annotationItemOffset = read32Bit();
+		        		annotationItemSize = size;
+		        		annotationItemOffset = offset;
 		        		break;
 		        	case 8197:
-		        		encodedArrayItemSize = read32Bit();
-		        		encodedArrayItemOffset = read32Bit();
+		        		encodedArrayItemSize = size;
+		        		encodedArrayItemOffset = offset;
 		        		break;
 		        	case 8198:
-		        		annotationsDirectoryItemSize = read32Bit();
-		        		annotationsDirectoryItemOffset = read32Bit();
+		        		annotationsDirectoryItemSize = size;
+		        		annotationsDirectoryItemOffset = offset;
 		        		break;
 		        	default:
-		        		read32Bit();
-		        		read32Bit();
+		        		//read32Bit();
+		        		//read32Bit();
 	        	}
 	        }
 	        
@@ -746,6 +766,26 @@ public class DexOriginalFile extends DexParser {
     	return annotation;
 	}
 	
+	public Collection<Byte> write32bit(long data) {
+		ArrayList<Byte> output = new ArrayList<Byte>();
+		
+		for(int i = 0; i < 4; ++i) {
+			output.add((byte)((data >> (i*8)) & 0xFF));
+		}
+
+		return output;
+	}
+	
+	public Collection<Byte> write16bit(int data) {
+		ArrayList<Byte> output = new ArrayList<Byte>();
+		
+		for(int i = 0; i < 2; ++i) {
+			output.add((byte)((data >> (i*8)) & 0xFF));
+		}
+
+		return output;
+	}
+	
 	public String getStringData() {
 		return stringData[stringDataIndex++];
 	}
@@ -960,6 +1000,14 @@ public class DexOriginalFile extends DexParser {
     
     public long getStringDataItemOffset() {
         return stringDataItemOffset;
+    }
+    
+    public byte[] getHeader() {
+    	return header;
+    }
+    
+    public Collection<Byte> getMapList() {
+    	return mapList;
     }
     
 }

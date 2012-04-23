@@ -25,7 +25,7 @@ public class EncodedArray {
 		return true;
 	}
 	
-	Collection<Byte> getData(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+	public Collection<Byte> getData(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
 		ret.addAll(getULeb128(size));
 		

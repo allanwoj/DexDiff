@@ -37,8 +37,8 @@ implements CodeInput {
 	}
 
 	@Override
-	public int read16Bit() throws EOFException {
-		 int result = 0;
+	public long read16Bit() throws EOFException {
+		long result = 0;
 		try {
 			result = file.read8Bit();
 			result |= ( file.read8Bit() << 8 );
@@ -47,7 +47,7 @@ implements CodeInput {
 			e.printStackTrace();
 		}
 	     
-	     return result;
+	    return result;
 	}
 
 	@Override

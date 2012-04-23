@@ -81,9 +81,9 @@ public final class ShortArrayCodeInput extends BaseCodeCursor
     }
 
 	@Override
-	public int read16Bit() throws EOFException {
-		int result = array[count++];
-		result |= (array[count++] << 8);
+	public long read16Bit() throws EOFException {
+		long result = array[count++] & 0xff;
+		result |= ((array[count++] & 0xff) << 8);
 		return result;
 	}
 }

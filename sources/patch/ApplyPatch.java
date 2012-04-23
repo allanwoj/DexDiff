@@ -6,18 +6,27 @@ import item.AnnotationSetRefList;
 import item.AnnotationsDirectoryItem;
 import item.ByteCode;
 import item.ClassDataItem;
+import item.ClassDefItem;
 import item.CodeItem;
 import item.DebugByteCode;
 import item.DebugInfoItem;
 import item.EncodedAnnotation;
+import item.EncodedArray;
 import item.EncodedValue;
 import item.FieldIdItem;
 import item.MethodIdItem;
 import item.ProtoIdItem;
 import item.TypeList;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -48,11 +57,15 @@ public class ApplyPatch {
 		GeneratedFile typeListFile = new GeneratedFile("out/type_list.dex");
 		GeneratedFile annotationsDirectoryItemFile = new GeneratedFile("out/annotations_directory_item.dex");
 		GeneratedFile classDataItemFile = new GeneratedFile("out/class_data_item.dex");
+		GeneratedFile encodedArrayItemFile = new GeneratedFile("out/encoded_array_item.dex");
+		GeneratedFile classDefItemFile = new GeneratedFile("out/class_def_item.dex");
 		GeneratedFile annotationItemFile = new GeneratedFile("out/annotation_item.dex");
 		GeneratedFile annotationSetItemFile = new GeneratedFile("out/annotation_set_item.dex");
 		GeneratedFile annotationSetRefListFile = new GeneratedFile("out/annotation_set_ref_list.dex");
 		GeneratedFile debugInfoItemFile = new GeneratedFile("out/debug_info_item.dex");
 		GeneratedFile codeItemFile = new GeneratedFile("out/code_item.dex");
+		GeneratedFile headerFile = new GeneratedFile("out/update.dex");
+		GeneratedFile mapListFile = new GeneratedFile("out/map_list.dex");
 		long[] stringIndexMap = new long[10000];
 		long[] typeIndexMap = new long[10000];
 		long[] fieldIndexMap = new long[10000];
@@ -60,7 +73,11 @@ public class ApplyPatch {
 		long[] methodIndexMap = new long[10000];
 		long[] typeListIndexMap = new long[10000];
 		long[] typeListPointerMap = new long[10000];
-		long[] classDataItemMap = new long[10000];
+		long[] classDataItemIndexMap = new long[10000];
+		long[] classDataItemPointerMap = new long[10000];
+		long[] encodedArrayItemIndexMap = new long[10000];
+		long[] encodedArrayItemPointerMap = new long[10000];
+		long[] classDefItemIndexMap = new long[10000];
 		long[] annotationItemIndexMap = new long[10000];
 		long[] annotationItemPointerMap = new long[10000];
 		long[] annotationSetItemIndexMap = new long[10000];
@@ -71,7 +88,7 @@ public class ApplyPatch {
 		long[] annotationsDirectoryItemPointerMap = new long[10000];
 		long[] debugInfoItemMap = new long[10000];
 		long[] debugInfoItemPointerMap = new long[10000];
-		long[] codeItemMap = new long[10000];
+		long[] codeItemIndexMap = new long[10000];
 		long[] codeItemPointerMap = new long[10000];
 		PatchCommand command;
 		int fileIndex = 0;
@@ -90,7 +107,8 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					buf = original.getStringData();
 					currentStringOffset += buf.length() + 1;
-					stringIdsFile.write(currentStringOffset);
+					if (patch.hasStringCommands() || i < command.size - 1)
+						stringIdsFile.write(currentStringOffset);
 					stringFile.write(buf);
 					stringFile.write(0);
 					stringIndexMap[mapIndex++] = fileIndex++;
@@ -107,7 +125,8 @@ public class ApplyPatch {
 					}
 					currentStringOffset += buffer.size() + size_buf;
 					// TODO Handle cases when length is larger than 127.
-					stringIdsFile.write(currentStringOffset);
+					if (patch.hasStringCommands() || i < command.size - 1)
+						stringIdsFile.write(currentStringOffset);
 					stringFile.write(buffer.size());
 					stringFile.write(buffer);
 					stringFile.write((char)0);
@@ -396,10 +415,10 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					codeItemMap[mapIndex++] = fileIndex++;
+					codeItemIndexMap[mapIndex++] = fileIndex++;
 					codeItemPointerMap[pointerIndex++] = tempPointer;
 					codeItem = original.getCodeItem();
-					byte[] temp = codeItem.getNaiveOutput(typeIndexMap, debugInfoItemMap, debugInfoItemPointerMap);
+					byte[] temp = codeItem.getOutput(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap, debugInfoItemMap, debugInfoItemPointerMap);
 					tempPointer += temp.length;
 					codeItemFile.write(temp);
 				}
@@ -416,7 +435,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getCodeItem();
-					codeItemMap[mapIndex++] = -1;
+					codeItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -577,137 +596,221 @@ public class ApplyPatch {
 		
 		// class_data_item
 		fileIndex = 0;
-		/*mapIndex = 0;
-		ClassDataItem classDataItem;
-		int classDataItemSize = (int)original.getClassDataItemSize();
-		for (int i = 0; i < classDataItemSize; ++i) {
-			classDataItem = original.getClassDataItem();
-			classDataItemFile.writeULeb128((int) classDataItem.staticFieldsSize);
-			classDataItemFile.writeULeb128((int) classDataItem.instanceFieldsSize);
-			classDataItemFile.writeULeb128((int) classDataItem.directMethodsSize);
-			classDataItemFile.writeULeb128((int) classDataItem.virtualMethodsSize);
-			
-			if (classDataItem.staticFieldsSize > 0) {
-				long start = classDataItem.staticFields[0].diff;
-				classDataItemFile.writeULeb128((int)fieldIndexMap[(int)start]);
-				classDataItemFile.writeULeb128((int)classDataItem.staticFields[0].flags);
-				for (int j = 1; j < classDataItem.staticFieldsSize; ++j) {
-					classDataItemFile.writeULeb128((int)fieldIndexMap[(int)(classDataItem.staticFields[j].diff + start)]);
-					classDataItemFile.writeULeb128((int)classDataItem.staticFields[j].flags);
-				}
-			}
-			
-			if (classDataItem.instanceFieldsSize > 0) {
-				long start = classDataItem.instanceFields[0].diff;
-				classDataItemFile.writeULeb128((int)fieldIndexMap[(int)start]);
-				classDataItemFile.writeULeb128((int)classDataItem.instanceFields[0].flags);
-				for (int j = 1; j < classDataItem.instanceFieldsSize; ++j) {
-					classDataItemFile.writeULeb128((int)fieldIndexMap[(int)(classDataItem.instanceFields[j].diff + start)]);
-					classDataItemFile.writeULeb128((int)classDataItem.instanceFields[j].flags);
-				}
-			}
-			
-			
-			
-			
-			if (classDataItem.directMethodsSize > 0) {
-				long start = classDataItem.directMethods[0].diff;
-				classDataItemFile.writeULeb128((int)methodIndexMap[(int)start]);
-				classDataItemFile.writeULeb128((int)classDataItem.directMethods[0].flags);
-				classDataItemFile.writeULeb128(0);
-				for (int j = 1; j < classDataItem.directMethodsSize; ++j) {
-					classDataItemFile.writeULeb128((int)methodIndexMap[(int)(classDataItem.directMethods[j].diff + start)]);
-					classDataItemFile.writeULeb128((int)classDataItem.directMethods[j].flags);
-					classDataItemFile.writeULeb128(0);
-				}
-			}
-			
-			if (classDataItem.virtualMethodsSize > 0) {
-				long start = classDataItem.virtualMethods[0].diff;
-				classDataItemFile.writeULeb128((int)methodIndexMap[(int)start]);
-				classDataItemFile.writeULeb128((int)classDataItem.virtualMethods[0].flags);
-				classDataItemFile.writeULeb128(0);
-				for (int j = 1; j < classDataItem.virtualMethodsSize; ++j) {
-					classDataItemFile.writeULeb128((int)methodIndexMap[(int)(classDataItem.virtualMethods[j].diff + start)]);
-					classDataItemFile.writeULeb128((int)classDataItem.virtualMethods[j].flags);
-					classDataItemFile.writeULeb128(0);
-				}
-			}
-			
-		}
-		
-		
-		*/
-	}
-	
-	
-	/*
-	public static void main(String[] args) {
-		OriginalFile original = new OriginalFile(args[0]);
-		PatchFile patch = new PatchFile(args[1]);
-		GeneratedFile generated = new GeneratedFile(args[2]);
-		int[] indexMap = new int[100];
-		PatchCommand command;
-		int fileIndex = 0;
-		int mapIndex = 0;
-		while(patch.hasCommands()) {
-			command = patch.getNextCommand();
-			
+		mapIndex = 0;
+		ClassDataItem classDataItem = null;
+		tempPointer = patch.getClassDataItemOffset();
+		pointerIndex = 0;
+		// Generate patched class_data_items
+		while(patch.hasClassDataItemCommands()) {
+			command = patch.getNextClassDataItemCommand();
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					generated.write(original.getTableData());
-					indexMap[mapIndex++] = fileIndex++;
+					classDataItemIndexMap[mapIndex++] = fileIndex++;
+					classDataItemPointerMap[pointerIndex++] = tempPointer;
+					classDataItem = original.getClassDataItem();
+					byte[] temp = classDataItem.getBytes(fieldIndexMap, methodIndexMap, codeItemIndexMap, codeItemPointerMap);
+					tempPointer += temp.length;
+					classDataItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					generated.write(patch.getData());
+					classDataItemPointerMap[pointerIndex++] = tempPointer;
+					List<Byte> temp = patch.getNextData();
+					tempPointer += temp.size();
+					classDataItemFile.write(temp);
 					++fileIndex;
 				}
 			} else if (command.type == 2) {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
-					original.getTableData();
-					indexMap[mapIndex++] = -1;
+					original.getClassDataItem();
+					classDataItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
 		
-		System.out.println("DONE");
-		
-		for (int i = 0; i < mapIndex; ++i) {
-			System.out.print(i + " ");
-		}
-		System.out.println(" ");
-		for (int i = 0; i < mapIndex; ++i) {
-			System.out.print(indexMap[i] + " ");
-		}
-		
-		while(patch.hasDataCommands()) {
-			command = patch.getNextDataCommand();
+		// encoded_array_item
+		fileIndex = 0;
+		mapIndex = 0;
+		EncodedArray encodedArrayItem = null;
+		tempPointer = patch.getEncodedArrayItemOffset();
+		pointerIndex = 0;
+		// Generate patched encoded_array_items
+		while(patch.hasEncodedArrayItemCommands()) {
+			command = patch.getNextEncodedArrayItemCommand();
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					generated.write((char)10);
-					generated.write((char)(indexMap[original.getData()] + 48));
+					encodedArrayItemIndexMap[mapIndex++] = fileIndex++;
+					encodedArrayItemPointerMap[pointerIndex++] = tempPointer;
+					encodedArrayItem = original.getEncodedArrayItem();
+					Collection<Byte> temp = encodedArrayItem.getData(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap);
+					tempPointer += temp.size();
+					encodedArrayItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					generated.write((char)10);
-					generated.write(patch.getData());
+					encodedArrayItemPointerMap[pointerIndex++] = tempPointer;
+					List<Byte> temp = patch.getNextData();
+					tempPointer += temp.size();
+					encodedArrayItemFile.write(temp);
+					++fileIndex;
 				}
 			} else if (command.type == 2) {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
-					System.out.print("Delete: " + indexMap[original.getData()]);
+					original.getEncodedArrayItem();
+					encodedArrayItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
 		
+		// class_def_item
+		fileIndex = 0;
+		mapIndex = 0;
+		ClassDefItem classDefItem = null;
+		// Generate patched class_def_items
+		while(patch.hasClassDefItemCommands()) {
+			command = patch.getNextClassDefItemCommand();
+			if (command.type == 0) {
+				// KEEP
+				for(int i = 0; i < command.size; ++i) {
+					classDefItemIndexMap[mapIndex++] = fileIndex++;
+					classDefItem = original.getClassDefItem();
+					byte[] temp = classDefItem.getData(annotationsDirectoryItemIndexMap, annotationsDirectoryItemPointerMap, classDataItemIndexMap, classDataItemPointerMap, encodedArrayItemIndexMap, encodedArrayItemPointerMap, stringIndexMap, typeIndexMap, typeListIndexMap, typeListPointerMap);
+					classDefItemFile.write(temp);
+				}
+			} else if (command.type == 1) {
+				// ADD
+				for(int i = 0; i < command.size; ++i) {
+					List<Byte> temp = patch.getNextData();
+					classDefItemFile.write(temp);
+					++fileIndex;
+				}
+			} else if (command.type == 2) {
+				// DELETE
+				for(int i = 0; i < command.size; ++i) {
+					original.getClassDefItem();
+					classDefItemIndexMap[mapIndex++] = -1;
+				}
+			}
+		}
+		
+		// header
+		List<Byte> temp = patch.getNextData();
+		headerFile.write(temp);
+		
+		// map_list
+		temp = patch.getNextData();
+		mapListFile.write(temp);
+		
+		stringIdsFile.close();
+		typeIdsFile.close();
+		fieldIdsFile.close();
+		stringFile.close();
+		protoFile.close();
+		methodFile.close();
+		typeListFile.close();
+		annotationsDirectoryItemFile.close();
+		classDataItemFile.close();
+		encodedArrayItemFile.close();
+		classDefItemFile.close();
+		annotationItemFile.close();
+		annotationSetItemFile.close();
+		annotationSetRefListFile.close();
+		debugInfoItemFile.close();
+		codeItemFile.close();
+		headerFile.close();
+		mapListFile.close();
+		
+		writeCompleteFile("out/update.dex", "out/string_id.dex");
+		writeCompleteFile("out/update.dex", "out/type.dex");
+		writeCompleteFile("out/update.dex", "out/proto.dex");
+		writeCompleteFile("out/update.dex", "out/field.dex");
+		writeCompleteFile("out/update.dex", "out/method.dex");
+		writeCompleteFile("out/update.dex", "out/class_def_item.dex");
+		writeCompleteFile("out/update.dex", "out/annotation_set_item.dex");
+		writeCompleteFile("out/update.dex", "out/code_item.dex");
+		writeCompleteFile("out/update.dex", "out/annotations_directory_item.dex");
+		writeCompleteFile("out/update.dex", "out/type_list.dex");
+		writeCompleteFile("out/update.dex", "out/string_data_item.dex");
+		writeCompleteFile("out/update.dex", "out/debug_info_item.dex");
+		writeCompleteFile("out/update.dex", "out/annotation_item.dex");
+		writeCompleteFile("out/update.dex", "out/class_data_item.dex");
+		writeCompleteFile("out/update.dex", "out/map_list.dex");
 		
 		
-	}*/
+		File f = new File("out/string_id.dex");
+		f.delete();
+		f = new File("out/type.dex");
+		f.delete();
+		f = new File("out/proto.dex");
+		f.delete();
+		f = new File("out/field.dex");
+		f.delete();
+		f = new File("out/method.dex");
+		f.delete();
+		f = new File("out/class_def_item.dex");
+		f.delete();
+		f = new File("out/annotation_set_item.dex");
+		f.delete();
+		f = new File("out/code_item.dex");
+		f.delete();
+		f = new File("out/annotations_directory_item.dex");
+		f.delete();
+		f = new File("out/type_list.dex");
+		f.delete();
+		f = new File("out/string_data_item.dex");
+		f.delete();
+		f = new File("out/debug_info_item.dex");
+		f.delete();
+		f = new File("out/annotation_item.dex");
+		f.delete();
+		f = new File("out/class_data_item.dex");
+		f.delete();
+		f = new File("out/map_list.dex");
+		f.delete();
+		f = new File("out/annotation_set_ref_list.dex");
+		f.delete();
+		f = new File("out/encoded_array_item.dex");
+		f.delete();
+		f = new File("out/string_id.dex");
+		f.delete();
+		
+	}
+	
+	
+	static void writeCompleteFile(String patchFile, String dataFile) {
+		try {
+			//GeneratedFile completeFile = new GeneratedFile("out/complete.patch");
+			File f1 = new File(patchFile);
+			File f2 = new File(dataFile);
+		
+			InputStream in = new FileInputStream(f2);
+			OutputStream out = new FileOutputStream(f1, true);
+			
+			byte[] buf = new byte[1024];
+			  
+			int len;
+			 
+			while ((len = in.read(buf)) > 0){
+				out.write(buf, 0, len);
+			}
+			in.close();
+
+			out.close();
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 
 }

@@ -66,6 +66,8 @@ public class GeneratePatch {
 		patchFile.write(((Long)update.getAnnotationSetItemOffset()).toString() +"\n");
 		patchFile.write(((Long)update.getAnnotationSetRefListOffset()).toString() +"\n");
 		patchFile.write(((Long)update.getAnnotationsDirectoryItemOffset()).toString() +"\n");
+		patchFile.write(((Long)update.getClassDataItemOffset()).toString() +"\n");
+		patchFile.write(((Long)update.getEncodedArrayItemOffset()).toString() +"\n");
 		
 		String[] data1 = { "a", "b", "c", "d", "e", "f", "g" };
 		String[] data2 = { "a", "f", "b", "c", "e", "f", "g", "s" };
@@ -126,7 +128,7 @@ public class GeneratePatch {
 		patchFile.write(4);
 		
 		// type_id
-		l = lcs2(original.typeIds, update.typeIds, original.stringData, update.stringData);
+		l = lcs2(original.typeIds, update.typeIds, stringIndexMap);
 		it = l.listIterator(l.size());
 		c = it.previous();
 		long[] typeIndexMap = new long[10000];
@@ -182,7 +184,7 @@ public class GeneratePatch {
 		patchFile.write(4);
 		
 		// field_id_item
-		l = lcs2(original.fieldIds, update.fieldIds, original.typeIds, update.typeIds, original.stringData, update.stringData);
+		l = lcs2(original.fieldIds, update.fieldIds, typeIndexMap, stringIndexMap);
 		it = l.listIterator(l.size());
 		c = it.previous();
 		long[] fieldIndexMap = new long[10000];
@@ -235,7 +237,7 @@ public class GeneratePatch {
 		patchFile.write(4);
 		
 		// type_list
-		l = lcs2(original.typeLists, update.typeLists, original.typeIds, update.typeIds, original.stringData, update.stringData);
+		l = lcs2(original.typeLists, update.typeLists, typeIndexMap);
 		it = l.listIterator(l.size());
 		c = it.previous();
 		long[] typeListIndexMap = new long[10000];
@@ -885,9 +887,15 @@ public class GeneratePatch {
 		
 		patchFile.write(4);
 		
+		byte[] header = update.getHeader();
+		dataFile.write((long)header.length);
+		dataFile.write(header);
+		Collection<Byte> mapList = update.getMapList();
+		dataFile.write((long)mapList.size());
+		dataFile.write(mapList);
 		
 		//~~~~~//
-		dataFile.write(0L);
+		dataFile.write((long)0x0fffffff);
 		patchFile.close();
 		dataFile.close();
 		writeCompleteFile("out/connect.patch", "out/data.patch");
@@ -939,14 +947,14 @@ public class GeneratePatch {
 	    return l;
 	}
 	
-	public static List<PCommand> lcs2(int[] a, int[] b, String[] aData, String[] bData) {
+	public static List<PCommand> lcs2(int[] a, int[] b, long[] stringIndexMap) {
 	    int[][] lengths = new int[a.length+1][b.length+1];
 	 
 	    // row 0 and column 0 are initialized to 0 already
 	 
 	    for (int i = 0; i < a.length; i++)
 	        for (int j = 0; j < b.length; j++)
-	            if (aData[a[i]].equals(bData[b[j]]))
+	            if (stringIndexMap[a[i]] == b[j])
 	                lengths[i+1][j+1] = lengths[i][j] + 1;
 	            else
 	                lengths[i+1][j+1] =
@@ -974,16 +982,16 @@ public class GeneratePatch {
 	    return l;
 	}
 	
-	public static List<PCommand> lcs2(FieldIdItem[] a, FieldIdItem[] b, int[] aTypes, int[] bTypes, String[] aData, String[] bData) {
+	public static List<PCommand> lcs2(FieldIdItem[] a, FieldIdItem[] b, long[] typeIndexMap, long[] stringIndexMap) {
 	    int[][] lengths = new int[a.length+1][b.length+1];
 	 
 	    // row 0 and column 0 are initialized to 0 already
 	 
 	    for (int i = 0; i < a.length; i++)
 	        for (int j = 0; j < b.length; j++)
-	            if (aData[(int) a[i].nameId].equals(bData[(int) b[j].nameId])
-	            		&& aData[aTypes[a[i].classId]].equals(bData[bTypes[b[j].classId]])
-	            		&& aData[aTypes[a[i].typeId]].equals(bData[bTypes[b[j].typeId]])) {
+	            if (stringIndexMap[(int) a[i].nameId] == b[j].nameId
+	            		&& typeIndexMap[a[i].classId] == b[j].classId
+	            		&& typeIndexMap[a[i].typeId] == b[j].typeId) {
 	                lengths[i+1][j+1] = lengths[i][j] + 1;
 	            } else {
 	                lengths[i+1][j+1] =
@@ -1014,7 +1022,7 @@ public class GeneratePatch {
 	    return l;
 	}
 	
-	public static List<PCommand> lcs2(TypeList[] a, TypeList[] b, int[] aTypes, int[] bTypes, String[] aData, String[] bData) {
+	public static List<PCommand> lcs2(TypeList[] a, TypeList[] b, long[] typeIndexMap) {
 	    int[][] lengths = new int[a.length+1][b.length+1];
 	 
 	    // row 0 and column 0 are initialized to 0 already
@@ -1026,7 +1034,7 @@ public class GeneratePatch {
 	            	isEqual = false;
 	            } else {
 	            	for(int k = 0; k < a[i].size; ++k) {
-	            		if(!aData[aTypes[a[i].types[k]]].equals(bData[bTypes[b[j].types[k]]])) {
+	            		if(typeIndexMap[a[i].types[k]] != b[j].types[k]) {
 	            			isEqual = false;
 	            			break;
 	            		}
@@ -1176,8 +1184,6 @@ public class GeneratePatch {
 	    for (int i = 0; i < a.length; i++) {
 	        for (int j = 0; j < b.length; j++) {
 	        	boolean isEqual = true;
-	        	if (i == 716 && j == 716)
-	        		System.out.println("sup");
 	        	if (a[i].lineStart != b[j].lineStart || a[i].parametersSize != b[j].parametersSize ||
 	        			a[i].debugByteCode.size() != b[j].debugByteCode.size()) {
 	        		isEqual = false;
@@ -1223,7 +1229,6 @@ public class GeneratePatch {
 	        if (lengths[x][y] == lengths[x-1][y]) {
 	        	l.add(new PCommand(2));
 	        	x--;
-	        	System.out.println("Del deb");
 	        } else if (lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1].getByteCode(true)));
 	        	y--;
@@ -1278,11 +1283,8 @@ public class GeneratePatch {
 	        		}
 	        	}*/
 	        	
-	        	if (i == 985 && j == 985)
-	        		System.out.println("sup");
 	        	
 	        	if (a[i].isEqual(b[j], fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap, debugInfoIndexMap)) {
-	        		System.out.println(i + " " + j);
 	                lengths[i+1][j+1] = lengths[i][j] + 1;
 	            } else {
 	                lengths[i+1][j+1] =
@@ -1294,12 +1296,9 @@ public class GeneratePatch {
 	    List<PCommand> l = new LinkedList<PCommand>();
 	    for (int x = a.length, y = b.length;
 	         x != 0 || y != 0; ) {
-	    	if ( x == 4 || y == 4)
-	    		System.out.print("hi");
 	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
 	        	l.add(new PCommand(2));
 	        	x--;
-	        	System.out.println("Del");
 	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1].getNaiveOutput(true)));
 	        	y--;
@@ -1553,7 +1552,8 @@ public class GeneratePatch {
 	    for (int i = 0; i < a.length; i++) {
 	        for (int j = 0; j < b.length; j++) {
 	        	if (a[i].isEqual(b[j], annotationsDirectoryItemIndexMap, classDataItemIndexMap, encodedArrayItemIndexMap, stringIndexMap, typeIndexMap, typeListIndexMap)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
+	        		System.out.println(i + " " + j);
+	        		lengths[i+1][j+1] = lengths[i][j] + 1;
 	            } else {
 	                lengths[i+1][j+1] =
 	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
@@ -1568,6 +1568,7 @@ public class GeneratePatch {
 	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
 	        	l.add(new PCommand(2));
 	        	x--;
+	        	System.out.println("Del");
 	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1].getOutput()));
 	        	y--;

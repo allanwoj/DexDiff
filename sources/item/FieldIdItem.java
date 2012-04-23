@@ -21,10 +21,10 @@ public class FieldIdItem {
 		ret[start + 2] = (byte)((typeId) & 0xFF);
 		ret[start + 3] = (byte)((typeId >> 8) & 0xFF);
 		
-		ret[start + 4] = (byte)((classId) & 0xFF);
-		ret[start + 5] = (byte)((classId >> 8) & 0xFF);
-		ret[start + 6] = (byte)((classId >> 16) & 0xFF);
-		ret[start + 7] = (byte)((classId >> 32) & 0xFF);
+		ret[start + 4] = (byte)((nameId) & 0xFF);
+		ret[start + 5] = (byte)((nameId >> 8) & 0xFF);
+		ret[start + 6] = (byte)((nameId >> 16) & 0xFF);
+		ret[start + 7] = (byte)((nameId >> 32) & 0xFF);
 		
 		if (withSize) {
 			ret[0] = 8;

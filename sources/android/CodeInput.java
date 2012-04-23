@@ -39,7 +39,7 @@ public interface CodeInput extends CodeCursor {
     /**
      * Reads a code unit.
      */
-    public int read16Bit() throws EOFException;
+    public long read16Bit() throws EOFException;
 
     /**
      * Reads two code units, treating them as a little-endian {@code int}.

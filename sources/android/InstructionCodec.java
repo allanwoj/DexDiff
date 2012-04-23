@@ -32,13 +32,13 @@ import java.util.ArrayList;
  */
 public enum InstructionCodec {
     FORMAT_00X() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
         	ArrayList<Byte> l = new ArrayList<Byte>();
             l.add((byte)byte0(opcodeUnit));
             l.add((byte)byte1(opcodeUnit));
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, null,
+                    this, (int)opcodeUnit, 0, null,
                     0, 0L, l);
         }
 
@@ -48,7 +48,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_10X() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int literal = byte1(opcodeUnit); // should be zero
@@ -66,11 +66,11 @@ public enum InstructionCodec {
     },
 
     FORMAT_12X() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
-            int a = nibble2(opcodeUnit);
-            int b = nibble3(opcodeUnit);
+            //int a = nibble2(opcodeUnit);
+            //int b = nibble3(opcodeUnit);
             ArrayList<Byte> l = new ArrayList<Byte>();
             l.add((byte)byte0(opcodeUnit));
             l.add((byte)byte1(opcodeUnit));
@@ -87,17 +87,17 @@ public enum InstructionCodec {
     },
 
     FORMAT_11N() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
-            int a = nibble2(opcodeUnit);
-            int literal = (nibble3(opcodeUnit) << 28) >> 28; // sign-extend
+            //int a = nibble2(opcodeUnit);
+            //int literal = (nibble3(opcodeUnit) << 28) >> 28; // sign-extend
             ArrayList<Byte> l = new ArrayList<Byte>();
             l.add((byte)byte0(opcodeUnit));
             l.add((byte)byte1(opcodeUnit));
             return new DecodedInstruction(
                     this, opcode, 0, null,
-                    0, literal, l);
+                    0, 0, l);
         }
 
         @Override public void encode(DecodedInstruction insn, CodeOutput out) {
@@ -113,7 +113,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_11X() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -131,7 +131,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_10T() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int baseAddress = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
@@ -158,7 +158,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_20T() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int baseAddress = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
@@ -188,7 +188,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_20BC() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             // Note: We use the literal field to hold the decoded AA value.
             int opcode = byte0(opcodeUnit);
@@ -218,7 +218,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_22X() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -245,7 +245,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_21T() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int baseAddress = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
@@ -274,7 +274,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_21S() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -301,7 +301,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_21H() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -334,7 +334,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_21C() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -357,7 +357,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_23X() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -381,7 +381,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_22B() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -411,12 +411,12 @@ public enum InstructionCodec {
     },
 
     FORMAT_22T() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int baseAddress = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
-            int a = nibble2(opcodeUnit);
-            int b = nibble3(opcodeUnit);
+            //int a = nibble2(opcodeUnit);
+            //int b = nibble3(opcodeUnit);
             //int target = (short) in.read(); // sign-extend
             ArrayList<Byte> l = new ArrayList<Byte>();
             l.add((byte)byte0(opcodeUnit));
@@ -444,11 +444,11 @@ public enum InstructionCodec {
     },
 
     FORMAT_22S() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
-            int a = nibble2(opcodeUnit);
-            int b = nibble3(opcodeUnit);
+            //int a = nibble2(opcodeUnit);
+            //int b = nibble3(opcodeUnit);
             //int literal = (short) in.read(); // sign-extend
             ArrayList<Byte> l = new ArrayList<Byte>();
             l.add((byte)byte0(opcodeUnit));
@@ -473,11 +473,11 @@ public enum InstructionCodec {
     },
 
     FORMAT_22C() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
-            int a = nibble2(opcodeUnit);
-            int b = nibble3(opcodeUnit);
+            //int a = nibble2(opcodeUnit);
+            //int b = nibble3(opcodeUnit);
             //int index = in.read();
             ArrayList<Byte> l = new ArrayList<Byte>();
             l.add((byte)byte0(opcodeUnit));
@@ -498,11 +498,11 @@ public enum InstructionCodec {
     },
 
     FORMAT_22CS() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
-            int a = nibble2(opcodeUnit);
-            int b = nibble3(opcodeUnit);
+            //int a = nibble2(opcodeUnit);
+            //int b = nibble3(opcodeUnit);
             //int index = in.read();
             ArrayList<Byte> l = new ArrayList<Byte>();
             l.add((byte)byte0(opcodeUnit));
@@ -522,7 +522,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_30T() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int baseAddress = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
@@ -545,7 +545,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_32X() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int literal = byte1(opcodeUnit); // should be zero
@@ -572,7 +572,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_31I() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -603,7 +603,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_31T() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int baseAddress = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
@@ -641,7 +641,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_31C() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -666,7 +666,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_35C() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             return decodeRegisterList(this, opcodeUnit, in);
         }
@@ -677,7 +677,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_35MS() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             return decodeRegisterList(this, opcodeUnit, in);
         }
@@ -688,7 +688,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_35MI() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             return decodeRegisterList(this, opcodeUnit, in);
         }
@@ -699,7 +699,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_3RC() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             return decodeRegisterRange(this, opcodeUnit, in);
         }
@@ -710,7 +710,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_3RMS() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             return decodeRegisterRange(this, opcodeUnit, in);
         }
@@ -721,7 +721,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_3RMI() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             return decodeRegisterRange(this, opcodeUnit, in);
         }
@@ -732,7 +732,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_51L() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
@@ -758,7 +758,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_33X() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             //int ab = in.read();
             //int a = byte0(ab);
@@ -771,7 +771,7 @@ public enum InstructionCodec {
             l.addAll(in.read());
             
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, null,
+                    this, byte0(opcodeUnit), 0, null,
                     0, 0L, l);
         }
 
@@ -789,7 +789,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_32S() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             //int ab = in.read();
             //int a = byte0(ab);
@@ -801,7 +801,7 @@ public enum InstructionCodec {
             l.addAll(in.read());
             l.addAll(in.read());
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, null,
+                    this, (int)opcodeUnit, 0, null,
                     0, 0, l);
         }
 
@@ -819,7 +819,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_40SC() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             // Note: We use the literal field to hold the decoded AA value.
             //int index = in.readInt();
@@ -830,7 +830,7 @@ public enum InstructionCodec {
             l.addAll(in.readInt());
             l.addAll(in.read());
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, IndexType.VARIES,
+                    this, (int)opcodeUnit, 0, IndexType.VARIES,
                     0, 0, l);
         }
 
@@ -850,18 +850,18 @@ public enum InstructionCodec {
     },
 
     FORMAT_41C() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             //int index = in.readInt();
             //int a = in.read();
-            IndexType indexType = OpcodeInfo.getIndexType(opcodeUnit);
+            IndexType indexType = OpcodeInfo.getIndexType((int)opcodeUnit);
             ArrayList<Byte> l = new ArrayList<Byte>();
             l.add((byte)byte0(opcodeUnit));
             l.add((byte)byte1(opcodeUnit));
             l.addAll(in.readInt());
             l.addAll(in.read());
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, indexType,
+                    this, (int)opcodeUnit, 0, indexType,
                     0, 0L, l);
         }
 
@@ -881,7 +881,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_52C() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             //int index = in.readInt();
             //int a = in.read();
@@ -892,9 +892,9 @@ public enum InstructionCodec {
             l.addAll(in.readInt());
             l.addAll(in.read());
             l.addAll(in.read());
-        	IndexType indexType = OpcodeInfo.getIndexType(opcodeUnit);
+        	IndexType indexType = OpcodeInfo.getIndexType((int)opcodeUnit);
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, indexType,
+                    this, (int)opcodeUnit, 0, indexType,
                     0, 0L, l);
         }
 
@@ -915,7 +915,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_5RC() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             //int index = in.readInt();
             //int registerCount = in.read();
@@ -926,9 +926,9 @@ public enum InstructionCodec {
             l.addAll(in.readInt());
             l.addAll(in.read());
             l.addAll(in.read());
-        	IndexType indexType = OpcodeInfo.getIndexType(opcodeUnit);
+        	IndexType indexType = OpcodeInfo.getIndexType((int)opcodeUnit);
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, indexType,
+                    this, (int)opcodeUnit, 0, indexType,
                     0, 0L,l);
         }
 
@@ -949,7 +949,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_PACKED_SWITCH_PAYLOAD() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int baseAddress = in.baseAddressForCursor() - 1; // already read opcode
             ArrayList<Byte> l = new ArrayList<Byte>();
@@ -968,7 +968,7 @@ public enum InstructionCodec {
             }
 
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, null, 0, 0, l);
+                    this, (int)opcodeUnit, 0, null, 0, 0, l);
         }
 
         @Override public void encode(DecodedInstruction insn, CodeOutput out) {
@@ -988,7 +988,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_SPARSE_SWITCH_PAYLOAD() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             int baseAddress = in.baseAddressForCursor() - 1; // already read opcode
             //int size = in.read();
@@ -1011,7 +1011,7 @@ public enum InstructionCodec {
             }
 
             return new DecodedInstruction(
-                    this, opcodeUnit, 0, null, 0, 0, l);
+                    this, (int)opcodeUnit, 0, null, 0, 0, l);
         }
 
         @Override public void encode(DecodedInstruction insn, CodeOutput out) {
@@ -1035,7 +1035,7 @@ public enum InstructionCodec {
     },
 
     FORMAT_FILL_ARRAY_DATA_PAYLOAD() {
-        @Override public DecodedInstruction decode(int opcodeUnit,
+        @Override public DecodedInstruction decode(long opcodeUnit,
                 CodeInput in) throws EOFException {
             //int elementWidth = in.read();
             //int size = in.readInt();
@@ -1061,7 +1061,7 @@ public enum InstructionCodec {
                         value >>= 8;
                     }
                     return new DecodedInstruction(
-                            this, opcodeUnit, 0, null, 0, 0, l);
+                            this, (int)opcodeUnit, 0, null, 0, 0, l);
                 }
                 case 2: {
                     short[] array = new short[size];
@@ -1070,7 +1070,7 @@ public enum InstructionCodec {
                     	l.addAll(in.read());
                     }
                     return new DecodedInstruction(
-                            this, opcodeUnit, 0, null, 0, 0, l);
+                            this, (int)opcodeUnit, 0, null, 0, 0, l);
                 }
                 case 4: {
                     int[] array = new int[size];
@@ -1079,7 +1079,7 @@ public enum InstructionCodec {
                     	l.addAll(in.readInt());
                     }
                     return new DecodedInstruction(
-                            this, opcodeUnit, 0, null, 0, 0, l);
+                            this, (int)opcodeUnit, 0, null, 0, 0, l);
                 }
                 case 8: {
                     long[] array = new long[size];
@@ -1088,7 +1088,7 @@ public enum InstructionCodec {
                     	l.addAll(in.readLong());
                     }
                     return new DecodedInstruction(
-                            this, opcodeUnit, 0, null, 0, 0, l);
+                            this, (int)opcodeUnit, 0, null, 0, 0, l);
                 }
             }
 
@@ -1123,7 +1123,7 @@ public enum InstructionCodec {
      * Decodes an instruction specified by the given opcode unit, reading
      * any required additional code units from the given input source.
      */
-    public abstract DecodedInstruction decode(int opcodeUnit, CodeInput in)
+    public abstract DecodedInstruction decode(long opcodeUnit, CodeInput in)
         throws EOFException;
 
     /**
@@ -1135,11 +1135,11 @@ public enum InstructionCodec {
      * Helper method that decodes any of the register-list formats.
      */
     private static DecodedInstruction decodeRegisterList(
-            InstructionCodec format, int opcodeUnit, CodeInput in)
+            InstructionCodec format, long opcodeUnit, CodeInput in)
             throws EOFException {
         int opcode = byte0(opcodeUnit);
-        int e = nibble2(opcodeUnit);
-        int registerCount = nibble3(opcodeUnit);
+        //int e = nibble2(opcodeUnit);
+        //int registerCount = nibble3(opcodeUnit);
         //int index = in.read();
         //int abcd = in.read();
         ArrayList<Byte> l = new ArrayList<Byte>();
@@ -1209,7 +1209,7 @@ public enum InstructionCodec {
      * Helper method that decodes any of the three-unit register-range formats.
      */
     private static DecodedInstruction decodeRegisterRange(
-            InstructionCodec format, int opcodeUnit, CodeInput in)
+            InstructionCodec format, long opcodeUnit, CodeInput in)
             throws EOFException {
         int opcode = byte0(opcodeUnit);
         int registerCount = byte1(opcodeUnit);
@@ -1319,6 +1319,14 @@ public enum InstructionCodec {
         return (short) (value >> 48);
     }
 
+    private static int byte0(long value) {
+        return (int)(value & 0xff);
+    }
+
+    private static int byte1(long value) {
+        return (int)((value >> 8) & 0xff);
+    }
+    
     private static int byte0(int value) {
         return value & 0xff;
     }
