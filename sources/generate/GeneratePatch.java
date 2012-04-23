@@ -41,22 +41,22 @@ public class GeneratePatch {
 		update.setDumpOff();
 		RandomAccessFile raf = null;
 		try {
-			raf = new RandomAccessFile("testfiles/connect2.dex", "r");
+			raf = new RandomAccessFile(args[0], "r");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 		original.setRandomAccessFile(raf);
 		original.parse();
 		try {
-			raf = new RandomAccessFile("testfiles/connect3.dex", "r");
+			raf = new RandomAccessFile(args[1], "r");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 		update.setRandomAccessFile(raf);
 		update.parse();
 		
-		GeneratedFile patchFile = new GeneratedFile("out/connect.patch");
-		GeneratedFile dataFile = new GeneratedFile("out/data.patch");
+		GeneratedFile patchFile = new GeneratedFile(args[2]);
+		GeneratedFile dataFile = new GeneratedFile("data.diff");
 		
 		patchFile.write(((Long)update.getStringDataItemOffset()).toString() +"\n");
 		patchFile.write(((Long)update.getTypeListOffset()).toString() +"\n");
@@ -898,10 +898,11 @@ public class GeneratePatch {
 		dataFile.write((long)0x0fffffff);
 		patchFile.close();
 		dataFile.close();
-		writeCompleteFile("out/connect.patch", "out/data.patch");
+		writeCompleteFile(args[2], "data.diff");
 		//~~~~~//
 		
-		System.out.print("done");
+		File f = new File("data.diff");
+		f.delete();
 	}
 	
 	
@@ -1552,7 +1553,6 @@ public class GeneratePatch {
 	    for (int i = 0; i < a.length; i++) {
 	        for (int j = 0; j < b.length; j++) {
 	        	if (a[i].isEqual(b[j], annotationsDirectoryItemIndexMap, classDataItemIndexMap, encodedArrayItemIndexMap, stringIndexMap, typeIndexMap, typeListIndexMap)) {
-	        		System.out.println(i + " " + j);
 	        		lengths[i+1][j+1] = lengths[i][j] + 1;
 	            } else {
 	                lengths[i+1][j+1] =
@@ -1568,7 +1568,6 @@ public class GeneratePatch {
 	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
 	        	l.add(new PCommand(2));
 	        	x--;
-	        	System.out.println("Del");
 	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
 	        	l.add(new PCommand(1, b[y-1].getOutput()));
 	        	y--;

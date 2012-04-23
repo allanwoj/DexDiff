@@ -71,7 +71,7 @@ public class DexPatchFile {
 		data = new LinkedList<List<Byte>>();
 		try {
 			//BufferedReader file = new BufferedReader(new FileReader(fileName));
-			file = new RandomAccessFile("out/connect.patch", "r");
+			file = new RandomAccessFile(fileName, "r");
 			int size = 0;
 			int type;
 			

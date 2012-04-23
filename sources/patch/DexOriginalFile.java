@@ -153,24 +153,24 @@ public class DexOriginalFile extends DexParser {
     OutputStream outStream = null;
     
     private void doWrite(String data) {
-    	byte[] b = new byte[data.length()];
+    	/*byte[] b = new byte[data.length()];
 		data.getBytes(0, data.length(), b, 0);
     	try {
 			outStream.write(b);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
     }
 
 	@Override
 	public void parse() {
-		try {
+		/*try {
 			outStream = new FileOutputStream("out/log.log");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 		
 		try {
 			setFilePosition(0x0L);
@@ -392,8 +392,6 @@ public class DexOriginalFile extends DexParser {
 	        AndroidCodeInput codeInput = new AndroidCodeInput(this);
 	        // Read code_item
 	        for (int i = 0; i < codeItemSize; ++i) {
-	        	if(i == 775)
-	        		System.out.println("hi");
 	        	codeItemOffsetMap.put(position, i);
 	        	int regSize = read16Bit();
 	        	int insSize = read16Bit();
@@ -469,9 +467,6 @@ public class DexOriginalFile extends DexParser {
 	        	annotationItems[i] = new AnnotationItem(visibility, new EncodedAnnotation(type, size));
 	        	for (int j = 0; j < size; ++j) {
 	        		int name = readULEB128();
-	        		if (name == -1) {
-	        			System.out.print("oo");
-	        		}
 	        		Byte b = (byte) read8Bit();
 	        		int valueType = b & 0x1F;
 	        		int valueArg = (b & 0xFF) >> 5;
