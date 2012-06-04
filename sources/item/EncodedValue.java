@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import patch.MapManager;
+
 public class EncodedValue {
 
 	int name;
@@ -40,11 +42,11 @@ public class EncodedValue {
 		this.array = array;
 	}
 	
-	public boolean isEqual(EncodedValue other, long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+	public boolean isEqual(EncodedValue other, MapManager mm) {
 		if (valueType != other.valueType || valueArg != other.valueArg)
 			return false;
 		
-		if (name != -1 && stringMap[name] != other.name)
+		if (name != -1 && mm.stringIndexMap[name] != other.name)
 			return false;
 		
 		/*if (value != null) {
@@ -60,22 +62,22 @@ public class EncodedValue {
 		
 		if (valueType == 0x17) {
 			long val = readUint(value);
-			if (stringMap[(int)val] != (int)readUint(other.value)) {
+			if (mm.stringIndexMap[(int)val] != (int)readUint(other.value)) {
 				return false;
 			}
 		} else if (valueType == 0x18) {
 			long val = readUint(value);
-			if (typeMap[(int)val] != (int)readUint(other.value)) {
+			if (mm.typeIndexMap[(int)val] != (int)readUint(other.value)) {
 				return false;
 			}
 		} else if (valueType == 0x19 || valueType == 0x1B) {
 			long val = readUint(value);
-			if (fieldMap[(int)val] != (int)readUint(other.value)) {
+			if (mm.fieldIndexMap[(int)val] != (int)readUint(other.value)) {
 				return false;
 			}
 		} else if (valueType == 0x1A) {
 			long val = readUint(value);
-			if (methodMap[(int)val] != (int)readUint(other.value)) {
+			if (mm.methodIndexMap[(int)val] != (int)readUint(other.value)) {
 				return false;
 			}
 		} else if (value != null) {
@@ -88,46 +90,46 @@ public class EncodedValue {
 			}
 		}
 		
-		if (annotation != null && !annotation.isEqual(other.annotation, fieldMap, methodMap, stringMap, typeMap)) {
+		if (annotation != null && !annotation.isEqual(other.annotation, mm)) {
 			return false;
 		}
 		
-		if (array != null && !array.isEqual(other.array, fieldMap, methodMap, stringMap, typeMap)) {
+		if (array != null && !array.isEqual(other.array, mm)) {
 			return false;
 		}
 		
 		return true;
 	}
 	
-	public Collection<Byte> getData(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+	public Collection<Byte> getData(MapManager mm) {
 		int ret = (valueArg << 5) | valueType;
 		ArrayList<Byte> byteRet = new ArrayList<Byte>();
 		byteRet.add((byte)ret);
 		
 		if (valueType == 0x17) {
 			long val = readUint(value);
-			long newVal = stringMap[(int)val];
+			long newVal = mm.stringIndexMap[(int)val];
 			Byte[] blah = writeUint(newVal);
 			for (int i = 0; i < blah.length; ++i) {
 				byteRet.add(blah[i]);
 			}
 		} else if (valueType == 0x18) {
 			long val = readUint(value);
-			long newVal = typeMap[(int)val];
+			long newVal = mm.typeIndexMap[(int)val];
 			Byte[] blah = writeUint(newVal);
 			for (int i = 0; i < blah.length; ++i) {
 				byteRet.add(blah[i]);
 			}
 		} else if (valueType == 0x19 || valueType == 0x1B) {
 			long val = readUint(value);
-			long newVal = fieldMap[(int)val];
+			long newVal = mm.fieldIndexMap[(int)val];
 			Byte[] blah = writeUint(newVal);
 			for (int i = 0; i < blah.length; ++i) {
 				byteRet.add(blah[i]);
 			}
 		} else if (valueType == 0x1A) {
 			long val = readUint(value);
-			long newVal = methodMap[(int)val];
+			long newVal = mm.methodIndexMap[(int)val];
 			Byte[] blah = writeUint(newVal);
 			for (int i = 0; i < blah.length; ++i) {
 				byteRet.add(blah[i]);
@@ -137,9 +139,9 @@ public class EncodedValue {
 				byteRet.add(value[i]);
 			}
 		} else if (annotation != null) {
-			byteRet.addAll(annotation.getData(fieldMap, methodMap, stringMap, typeMap));
+			byteRet.addAll(annotation.getData(mm));
 		} else if (array != null){
-			byteRet.addAll(array.getData(fieldMap, methodMap, stringMap, typeMap));
+			byteRet.addAll(array.getData(mm));
 		}
 		return byteRet;
 	}

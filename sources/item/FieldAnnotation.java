@@ -3,6 +3,8 @@ package item;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import patch.MapManager;
+
 public class FieldAnnotation {
 
 	public long fieldId;
@@ -14,20 +16,20 @@ public class FieldAnnotation {
 		this.annotationSetItemOffset = annotationSetItemOffset;
 	}
 	
-	public Collection<Byte> getBytes(long[] fieldIndexMap, long[] annotationSetItemIndexMap, long[] annotationSetItemPointerMap) {
+	public Collection<Byte> getBytes(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
-		byte[] temp = write32bit(fieldIndexMap[(int)fieldId]);
+		byte[] temp = write32bit(mm.fieldIndexMap[(int)fieldId]);
 		for (int i = 0; i < temp.length; ++i)
 			l.add(temp[i]);
-		temp = write32bit(annotationSetItemPointerMap[(int)annotationSetItemIndexMap[(int)annotationSetItemIndex]]);
+		temp = write32bit(mm.annotationSetItemPointerMap[(int)mm.annotationSetItemIndexMap[(int)annotationSetItemIndex]]);
 		for (int i = 0; i < temp.length; ++i)
 			l.add(temp[i]);
 		return l;
 	}
 	
-	public boolean isEqual(FieldAnnotation other, long[] fieldIndexMap, long[] annotationSetItemIndexMap) {
-		return (fieldIndexMap[(int)fieldId] == other.fieldId &&
-			annotationSetItemIndexMap[annotationSetItemIndex] == other.annotationSetItemIndex);
+	public boolean isEqual(FieldAnnotation other, MapManager mm) {
+		return (mm.fieldIndexMap[(int)fieldId] == other.fieldId &&
+				mm.annotationSetItemIndexMap[annotationSetItemIndex] == other.annotationSetItemIndex);
 	}
 	
 	public Collection<Byte> getOutput() {

@@ -1,5 +1,7 @@
 package item;
 
+import patch.MapManager;
+
 public class MethodIdItem {
 
 	public long classId;
@@ -36,6 +38,12 @@ public class MethodIdItem {
 		
 		
 		return ret;
+	}
+	
+	public boolean isEqual(MethodIdItem other, MapManager mm) {
+		return (mm.typeIndexMap[(int)classId] == other.classId &&
+				mm.protoIndexMap[(int)proto] == other.proto &&
+				mm.stringIndexMap[(int)name] == other.name);
 	}
 	
 	public byte[] write16bit(long data) {

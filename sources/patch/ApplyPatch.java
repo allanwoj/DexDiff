@@ -66,30 +66,8 @@ public class ApplyPatch {
 		GeneratedFile codeItemFile = new GeneratedFile("code_item.dex");
 		GeneratedFile headerFile = new GeneratedFile(args[2]);
 		GeneratedFile mapListFile = new GeneratedFile("map_list.dex");
-		long[] stringIndexMap = new long[10000];
-		long[] typeIndexMap = new long[10000];
-		long[] fieldIndexMap = new long[10000];
-		long[] protoIndexMap = new long[10000];
-		long[] methodIndexMap = new long[10000];
-		long[] typeListIndexMap = new long[10000];
-		long[] typeListPointerMap = new long[10000];
-		long[] classDataItemIndexMap = new long[10000];
-		long[] classDataItemPointerMap = new long[10000];
-		long[] encodedArrayItemIndexMap = new long[10000];
-		long[] encodedArrayItemPointerMap = new long[10000];
-		long[] classDefItemIndexMap = new long[10000];
-		long[] annotationItemIndexMap = new long[10000];
-		long[] annotationItemPointerMap = new long[10000];
-		long[] annotationSetItemIndexMap = new long[10000];
-		long[] annotationSetItemPointerMap = new long[10000];
-		long[] annotationSetRefListIndexMap = new long[10000];
-		long[] annotationSetRefListPointerMap = new long[10000];
-		long[] annotationsDirectoryItemIndexMap = new long[10000];
-		long[] annotationsDirectoryItemPointerMap = new long[10000];
-		long[] debugInfoItemMap = new long[10000];
-		long[] debugInfoItemPointerMap = new long[10000];
-		long[] codeItemIndexMap = new long[10000];
-		long[] codeItemPointerMap = new long[10000];
+		
+		MapManager mm = new MapManager();
 		PatchCommand command;
 		int fileIndex = 0;
 		int mapIndex = 0;
@@ -111,7 +89,7 @@ public class ApplyPatch {
 						stringIdsFile.write(currentStringOffset);
 					stringFile.write(buf);
 					stringFile.write(0);
-					stringIndexMap[mapIndex++] = fileIndex++;
+					mm.stringIndexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {
 				// ADD
@@ -136,7 +114,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getStringData();
-					stringIndexMap[mapIndex++] = -1;
+					mm.stringIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -151,8 +129,8 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					typeIdsFile.write((stringIndexMap[original.getTypeIdData()]));
-					typeIndexMap[mapIndex++] = fileIndex++;
+					typeIdsFile.write((mm.stringIndexMap[original.getTypeIdData()]));
+					mm.typeIndexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {
 				// ADD
@@ -164,7 +142,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getTypeIdData();
-					typeIndexMap[mapIndex++] = -1;
+					mm.typeIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -182,10 +160,10 @@ public class ApplyPatch {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
 					item = original.getFieldIdData();
-					fieldIdsFile.write16bit(typeIndexMap[item.classId]);
-					fieldIdsFile.write16bit(typeIndexMap[item.typeId]);
-					fieldIdsFile.write(stringIndexMap[(int) item.nameId]);
-					fieldIndexMap[mapIndex++] = fileIndex++;
+					fieldIdsFile.write16bit(mm.typeIndexMap[item.classId]);
+					fieldIdsFile.write16bit(mm.typeIndexMap[item.typeId]);
+					fieldIdsFile.write(mm.stringIndexMap[(int) item.nameId]);
+					mm.fieldIndexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {
 				// ADD
@@ -197,7 +175,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getFieldIdData();
-					fieldIndexMap[mapIndex++] = -1;
+					mm.fieldIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -214,12 +192,12 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					typeListIndexMap[mapIndex++] = fileIndex++;
-					typeListPointerMap[pointerIndex++] = tempPointer;
+					mm.typeListIndexMap[mapIndex++] = fileIndex++;
+					mm.typeListPointerMap[pointerIndex++] = tempPointer;
 					typeList = original.getTypeList();
 					typeListFile.write(typeList.size);
 					for (int j = 0; j < typeList.size; ++j) {
-						typeListFile.write16bit(typeIndexMap[typeList.types[j]]);
+						typeListFile.write16bit(mm.typeIndexMap[typeList.types[j]]);
 					}
 					if (typeList.size % 2 == 1) {
 						typeListFile.write16bit(0L);
@@ -232,7 +210,7 @@ public class ApplyPatch {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
 					++fileIndex;
-					typeListPointerMap[pointerIndex++] = tempPointer;
+					mm.typeListPointerMap[pointerIndex++] = tempPointer;
 					
 					List<Byte> li = patch.getNextData();
 					tempPointer += li.size();
@@ -252,7 +230,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getTypeList();
-					typeListIndexMap[mapIndex++] = -1;
+					mm.typeListIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -268,14 +246,14 @@ public class ApplyPatch {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
 					protoItem = original.getProtoIdData();
-					protoFile.write(stringIndexMap[(int)protoItem.shorty]);
-					protoFile.write(typeIndexMap[(int)protoItem.type]);
+					protoFile.write(mm.stringIndexMap[(int)protoItem.shorty]);
+					protoFile.write(mm.typeIndexMap[(int)protoItem.type]);
 					if (protoItem.typeListIndex == -1) {
 						protoFile.write(0L);
 					} else {
-						protoFile.write(typeListPointerMap[(int) typeListIndexMap[protoItem.typeListIndex]]);
+						protoFile.write(mm.typeListPointerMap[(int) mm.typeListIndexMap[protoItem.typeListIndex]]);
 					}
-					protoIndexMap[mapIndex++] = fileIndex++;
+					mm.protoIndexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {
 				// ADD
@@ -287,7 +265,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getProtoIdData();
-					protoIndexMap[mapIndex++] = -1;
+					mm.protoIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -303,10 +281,10 @@ public class ApplyPatch {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
 					methodItem = original.getMethodIdData();
-					methodFile.write16bit(typeIndexMap[(int)methodItem.classId]);
-					methodFile.write16bit(protoIndexMap[(int)methodItem.proto]);
-					methodFile.write(stringIndexMap[(int)methodItem.name]);
-					methodIndexMap[mapIndex++] = fileIndex++;
+					methodFile.write16bit(mm.typeIndexMap[(int)methodItem.classId]);
+					methodFile.write16bit(mm.protoIndexMap[(int)methodItem.proto]);
+					methodFile.write(mm.stringIndexMap[(int)methodItem.name]);
+					mm.methodIndexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {
 				// ADD
@@ -318,7 +296,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getMethodIdData();
-					methodIndexMap[mapIndex++] = -1;
+					mm.methodIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -338,10 +316,10 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					debugInfoItem = original.getDebugInfoItem();
 					
-					debugInfoItemMap[mapIndex++] = fileIndex++;
-					debugInfoItemPointerMap[pointerIndex++] = tempPointer;
+					mm.debugInfoItemMap[mapIndex++] = fileIndex++;
+					mm.debugInfoItemPointerMap[pointerIndex++] = tempPointer;
 					
-					byte[] temp = debugInfoItem.getByteCode(stringIndexMap, typeIndexMap);
+					byte[] temp = debugInfoItem.getByteCode(mm);
 					tempPointer += temp.length;
 					
 					debugInfoItemFile.write(temp);
@@ -386,7 +364,7 @@ public class ApplyPatch {
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					debugInfoItemPointerMap[pointerIndex++] = tempPointer;
+					mm.debugInfoItemPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					debugInfoItemFile.write(temp);
@@ -397,7 +375,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getDebugInfoItem();
-					debugInfoItemMap[mapIndex++] = -1;
+					mm.debugInfoItemMap[mapIndex++] = -1;
 				}
 			}
 			
@@ -415,17 +393,17 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					codeItemIndexMap[mapIndex++] = fileIndex++;
-					codeItemPointerMap[pointerIndex++] = tempPointer;
+					mm.codeItemIndexMap[mapIndex++] = fileIndex++;
+					mm.codeItemPointerMap[pointerIndex++] = tempPointer;
 					codeItem = original.getCodeItem();
-					byte[] temp = codeItem.getOutput(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap, debugInfoItemMap, debugInfoItemPointerMap);
+					byte[] temp = codeItem.getOutput(mm);
 					tempPointer += temp.length;
 					codeItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					codeItemPointerMap[pointerIndex++] = tempPointer;
+					mm.codeItemPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					codeItemFile.write(temp);
@@ -435,7 +413,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getCodeItem();
-					codeItemIndexMap[mapIndex++] = -1;
+					mm.codeItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -453,17 +431,17 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					annotationItemIndexMap[mapIndex++] = fileIndex++;
-					annotationItemPointerMap[pointerIndex++] = tempPointer;
+					mm.annotationItemIndexMap[mapIndex++] = fileIndex++;
+					mm.annotationItemPointerMap[pointerIndex++] = tempPointer;
 					annotationItem = original.getAnnotationItem();
-					byte[] temp = annotationItem.getBytes(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap);
+					byte[] temp = annotationItem.getBytes(mm);
 					tempPointer += temp.length;
 					annotationItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					annotationItemPointerMap[pointerIndex++] = tempPointer;
+					mm.annotationItemPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					annotationItemFile.write(temp);
@@ -473,7 +451,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getAnnotationItem();
-					annotationItemIndexMap[mapIndex++] = -1;
+					mm.annotationItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -491,17 +469,17 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					annotationSetItemIndexMap[mapIndex++] = fileIndex++;
-					annotationSetItemPointerMap[pointerIndex++] = tempPointer;
+					mm.annotationSetItemIndexMap[mapIndex++] = fileIndex++;
+					mm.annotationSetItemPointerMap[pointerIndex++] = tempPointer;
 					annotationSetItem = original.getAnnotationSetItem();
-					byte[] temp = annotationSetItem.getBytes(annotationItemIndexMap, annotationItemPointerMap);
+					byte[] temp = annotationSetItem.getBytes(mm);
 					tempPointer += temp.length;
 					annotationSetItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					annotationSetItemPointerMap[pointerIndex++] = tempPointer;
+					mm.annotationSetItemPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					annotationSetItemFile.write(temp);
@@ -511,7 +489,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getAnnotationSetItem();
-					annotationSetItemIndexMap[mapIndex++] = -1;
+					mm.annotationSetItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -529,17 +507,17 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					annotationSetRefListIndexMap[mapIndex++] = fileIndex++;
-					annotationSetRefListPointerMap[pointerIndex++] = tempPointer;
+					mm.annotationSetRefListIndexMap[mapIndex++] = fileIndex++;
+					mm.annotationSetRefListPointerMap[pointerIndex++] = tempPointer;
 					annotationSetRefList= original.getAnnotationSetRefList();
-					byte[] temp = annotationSetRefList.getBytes(annotationSetItemIndexMap, annotationSetItemPointerMap);
+					byte[] temp = annotationSetRefList.getBytes(mm);
 					tempPointer += temp.length;
 					annotationSetRefListFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					annotationSetRefListPointerMap[pointerIndex++] = tempPointer;
+					mm.annotationSetRefListPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					annotationSetRefListFile.write(temp);
@@ -549,7 +527,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getAnnotationSetRefList();
-					annotationSetRefListIndexMap[mapIndex++] = -1;
+					mm.annotationSetRefListIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -569,17 +547,17 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex++;
-					annotationsDirectoryItemPointerMap[pointerIndex++] = tempPointer;
+					mm.annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex++;
+					mm.annotationsDirectoryItemPointerMap[pointerIndex++] = tempPointer;
 					annotationsDirectoryItem = original.getAnnotationsDirectoryItem();
-					byte[] temp = annotationsDirectoryItem.getBytes(fieldIndexMap, methodIndexMap, annotationSetItemIndexMap, annotationSetItemPointerMap, annotationSetRefListIndexMap, annotationSetRefListPointerMap);
+					byte[] temp = annotationsDirectoryItem.getBytes(mm);
 					tempPointer += temp.length;
 					annotationsDirectoryItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					annotationsDirectoryItemPointerMap[pointerIndex++] = tempPointer;
+					mm.annotationsDirectoryItemPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					annotationsDirectoryItemFile.write(temp);
@@ -589,7 +567,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getAnnotationsDirectoryItem();
-					annotationsDirectoryItemIndexMap[mapIndex++] = -1;
+					mm.annotationsDirectoryItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -606,17 +584,17 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					classDataItemIndexMap[mapIndex++] = fileIndex++;
-					classDataItemPointerMap[pointerIndex++] = tempPointer;
+					mm.classDataItemIndexMap[mapIndex++] = fileIndex++;
+					mm.classDataItemPointerMap[pointerIndex++] = tempPointer;
 					classDataItem = original.getClassDataItem();
-					byte[] temp = classDataItem.getBytes(fieldIndexMap, methodIndexMap, codeItemIndexMap, codeItemPointerMap);
+					byte[] temp = classDataItem.getBytes(mm);
 					tempPointer += temp.length;
 					classDataItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					classDataItemPointerMap[pointerIndex++] = tempPointer;
+					mm.classDataItemPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					classDataItemFile.write(temp);
@@ -626,7 +604,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getClassDataItem();
-					classDataItemIndexMap[mapIndex++] = -1;
+					mm.classDataItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -643,17 +621,17 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					encodedArrayItemIndexMap[mapIndex++] = fileIndex++;
-					encodedArrayItemPointerMap[pointerIndex++] = tempPointer;
+					mm.encodedArrayItemIndexMap[mapIndex++] = fileIndex++;
+					mm.encodedArrayItemPointerMap[pointerIndex++] = tempPointer;
 					encodedArrayItem = original.getEncodedArrayItem();
-					Collection<Byte> temp = encodedArrayItem.getData(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap);
+					Collection<Byte> temp = encodedArrayItem.getData(mm);
 					tempPointer += temp.size();
 					encodedArrayItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
 				// ADD
 				for(int i = 0; i < command.size; ++i) {
-					encodedArrayItemPointerMap[pointerIndex++] = tempPointer;
+					mm.encodedArrayItemPointerMap[pointerIndex++] = tempPointer;
 					List<Byte> temp = patch.getNextData();
 					tempPointer += temp.size();
 					encodedArrayItemFile.write(temp);
@@ -663,7 +641,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getEncodedArrayItem();
-					encodedArrayItemIndexMap[mapIndex++] = -1;
+					mm.encodedArrayItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}
@@ -678,9 +656,9 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					classDefItemIndexMap[mapIndex++] = fileIndex++;
+					mm.classDefItemIndexMap[mapIndex++] = fileIndex++;
 					classDefItem = original.getClassDefItem();
-					byte[] temp = classDefItem.getData(annotationsDirectoryItemIndexMap, annotationsDirectoryItemPointerMap, classDataItemIndexMap, classDataItemPointerMap, encodedArrayItemIndexMap, encodedArrayItemPointerMap, stringIndexMap, typeIndexMap, typeListIndexMap, typeListPointerMap);
+					byte[] temp = classDefItem.getData(mm);
 					classDefItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
@@ -694,7 +672,7 @@ public class ApplyPatch {
 				// DELETE
 				for(int i = 0; i < command.size; ++i) {
 					original.getClassDefItem();
-					classDefItemIndexMap[mapIndex++] = -1;
+					mm.classDefItemIndexMap[mapIndex++] = -1;
 				}
 			}
 		}

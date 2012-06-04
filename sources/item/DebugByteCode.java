@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import patch.MapManager;
+
 public class DebugByteCode {
 
 	public int value;
@@ -88,7 +90,7 @@ public class DebugByteCode {
 		return l;
 	}
 	
-	public Collection<Byte> getBytecode(long[] stringIndexMap, long[] typeIndexMap) {
+	public Collection<Byte> getBytecode(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.add(write(value));
 		if (value == 1) {
@@ -97,17 +99,17 @@ public class DebugByteCode {
 			l.addAll(writeSLeb128((int)lineDiff));
 		} else if (value == 3) {
 			l.addAll(writeULeb128((int)registerNum));
-			l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)name]));
-			l.addAll(writeULeb128(1 + (int)typeIndexMap[(int)type]));
+			l.addAll(writeULeb128(1 + (int)mm.stringIndexMap[(int)name]));
+			l.addAll(writeULeb128(1 + (int)mm.typeIndexMap[(int)type]));
 		} else if (value == 4) {
 			l.addAll(writeULeb128((int)registerNum));
-			l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)name]));
-			l.addAll(writeULeb128(1 + (int)typeIndexMap[(int)type]));
-			l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)sig]));
+			l.addAll(writeULeb128(1 + (int)mm.stringIndexMap[(int)name]));
+			l.addAll(writeULeb128(1 + (int)mm.typeIndexMap[(int)type]));
+			l.addAll(writeULeb128(1 + (int)mm.stringIndexMap[(int)sig]));
 		} else if (value == 5 || value == 6) {
 			l.addAll(writeULeb128((int)registerNum));
 		} else if (value == 9) {
-			l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)name]));
+			l.addAll(writeULeb128(1 + (int)mm.stringIndexMap[(int)name]));
 		}
 		return l;
 	}

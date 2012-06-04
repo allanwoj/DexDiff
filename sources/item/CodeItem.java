@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import patch.MapManager;
+
 import android.DecodedInstruction;
 
 public class CodeItem {
@@ -152,11 +154,11 @@ public class CodeItem {
 		return ret;
 	}
 	
-	public boolean isEqual(CodeItem other, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap, long[] debugInfoIndexMap) {
+	public boolean isEqual(CodeItem other, MapManager mm) {
 		if (registersSize != other.registersSize || insSize != other.insSize ||
     			outsSize != other.outsSize || triesSize != other.triesSize ||
     			insnsSize != other.insnsSize || padding != other.padding || ins.size() != other.ins.size() ||
-    			times != other.times ||	debugInfoIndexMap[debugInfoIndex] != other.debugInfoIndex) {
+    			times != other.times ||	mm.debugInfoItemMap[debugInfoIndex] != other.debugInfoIndex) {
     		return false;
     	}
 		
@@ -167,7 +169,7 @@ public class CodeItem {
 		}
 		
 		if (triesSize > 0) {
-			if (!handlers.isEqual(other.handlers, typeIndexMap)) {
+			if (!handlers.isEqual(other.handlers, mm.typeIndexMap)) {
 				return false;
 			}
 		}
@@ -177,7 +179,7 @@ public class CodeItem {
 		Iterator<DecodedInstruction> otherIt = other.ins.iterator();
 		
 		while (it.hasNext()) {
-			if (!it.next().isEqual(otherIt.next(), fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap)) {
+			if (!it.next().isEqual(otherIt.next(), mm)) {
 				return false;
 			}
 		}
@@ -186,13 +188,13 @@ public class CodeItem {
 		
 	}
 	
-	public byte[] getOutput(long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap, long[] debugInfoIndexMap, long[] debugInfoPointerMap) {
+	public byte[] getOutput(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(write16bit(registersSize));
 		l.addAll(write16bit(insSize));
 		l.addAll(write16bit(outsSize));
 		l.addAll(write16bit(triesSize));
-		l.addAll(write32bit(debugInfoPointerMap[(int) debugInfoIndexMap[debugInfoIndex]]));
+		l.addAll(write32bit(mm.debugInfoItemPointerMap[(int) mm.debugInfoItemMap[debugInfoIndex]]));
 		l.addAll(write32bit(insnsSize));
 		
 		/*Iterator<ByteCode> it = byteCode.iterator();
@@ -202,7 +204,7 @@ public class CodeItem {
 		
 		Iterator<DecodedInstruction> it = ins.iterator();
 		while (it.hasNext()) {
-			l.addAll(it.next().getOutput(fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap));
+			l.addAll(it.next().getOutput(mm));
 		}
 		
 		if (insnsSize % 2 == 1)
@@ -218,7 +220,7 @@ public class CodeItem {
 			for (int j = 0; j < handlers.size; ++j) {
 				l.addAll(writeSLeb128((int)handlers.list[j].size));
 				for (int k = 0; k < Math.abs(handlers.list[j].size); ++k) {
-					l.addAll(writeULeb128((int)typeIndexMap[(int)handlers.list[j].handlers[k].type]));
+					l.addAll(writeULeb128((int)mm.typeIndexMap[(int)handlers.list[j].handlers[k].type]));
 					l.addAll(writeULeb128((int)handlers.list[j].handlers[k].addr));
 				}
 				if (handlers.list[j].size <= 0)

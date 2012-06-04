@@ -3,6 +3,8 @@ package item;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import patch.MapManager;
+
 public class EncodedAnnotation {
 	private int type;
 	private int size;
@@ -22,12 +24,12 @@ public class EncodedAnnotation {
 		return size;
 	}
 	
-	public boolean isEqual(EncodedAnnotation other, long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
-		if (size != other.size || typeMap[type] != other.type)
+	public boolean isEqual(EncodedAnnotation other, MapManager mm) {
+		if (size != other.size || mm.typeIndexMap[type] != other.type)
 			return false;
 		
 		for (int i = 0; i < size; ++i) {
-			if (!values[i].isEqual(other.values[i], fieldMap, methodMap, stringMap, typeMap)) {
+			if (!values[i].isEqual(other.values[i], mm)) {
 				return false;
 			}
 		}
@@ -35,15 +37,15 @@ public class EncodedAnnotation {
 		return true;
 	}
 	
-	public Collection<Byte> getData(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+	public Collection<Byte> getData(MapManager mm) {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
-		ret.addAll(getULeb128((int)typeMap[type]));
+		ret.addAll(getULeb128((int)mm.typeIndexMap[type]));
 		ret.addAll(getULeb128(size));
 		int name = 0;
 		for (int i = 0; i < size; ++i) {
-			name = (int)stringMap[values[i].name];
+			name = (int)mm.stringIndexMap[values[i].name];
 			ret.addAll(getULeb128(name));
-			ret.addAll(values[i].getData(fieldMap, methodMap, stringMap, typeMap));
+			ret.addAll(values[i].getData(mm));
 		}
 		return ret;
 	}

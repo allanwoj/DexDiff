@@ -3,6 +3,8 @@ package item;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import patch.MapManager;
+
 public class AnnotationSetItem {
 
 	public long size;
@@ -15,18 +17,18 @@ public class AnnotationSetItem {
 		this.entriesIndex = entriesIndex;
 	}
 	
-	public boolean isEqual(AnnotationSetItem other, long[] annotationItemIndexMap) {
+	public boolean isEqual(AnnotationSetItem other, MapManager mm) {
 		if (size != other.size)
 			return false;
 		
 		for (int i = 0; i < size; ++i) {
-			if (annotationItemIndexMap[entriesIndex[i]] != other.entriesIndex[i])
+			if (mm.annotationItemIndexMap[entriesIndex[i]] != other.entriesIndex[i])
 				return false;
 		}
 		return true;
 	}
 	
-	public byte[] getBytes(long[] annotationItemIndexMap, long[] annotationItemPointerMap) {
+	public byte[] getBytes(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 			
 		byte[] temp = write32bit(size);
@@ -34,7 +36,7 @@ public class AnnotationSetItem {
 			l.add(temp[i]);
 		
 		for (int i = 0; i < size; ++i) {
-			temp = write32bit(annotationItemPointerMap[(int)annotationItemIndexMap[entriesIndex[i]]]);
+			temp = write32bit(mm.annotationItemPointerMap[(int)mm.annotationItemIndexMap[entriesIndex[i]]]);
 			for (int j = 0; j < 4; ++j)
 				l.add(temp[j]);
 		}

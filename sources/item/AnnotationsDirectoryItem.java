@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import patch.MapManager;
+
 public class AnnotationsDirectoryItem {
 
 	public long classOffset;
@@ -32,12 +34,12 @@ public class AnnotationsDirectoryItem {
 	}
 	
 	
-	public byte[] getBytes(long[]fieldIndexMap, long[] methodIndexMap, long[] annotationSetItemIndexMap, long[] annotationSetItemPointerMap, long[] annotationSetRefListIndexMap, long[] annotationSetRefListPointerMap) {
+	public byte[] getBytes(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		byte[] temp;
 		
 		if (classIndex != - 1) {
-			temp = write32bit(annotationSetItemPointerMap[(int)annotationSetItemIndexMap[classIndex]]);
+			temp = write32bit(mm.annotationSetItemPointerMap[(int)mm.annotationSetItemIndexMap[classIndex]]);
 			for (int i = 0; i < temp.length; ++i)
 				l.add(temp[i]);
 		} else {
@@ -59,15 +61,15 @@ public class AnnotationsDirectoryItem {
 			l.add(temp[i]);
 		
 		for (int i = 0; i < fieldsSize; ++i) {
-			l.addAll(fieldAnnotations[i].getBytes(fieldIndexMap, annotationSetItemIndexMap, annotationSetItemPointerMap));
+			l.addAll(fieldAnnotations[i].getBytes(mm));
 		}
 		
 		for (int i = 0; i < annMethodsSize; ++i) {
-			l.addAll(methodAnnotations[i].getBytes(methodIndexMap, annotationSetItemIndexMap, annotationSetItemPointerMap));
+			l.addAll(methodAnnotations[i].getBytes(mm));
 		}
 		
 		for (int i = 0; i < annParamsSize; ++i) {
-			l.addAll(parameterAnnotations[i].getBytes(methodIndexMap, annotationSetRefListIndexMap, annotationSetRefListPointerMap));
+			l.addAll(parameterAnnotations[i].getBytes(mm));
 		}
 		
 		byte[] ret = new byte[l.size()];
@@ -81,29 +83,29 @@ public class AnnotationsDirectoryItem {
 		return ret;
 	}
 	
-	public boolean isEqual(AnnotationsDirectoryItem other, long[] fieldIndexMap, long[] methodIndexMap, long[] annotationSetItemIndexMap, long[] annotationSetRefListIndexMap) {
+	public boolean isEqual(AnnotationsDirectoryItem other, MapManager mm) {
 		if (fieldsSize != other.fieldsSize ||
 				annMethodsSize != other.annMethodsSize || annParamsSize != other.annParamsSize) {
 			return false;
 		}
 		
-		if (classIndex != -1 && annotationSetItemIndexMap[classIndex] != other.classIndex)
+		if (classIndex != -1 && mm.annotationSetItemIndexMap[classIndex] != other.classIndex)
 			return false;
 		
 		for (int i = 0; i < fieldsSize; ++i) {
-			if (!fieldAnnotations[i].isEqual(other.fieldAnnotations[i], fieldIndexMap, annotationSetItemIndexMap)) {
+			if (!fieldAnnotations[i].isEqual(other.fieldAnnotations[i], mm)) {
 				return false;
 			}
 		}
 		
 		for (int i = 0; i < annMethodsSize; ++i) {
-			if (!methodAnnotations[i].isEqual(other.methodAnnotations[i], methodIndexMap, annotationSetItemIndexMap)) {
+			if (!methodAnnotations[i].isEqual(other.methodAnnotations[i], mm)) {
 				return false;
 			}
 		}
 		
 		for (int i = 0; i < annParamsSize; ++i) {
-			if (!parameterAnnotations[i].isEqual(other.parameterAnnotations[i], methodIndexMap, annotationSetRefListIndexMap)) {
+			if (!parameterAnnotations[i].isEqual(other.parameterAnnotations[i], mm)) {
 				return false;
 			}
 		}

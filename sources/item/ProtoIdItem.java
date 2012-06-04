@@ -1,5 +1,7 @@
 package item;
 
+import patch.MapManager;
+
 public class ProtoIdItem {
 
 	public long shorty;
@@ -38,6 +40,22 @@ public class ProtoIdItem {
 		
 		
 		return ret;
+	}
+	
+	public boolean isEqual(ProtoIdItem other, MapManager mm) {
+		if (mm.stringIndexMap[(int)shorty] != other.shorty ||
+				mm.typeIndexMap[(int)type] != other.type) {
+    		return false;
+    	}
+    	
+    	if (typeListIndex == -1 || other.typeListIndex == -1) {
+    		if(typeListIndex != other.typeListIndex) {
+    			return false;
+    		}
+    	} else if (mm.typeListIndexMap[(int)typeListIndex] != other.typeListIndex) {
+    		return false;
+    	}
+    	return true;
 	}
 	
 	public byte[] write32bit(long data) {

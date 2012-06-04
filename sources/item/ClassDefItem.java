@@ -3,6 +3,8 @@ package item;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import patch.MapManager;
+
 public class ClassDefItem {
 	public long classId;
 	public long accessFlags;
@@ -35,10 +37,9 @@ public class ClassDefItem {
 		this.staticValuesOffset = staticValuesOffset;
 	}
 	
-	public byte[] getData(long[] annotationsDirectoryItemIndexMap, long[] annotationsDirectoryItemPointerMap, long[] classDataItemIndexMap, long[] classDataItemPointerMap,
-			long[] encodedArrayItemIndexMap, long[] encodedArrayItemPointerMap,long[] stringIndexMap, long[] typeIndexMap, long[] typeListIndexMap, long[] typeListPointerMap) {
+	public byte[] getData(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
-		byte[] temp = write32bit(typeIndexMap[(int)classId]);
+		byte[] temp = write32bit(mm.typeIndexMap[(int)classId]);
 		for (int i = 0; i < 4; ++i)
 			l.add(temp[i]);
 		
@@ -47,7 +48,7 @@ public class ClassDefItem {
 			l.add(temp[i]);
 		
 		if (superclassId != -1) {
-			temp = write32bit(typeIndexMap[(int)superclassId]);
+			temp = write32bit(mm.typeIndexMap[(int)superclassId]);
 			for (int i = 0; i < 4; ++i)
 				l.add(temp[i]);
 		} else {
@@ -57,7 +58,7 @@ public class ClassDefItem {
 		}
 		
 		if (interfacesOffset != 0) {
-			temp = write32bit(typeListPointerMap[(int)typeListIndexMap[(int)interfacesIndex]]);
+			temp = write32bit(mm.typeListPointerMap[(int)mm.typeListIndexMap[(int)interfacesIndex]]);
 			for (int i = 0; i < 4; ++i)
 				l.add(temp[i]);
 		} else {
@@ -67,7 +68,7 @@ public class ClassDefItem {
 		}
 		
 		if (sourceFileId != -1) {
-			temp = write32bit(stringIndexMap[(int)sourceFileId]);
+			temp = write32bit(mm.stringIndexMap[(int)sourceFileId]);
 			for (int i = 0; i < 4; ++i)
 				l.add(temp[i]);
 		} else {
@@ -77,7 +78,7 @@ public class ClassDefItem {
 		}
 		
 		if (annotationsOffset != 0) {
-			temp = write32bit(annotationsDirectoryItemPointerMap[(int)annotationsDirectoryItemIndexMap[annotationsIndex]]);
+			temp = write32bit(mm.annotationsDirectoryItemPointerMap[(int)mm.annotationsDirectoryItemIndexMap[annotationsIndex]]);
 			for (int i = 0; i < 4; ++i)
 				l.add(temp[i]);
 		} else {
@@ -87,7 +88,7 @@ public class ClassDefItem {
 		}
 		
 		if (classDataOffset != 0) {
-			temp = write32bit(classDataItemPointerMap[(int)classDataItemIndexMap[classDataIndex]]);
+			temp = write32bit(mm.classDataItemPointerMap[(int)mm.classDataItemIndexMap[classDataIndex]]);
 			for (int i = 0; i < 4; ++i)
 				l.add(temp[i]);
 		} else {
@@ -97,7 +98,7 @@ public class ClassDefItem {
 		}
 		
 		if (staticValuesOffset != 0) {
-			temp = write32bit(encodedArrayItemPointerMap[(int)encodedArrayItemIndexMap[staticValuesIndex]]);
+			temp = write32bit(mm.encodedArrayItemPointerMap[(int)mm.encodedArrayItemIndexMap[staticValuesIndex]]);
 			for (int i = 0; i < 4; ++i)
 				l.add(temp[i]);
 		} else {
@@ -164,43 +165,43 @@ public class ClassDefItem {
 		return ret;
 	}
 	
-	public boolean isEqual(ClassDefItem other, long[] annotationsDirectoryItemIndexMap, long[] classDataItemIndexMap, long[] encodedArrayItemIndexMap, long[] stringIndexMap, long[] typeIndexMap, long[] typeListIndexMap) {
-		if (typeIndexMap[(int) classId] != other.classId || accessFlags != other.accessFlags) {
+	public boolean isEqual(ClassDefItem other, MapManager mm) {
+		if (mm.typeIndexMap[(int) classId] != other.classId || accessFlags != other.accessFlags) {
 			return false;
 		}
 		
 		if (superclassId != -1) {
-			if (typeIndexMap[(int) superclassId] != other.superclassId) {
+			if (mm.typeIndexMap[(int) superclassId] != other.superclassId) {
 				return false;
 			}
 		}
 		
 		if (interfacesOffset != 0) {
-			if (typeListIndexMap[interfacesIndex] != other.interfacesIndex) {
+			if (mm.typeListIndexMap[interfacesIndex] != other.interfacesIndex) {
 				return false;
 			}
 		}
 		
 		if (sourceFileId != -1) {
-			if (stringIndexMap[(int) sourceFileId] != other.sourceFileId) {
+			if (mm.stringIndexMap[(int) sourceFileId] != other.sourceFileId) {
 				return false;
 			}
 		}
 		
 		if (annotationsOffset != 0) {
-			if (annotationsDirectoryItemIndexMap[annotationsIndex] != other.annotationsIndex) {
+			if (mm.annotationsDirectoryItemIndexMap[annotationsIndex] != other.annotationsIndex) {
 				return false;
 			}
 		}
 		
 		if (classDataOffset != 0) {
-			if (classDataItemIndexMap[classDataIndex] != other.classDataIndex) {
+			if (mm.classDataItemIndexMap[classDataIndex] != other.classDataIndex) {
 				return false;
 			}
 		}
 		
 		if (staticValuesOffset != 0) {
-			if (encodedArrayItemIndexMap[staticValuesIndex] != other.staticValuesIndex) {
+			if (mm.encodedArrayItemIndexMap[staticValuesIndex] != other.staticValuesIndex) {
 				return false;
 			}
 		}

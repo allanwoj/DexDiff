@@ -1,5 +1,7 @@
 package item;
 
+import patch.MapManager;
+
 public class FieldIdItem {
 
 	public int classId;
@@ -10,6 +12,12 @@ public class FieldIdItem {
 		this.classId = classId;
 		this.typeId = typeId;
 		this.nameId = nameId;
+	}
+	
+	public boolean isEqual(FieldIdItem other, MapManager mm) {
+		return (mm.stringIndexMap[(int) nameId] == other.nameId
+        		&& mm.typeIndexMap[classId] == other.classId
+        		&& mm.typeIndexMap[typeId] == other.typeId);
 	}
 	
 	public byte[] getOutput(boolean withSize) {

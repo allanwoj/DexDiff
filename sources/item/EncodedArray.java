@@ -3,6 +3,8 @@ package item;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import patch.MapManager;
+
 public class EncodedArray {
 	int size;
 	EncodedValue[] values;
@@ -12,12 +14,12 @@ public class EncodedArray {
 		this.values = values;
 	}
 	
-	public boolean isEqual(EncodedArray other, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap) {
+	public boolean isEqual(EncodedArray other, MapManager mm) {
 		if (size != other.size)
 			return false;
 		
 		for (int i = 0; i < values.length; ++i) {
-			if (!values[i].isEqual(other.values[i], fieldIndexMap, methodIndexMap, stringIndexMap, typeIndexMap)) {
+			if (!values[i].isEqual(other.values[i], mm)) {
 				return false;
 			}
 		}
@@ -25,12 +27,12 @@ public class EncodedArray {
 		return true;
 	}
 	
-	public Collection<Byte> getData(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+	public Collection<Byte> getData(MapManager mm) {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
 		ret.addAll(getULeb128(size));
 		
 		for(int i = 0; i < size; ++i) {
-			ret.addAll(values[i].getData(fieldMap, methodMap, stringMap, typeMap));
+			ret.addAll(values[i].getData(mm));
 		}
 		return ret;
 	}

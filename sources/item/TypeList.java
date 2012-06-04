@@ -3,6 +3,8 @@ package item;
 import java.io.IOException;
 import java.util.Collection;
 
+import patch.MapManager;
+
 public class TypeList {
 
 	public long size;
@@ -44,6 +46,18 @@ public class TypeList {
 		}
 		
 		return ret;
+	}
+	
+	public boolean isEqual(TypeList other, MapManager mm) {
+		if (size != other.size) {
+        	return false;
+        }
+		for(int k = 0; k < size; ++k) {
+        	if(mm.typeIndexMap[types[k]] != other.types[k]) {
+        		return false;
+        	}
+        }
+		return true;
 	}
 	
 	public byte[] write16bit(long data) {

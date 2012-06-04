@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import patch.MapManager;
+
 public class DebugInfoItem {
 
 	public long lineStart;
@@ -51,7 +53,7 @@ public class DebugInfoItem {
 	
 	
 	
-	public byte[] getByteCode(long[] stringIndexMap, long[] typeIndexMap) {
+	public byte[] getByteCode(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(writeULeb128((int)lineStart));
 		l.addAll(writeULeb128((int)parametersSize));
@@ -59,13 +61,13 @@ public class DebugInfoItem {
 			if (parameterNames[j] == -1) {
 				l.addAll(writeULeb128(0));
 			} else {
-				l.addAll(writeULeb128(1 + (int)stringIndexMap[(int)parameterNames[j]]));
+				l.addAll(writeULeb128(1 + (int)mm.stringIndexMap[(int)parameterNames[j]]));
 			}
 		}
 		
 		Iterator<DebugByteCode> it = debugByteCode.iterator();
 		while (it.hasNext()) {
-			l.addAll(it.next().getBytecode(stringIndexMap, typeIndexMap));
+			l.addAll(it.next().getBytecode(mm));
 		}
 		l.add((byte)0);
 		
@@ -80,7 +82,34 @@ public class DebugInfoItem {
 		return ret;
 	}
 	
-	
+	public boolean isEqual(DebugInfoItem other, MapManager mm) {
+		if (lineStart != other.lineStart || parametersSize != other.parametersSize ||
+    			debugByteCode.size() != other.debugByteCode.size()) {
+    		return false;
+    	}
+
+		for (int k = 0; k < parametersSize; ++k) {
+			if (parameterNames[k] != -1 && other.parameterNames[k] != -1) {
+    			if (mm.stringIndexMap[(int)parameterNames[k]] != other.parameterNames[k]) {
+    				return false;
+    			}
+			}	
+		}
+		
+		Iterator<DebugByteCode> it1 = debugByteCode.iterator();
+		Iterator<DebugByteCode> it2 = other.debugByteCode.iterator();
+			
+		while (it1.hasNext()) {
+			DebugByteCode b1 = it1.next();
+			DebugByteCode b2 = it2.next();
+			
+			if (!b1.isEqual(b2, mm.typeIndexMap, mm.stringIndexMap)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
 	
 	
 	Collection<Byte> writeULeb128(int value) {

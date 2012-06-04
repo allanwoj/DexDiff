@@ -3,6 +3,8 @@ package item;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import patch.MapManager;
+
 
 public class AnnotationItem {
 
@@ -22,14 +24,14 @@ public class AnnotationItem {
 		return visibility;
 	}
 	
-	public boolean isEqual(AnnotationItem other, long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
-		return (visibility == other.visibility && annotation.isEqual(other.annotation, fieldMap, methodMap, stringMap, typeMap));
+	public boolean isEqual(AnnotationItem other, MapManager mm) {
+		return (visibility == other.visibility && annotation.isEqual(other.annotation, mm));
 	}
 	
-	public byte[] getBytes(long[] fieldMap, long[] methodMap, long[] stringMap, long[] typeMap) {
+	public byte[] getBytes(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.add((byte)visibility);
-		l.addAll(annotation.getData(fieldMap, methodMap, stringMap, typeMap));
+		l.addAll(annotation.getData(mm));
 		
 		
 		byte[] ret = new byte[l.size()];

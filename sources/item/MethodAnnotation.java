@@ -3,6 +3,8 @@ package item;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import patch.MapManager;
+
 public class MethodAnnotation {
 
 	public long methodId;
@@ -15,20 +17,20 @@ public class MethodAnnotation {
 		this.annotationSetItemOffset = annotationSetItemOffset;
 	}
 	
-	public Collection<Byte> getBytes(long[] methodIndexMap, long[] annotationSetItemIndexMap, long[] annotationSetItemPointerMap) {
+	public Collection<Byte> getBytes(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
-		byte[] temp = write32bit(methodIndexMap[(int)methodId]);
+		byte[] temp = write32bit(mm.methodIndexMap[(int)methodId]);
 		for (int i = 0; i < temp.length; ++i)
 			l.add(temp[i]);
-		temp = write32bit(annotationSetItemPointerMap[(int)annotationSetItemIndexMap[(int)annotationSetItemIndex]]);
+		temp = write32bit(mm.annotationSetItemPointerMap[(int)mm.annotationSetItemIndexMap[(int)annotationSetItemIndex]]);
 		for (int i = 0; i < temp.length; ++i)
 			l.add(temp[i]);
 		return l;
 	}
 	
-	public boolean isEqual(MethodAnnotation other, long[] methodIndexMap, long[] annotationSetItemIndexMap) {
-		return (methodIndexMap[(int)methodId] == other.methodId &&
-			annotationSetItemIndexMap[annotationSetItemIndex] == other.annotationSetItemIndex);
+	public boolean isEqual(MethodAnnotation other, MapManager mm) {
+		return (mm.methodIndexMap[(int)methodId] == other.methodId &&
+				mm.annotationSetItemIndexMap[annotationSetItemIndex] == other.annotationSetItemIndex);
 	}
 	
 	public Collection<Byte> getOutput() {

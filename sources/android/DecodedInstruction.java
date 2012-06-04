@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import patch.MapManager;
+
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 /**
@@ -503,56 +505,56 @@ public class DecodedInstruction {
     	return data;
     }
     
-    public Collection<Byte> getOutput(long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap) {
+    public Collection<Byte> getOutput(MapManager mm) {
     	ArrayList<Byte> ret = new ArrayList<Byte>();
     	int index = 0;
     	if (opcode == 0x1A) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)stringIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.stringIndexMap[index]));
     	} else if (opcode == 0x1B) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(5), data.get(4), data.get(3), data.get(2));
-    		ret.addAll(write32bit((int)stringIndexMap[index]));
+    		ret.addAll(write32bit((int)mm.stringIndexMap[index]));
     	} else if (opcode == 0x1C) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.typeIndexMap[index]));
     	} else if (opcode == 0x1f) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.typeIndexMap[index]));
     	} else if (opcode == 0x20) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.typeIndexMap[index]));
     	} else if (opcode == 0x22) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.typeIndexMap[index]));
     	} else if (opcode == 0x23) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.typeIndexMap[index]));
     	} else if (opcode == 0x24) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.typeIndexMap[index]));
     		ret.add(data.get(4));
     		ret.add(data.get(5));
     	} else if (opcode == 0x25) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)typeIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.typeIndexMap[index]));
     		ret.add(data.get(4));
     		ret.add(data.get(5));
     		return data;
@@ -560,24 +562,24 @@ public class DecodedInstruction {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)fieldIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.fieldIndexMap[index]));
     	} else if (opcode >= 0x60 && opcode <= 0x6D) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)fieldIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.fieldIndexMap[index]));
     	} else if (opcode >= 0x6E && opcode <= 0x72) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)methodIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.methodIndexMap[index]));
     		ret.add(data.get(4));
     		ret.add(data.get(5));
     	} else if (opcode >= 0x74 && opcode <= 0x78) {
     		ret.add(data.get(0));
     		ret.add(data.get(1));
     		index = combine(data.get(3), data.get(2));
-    		ret.addAll(write16bit((int)methodIndexMap[index]));
+    		ret.addAll(write16bit((int)mm.methodIndexMap[index]));
     		ret.add(data.get(4));
     		ret.add(data.get(5));
     	} else {
@@ -587,7 +589,7 @@ public class DecodedInstruction {
     	return ret;
     }
     
-    public boolean isEqual(DecodedInstruction other, long[] fieldIndexMap, long[] methodIndexMap, long[] stringIndexMap, long[] typeIndexMap) {
+    public boolean isEqual(DecodedInstruction other, MapManager mm) {
     	ArrayList<Byte> ret = new ArrayList<Byte>();
     	Collection<Byte> temp;
     	int index = 0;
@@ -599,68 +601,68 @@ public class DecodedInstruction {
     	if (opcode == 0x1A) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)stringIndexMap[index] != otherIndex)
+    		if ((int)mm.stringIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode == 0x1B) {
     		index = combine(data.get(5), data.get(4), data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(5), other.getData().get(4), other.getData().get(3), other.getData().get(2));
-    		if ((int)stringIndexMap[index] != otherIndex)
+    		if ((int)mm.stringIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode == 0x1C) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)typeIndexMap[index] != otherIndex)
+    		if ((int)mm.typeIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode == 0x1f) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)typeIndexMap[index] != otherIndex)
+    		if ((int)mm.typeIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode == 0x20) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)typeIndexMap[index] != otherIndex)
+    		if ((int)mm.typeIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode == 0x22) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)typeIndexMap[index] != otherIndex)
+    		if ((int)mm.typeIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode == 0x23) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)typeIndexMap[index] != otherIndex)
+    		if ((int)mm.typeIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode == 0x24) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)typeIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
+    		if ((int)mm.typeIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
     			return false;
     	} else if (opcode == 0x25) {
     		System.out.println("eep!");
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)typeIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
+    		if ((int)mm.typeIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
     			return false;
     	} else if (opcode >= 0x52 && opcode <= 0x5f) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)fieldIndexMap[index] != otherIndex)
+    		if ((int)mm.fieldIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode >= 0x60 && opcode <= 0x6D) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)fieldIndexMap[index] != otherIndex)
+    		if ((int)mm.fieldIndexMap[index] != otherIndex)
     			return false;
     	} else if (opcode >= 0x6E && opcode <= 0x72) {
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)methodIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
+    		if ((int)mm.methodIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
     			return false;
     	} else if (opcode >= 0x74 && opcode <= 0x78) {//
     		index = combine(data.get(3), data.get(2));
     		otherIndex = combine(other.getData().get(3), other.getData().get(2));
-    		if ((int)methodIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
+    		if ((int)mm.methodIndexMap[index] != otherIndex || data.get(4) != other.getData().get(4) || data.get(5) != other.getData().get(5))
     			return false;
     	} else {
     		Iterator<Byte> it = data.iterator();
