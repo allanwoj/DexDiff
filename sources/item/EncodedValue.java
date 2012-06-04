@@ -141,7 +141,7 @@ public class EncodedValue {
 		} else if (annotation != null) {
 			byteRet.addAll(annotation.getData(mm));
 		} else if (array != null){
-			byteRet.addAll(array.getData(mm));
+			byteRet.addAll(array.getModifiedData(mm));
 		}
 		return byteRet;
 	}
@@ -182,7 +182,7 @@ public class EncodedValue {
 		} else if (annotation != null) {
 			byteRet.addAll(annotation.getOutput());
 		} else if (array != null){
-			byteRet.addAll(array.getOutput());
+			byteRet.addAll(array.getRawData());
 		}
 		return byteRet;
 	}

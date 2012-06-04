@@ -1,11 +1,13 @@
 package item;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import patch.MapManager;
 
-public class TypeList {
+public class TypeList extends DexItem<TypeList> {
 
 	public long size;
 	public int[] types;
@@ -15,37 +17,39 @@ public class TypeList {
 		this.types = types;
 	}
 	
-	public byte[] getOutput(boolean withSize) {
+	public List<Byte> getModifiedData(MapManager mm) {
+		return null;
+	}
+	
+	public List<Byte> getRawData() {
+		ArrayList<Byte> l = new ArrayList<Byte>();
+		
 		int length = 4 + 2 * (int)size;
 		if (size % 2 == 1) {
 			length += 2;
 		}
-		byte[] ret = new byte[withSize ? 4 + length : length];
-		int start = withSize ? 4 : 0;
-		if (withSize) {
-			byte[] temp = write32bit((long)length);
-			for (int i = 0; i < 4; ++i)
-				ret[i] = temp[i];
-		}
 		
-		byte[] temp = write32bit((long)size);
+		byte[] temp = write32bit((long)length);
 		for (int i = 0; i < 4; ++i)
-			ret[start + i] = temp[i];
+			l.add(temp[i]);
 		
-		int count = start + 4;
+		temp = write32bit((long)size);
+		for (int i = 0; i < 4; ++i)
+			l.add(temp[i]);
+		
 		for (int i = 0; i < size; ++i) {
 			temp = write16bit(types[i]);
 			for (int j = 0 ; j < 2; ++j) {
-				ret[count++] = temp[j];
+				l.add(temp[j]);
 			}
 		}
 		
 		if (size % 2 == 1) {
-			ret[count++] = 0;
-			ret[count] = 0;
+			l.add((byte) 0);
+			l.add((byte) 0);
 		}
 		
-		return ret;
+		return l;
 	}
 	
 	public boolean isEqual(TypeList other, MapManager mm) {
@@ -79,5 +83,7 @@ public class TypeList {
 
 		return output;
 	}
+
+	
 	
 }

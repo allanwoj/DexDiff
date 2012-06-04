@@ -2,10 +2,11 @@ package item;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import patch.MapManager;
 
-public class EncodedArray {
+public class EncodedArray extends DexItem<EncodedArray> {
 	int size;
 	EncodedValue[] values;
 	
@@ -27,7 +28,7 @@ public class EncodedArray {
 		return true;
 	}
 	
-	public Collection<Byte> getData(MapManager mm) {
+	public List<Byte> getModifiedData(MapManager mm) {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
 		ret.addAll(getULeb128(size));
 		
@@ -37,7 +38,7 @@ public class EncodedArray {
 		return ret;
 	}
 	
-	public Collection<Byte> getOutput() {
+	public List<Byte> getRawData() {
 		ArrayList<Byte> ret = new ArrayList<Byte>();
 		ret.addAll(getULeb128(size));
 		

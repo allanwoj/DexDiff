@@ -2,11 +2,12 @@ package item;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import patch.MapManager;
 
 
-public class AnnotationItem {
+public class AnnotationItem extends DexItem<AnnotationItem> {
 
 	private int visibility;
 	private EncodedAnnotation annotation;
@@ -28,42 +29,25 @@ public class AnnotationItem {
 		return (visibility == other.visibility && annotation.isEqual(other.annotation, mm));
 	}
 	
-	public byte[] getBytes(MapManager mm) {
+	public List<Byte> getModifiedData(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.add((byte)visibility);
 		l.addAll(annotation.getData(mm));
-		
-		
-		byte[] ret = new byte[l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+				
+		return l;
 	}
 	
-	public byte[] getOutput() {
+	public List<Byte> getRawData() {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.add((byte)visibility);
 		l.addAll(annotation.getOutput());
 		
 		
-		byte[] ret = new byte[4 + l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-
 		byte[] temp = write32bit(l.size());
-		for (int i = 0; i < 4; ++i)
-			ret[count++] = temp[i];
+		for (int i = 3; i >= 0; --i)
+			l.add(0, temp[i]);
 		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
 	public byte[] write32bit(long data) {

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 public class GeneratedFile {
 	OutputStream out = null;
@@ -37,6 +38,17 @@ public class GeneratedFile {
 	}
 	
 	public void write(Collection<Byte> data) {
+		try {
+			for (Iterator<Byte> i = data.iterator(); i.hasNext();) {
+				out.write(i.next().byteValue());				
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void write(List<Byte> data) {
 		try {
 			for (Iterator<Byte> i = data.iterator(); i.hasNext();) {
 				out.write(i.next().byteValue());				

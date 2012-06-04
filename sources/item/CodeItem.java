@@ -5,12 +5,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import patch.MapManager;
 
 import android.DecodedInstruction;
 
-public class CodeItem {
+public class CodeItem extends DexItem<CodeItem> {
 
 	public int registersSize;
 	public int insSize;
@@ -96,7 +97,7 @@ public class CodeItem {
 		return ret;
 	}
 	
-	public byte[] getNaiveOutput(boolean withSize) {
+	public List<Byte> getRawData() {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(write16bit(registersSize));
 		l.addAll(write16bit(insSize));
@@ -138,20 +139,11 @@ public class CodeItem {
 			}
 		}
 		
-		byte[] ret = new byte[withSize ? 4 + l.size() : l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-		if (withSize) {
-			byte[] temp = write32bita(l.size());
-			for (int i = 0; i < 4; ++i)
-				ret[count++] = temp[i];
-		}
+		byte[] temp = write32bita(l.size());
+		for (int i = 3; i >= 0; --i)
+			l.add(0, temp[i]);
 		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
 	public boolean isEqual(CodeItem other, MapManager mm) {
@@ -188,7 +180,7 @@ public class CodeItem {
 		
 	}
 	
-	public byte[] getOutput(MapManager mm) {
+	public List<Byte> getModifiedData(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(write16bit(registersSize));
 		l.addAll(write16bit(insSize));
@@ -232,14 +224,7 @@ public class CodeItem {
 			}
 		}
 		
-		byte[] ret = new byte[l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
 	Collection<Byte> writeULeb128(int value) {

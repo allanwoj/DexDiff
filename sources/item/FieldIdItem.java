@@ -1,8 +1,11 @@
 package item;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import patch.MapManager;
 
-public class FieldIdItem {
+public class FieldIdItem extends DexItem<FieldIdItem> {
 
 	public int classId;
 	public int typeId;
@@ -20,28 +23,30 @@ public class FieldIdItem {
         		&& mm.typeIndexMap[typeId] == other.typeId);
 	}
 	
-	public byte[] getOutput(boolean withSize) {
-		byte[] ret = new byte[withSize ? 12 : 8];
-		int start = withSize ? 4 : 0;
-		ret[start] = (byte)((classId) & 0xFF);
-		ret[start + 1] = (byte)((classId >> 8) & 0xFF);
+	public List<Byte> getRawData() {
+		ArrayList<Byte> l = new ArrayList<Byte>();
+		l.add((byte) 8);
+		l.add((byte) 0);
+		l.add((byte) 0);
+		l.add((byte) 0);
 		
-		ret[start + 2] = (byte)((typeId) & 0xFF);
-		ret[start + 3] = (byte)((typeId >> 8) & 0xFF);
+		l.add((byte)((classId) & 0xFF));
+		l.add((byte)((classId >> 8) & 0xFF));
 		
-		ret[start + 4] = (byte)((nameId) & 0xFF);
-		ret[start + 5] = (byte)((nameId >> 8) & 0xFF);
-		ret[start + 6] = (byte)((nameId >> 16) & 0xFF);
-		ret[start + 7] = (byte)((nameId >> 32) & 0xFF);
+		l.add((byte)((typeId) & 0xFF));
+		l.add((byte)((typeId >> 8) & 0xFF));
 		
-		if (withSize) {
-			ret[0] = 8;
-			ret[1] = 0;
-			ret[2] = 0;
-			ret[3] = 0;
-		}
+		l.add((byte)((nameId) & 0xFF));
+		l.add((byte)((nameId >> 8) & 0xFF));
+		l.add((byte)((nameId >> 16) & 0xFF));
+		l.add((byte)((nameId >> 32) & 0xFF));
 		
-		return ret;
+		return l;
+	}
+	
+	public List<Byte> getModifiedData(MapManager mm) {
+		ArrayList<Byte> l = new ArrayList<Byte>();
+		return l;
 	}
 		
 }

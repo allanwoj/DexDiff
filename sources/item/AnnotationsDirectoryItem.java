@@ -3,10 +3,11 @@ package item;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import patch.MapManager;
 
-public class AnnotationsDirectoryItem {
+public class AnnotationsDirectoryItem extends DexItem<AnnotationsDirectoryItem>{
 
 	public long classOffset;
 	public int classIndex;
@@ -34,7 +35,7 @@ public class AnnotationsDirectoryItem {
 	}
 	
 	
-	public byte[] getBytes(MapManager mm) {
+	public List<Byte> getModifiedData(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		byte[] temp;
 		
@@ -72,15 +73,7 @@ public class AnnotationsDirectoryItem {
 			l.addAll(parameterAnnotations[i].getBytes(mm));
 		}
 		
-		byte[] ret = new byte[l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
 	public boolean isEqual(AnnotationsDirectoryItem other, MapManager mm) {
@@ -113,7 +106,7 @@ public class AnnotationsDirectoryItem {
 		return true;
 	}
 	
-	public byte[] getOutput() {
+	public List<Byte> getRawData() {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		byte[] temp = write32bit(classOffset);
 		for (int i = 0; i < temp.length; ++i)
@@ -143,18 +136,11 @@ public class AnnotationsDirectoryItem {
 			l.addAll(parameterAnnotations[i].getOutput());
 		}
 		
-		byte[] ret = new byte[4 + l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
 		temp = write32bit(l.size());
-		for (int i = 0; i < 4; ++i)
-			ret[count++] = temp[i];
+		for (int i = 3; i >= 0; --i)
+			l.add(0, temp[i]);
 		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
 	public byte[] write32bit(long data) {

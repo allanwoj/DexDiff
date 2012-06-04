@@ -9,6 +9,7 @@ import item.ClassDefItem;
 import item.CodeItem;
 import item.DebugByteCode;
 import item.DebugInfoItem;
+import item.DexItem;
 import item.EncodedArray;
 import item.FieldIdItem;
 import item.MethodIdItem;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -937,472 +939,9 @@ public class GeneratePatch {
 	 
 	    return l;
 	}
-	
-	public static List<PCommand> lcs2(FieldIdItem[] a, FieldIdItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++)
-	        for (int j = 0; j < b.length; j++)
-	            if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	 
-	    // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 && y != 0; ) {
-	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	byte[] by = b[y-1].getOutput(true);
-	        	
-	        	l.add(new PCommand(1, by));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-	
-	public static List<PCommand> lcs2(TypeList[] a, TypeList[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	           	            
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 
-	    // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 && y != 0; ) {
-	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	byte[] by = b[y-1].getOutput(true);
-	        	l.add(new PCommand(1, by));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-	
-	public static List<PCommand> lcs2(ProtoIdItem[] a, ProtoIdItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	   
-	    // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 && y != 0; ) {
-	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	byte[] by = b[y-1].getOutput(true);
-	        	l.add(new PCommand(1, by));
-	        	y--;
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-	
-	 // method ids
-    public static List<PCommand> lcs2(MethodIdItem[] a, MethodIdItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 && y != 0; ) {
-	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	byte[] by = b[y-1].getOutput(true);
-	        	l.add(new PCommand(1, by));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
     
-    // debug_info_item
-    public static List<PCommand> lcs2(DebugInfoItem[] a, DebugInfoItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	
-	        	
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 && y != 0; ) {
-	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getByteCode(true)));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-    
-    
-    // code_item
-    public static List<PCommand> lcs2(CodeItem[] a, CodeItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 || y != 0; ) {
-	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getNaiveOutput(true)));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-    
-    // annotation_item
-    public static List<PCommand> lcs2(AnnotationItem[] a, AnnotationItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 || y != 0; ) {
-	    	if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getOutput()));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-    
-    // annotation_set_item
-    public static List<PCommand> lcs2(AnnotationSetItem[] a, AnnotationSetItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 || y != 0; ) {
-	    	if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getOutput()));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-    
-    // annotation_set_ref_list
-    public static List<PCommand> lcs2(AnnotationSetRefList[] a, AnnotationSetRefList[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 || y != 0; ) {
-	    	if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getOutput()));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-    
-    
-    // annotations_directory_item
-    public static List<PCommand> lcs2(AnnotationsDirectoryItem[] a, AnnotationsDirectoryItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 || y != 0; ) {
-	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getOutput()));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-    
-    // class_data_item
-    public static List<PCommand> lcs2(ClassDataItem[] a, ClassDataItem[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 || y != 0; ) {
-	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getOutput()));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-    
-    // encoded_array_item
-    public static List<PCommand> lcs2(EncodedArray[] a, EncodedArray[] b, MapManager mm) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++) {
-	        for (int j = 0; j < b.length; j++) {
-	        	if (a[i].isEqual(b[j], mm)) {
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            } else {
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	            }
-	        }
-	    }
-	 // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 || y != 0; ) {
-	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getOutput()));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-    
-    // class_def_item
-    public static List<PCommand> lcs2(ClassDefItem[] a, ClassDefItem[] b, MapManager mm) {
+    // DexItem lcs
+    public static List<PCommand> lcs2(DexItem[] a, DexItem[] b, MapManager mm) {
 	    int[][] lengths = new int[a.length+1][b.length+1];
 	 
 	    // row 0 and column 0 are initialized to 0 already
@@ -1426,7 +965,7 @@ public class GeneratePatch {
 	        	l.add(new PCommand(2));
 	        	x--;
 	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getOutput()));
+	        	l.add(new PCommand(1, b[y-1].getRawData()));
 	        	y--;
 	            
 	        } else {
@@ -1442,7 +981,7 @@ public class GeneratePatch {
 	
 	private static class PCommand {
 		public int type;
-		byte[] data;
+		List<Byte> data;
 		int index;
 		
 		public PCommand(int type) {
@@ -1452,25 +991,15 @@ public class GeneratePatch {
 		
 		public PCommand(int type, byte[] data) {
 			this.type = type;
+			ArrayList<Byte> l = new ArrayList<Byte>();
+			for (int i = 0; i < data.length; ++i)
+				l.add(data[i]);
+			this.data = l;
+		}
+		
+		public PCommand(int type, List<Byte> data) {
+			this.type = type;
 			this.data = data;
-		}
-		
-		public PCommand(int type, Byte[] data) {
-			this.type = type;
-			this.data = new byte[data.length];
-			for (int i = 0; i < data.length; ++i) {
-				this.data[i] = data[i];
-			}
-		}
-		
-		public PCommand(int type, Collection<Byte> data) {
-			this.type = type;
-			this.data = new byte[data.size()];
-			Iterator<Byte> it = data.iterator();
-			int count = 0;
-			while (it.hasNext()) {
-				this.data[count++] = it.next();
-			}
 		}
 		
 		public PCommand(int type, int index) {

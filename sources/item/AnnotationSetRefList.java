@@ -2,10 +2,11 @@ package item;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import patch.MapManager;
 
-public class AnnotationSetRefList {
+public class AnnotationSetRefList extends DexItem<AnnotationSetRefList> {
 
 	public long size;
 	public long[] annotationsSetOffsets;
@@ -29,7 +30,7 @@ public class AnnotationSetRefList {
 		return true;
 	}
 	
-	public byte[] getBytes(MapManager mm) {
+	public List<Byte> getModifiedData(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 				
 		byte[] temp = write32bit(size);
@@ -42,18 +43,10 @@ public class AnnotationSetRefList {
 				l.add(temp[j]);
 		}
 		
-		byte[] ret = new byte[l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
-	public byte[] getOutput() {
+	public List<Byte> getRawData() {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		byte[] temp = write32bit(4 + 4 * size);
 		for (int i = 0; i < 4; ++i)
@@ -69,15 +62,7 @@ public class AnnotationSetRefList {
 				l.add(temp[j]);
 		}
 		
-		byte[] ret = new byte[l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
 	public byte[] write32bit(long data) {

@@ -319,8 +319,8 @@ public class ApplyPatch {
 					mm.debugInfoItemMap[mapIndex++] = fileIndex++;
 					mm.debugInfoItemPointerMap[pointerIndex++] = tempPointer;
 					
-					byte[] temp = debugInfoItem.getByteCode(mm);
-					tempPointer += temp.length;
+					List<Byte> temp = debugInfoItem.getModifiedData(mm);
+					tempPointer += temp.size();
 					
 					debugInfoItemFile.write(temp);
 					
@@ -396,8 +396,8 @@ public class ApplyPatch {
 					mm.codeItemIndexMap[mapIndex++] = fileIndex++;
 					mm.codeItemPointerMap[pointerIndex++] = tempPointer;
 					codeItem = original.getCodeItem();
-					byte[] temp = codeItem.getOutput(mm);
-					tempPointer += temp.length;
+					List<Byte> temp = codeItem.getModifiedData(mm);
+					tempPointer += temp.size();
 					codeItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
@@ -434,8 +434,8 @@ public class ApplyPatch {
 					mm.annotationItemIndexMap[mapIndex++] = fileIndex++;
 					mm.annotationItemPointerMap[pointerIndex++] = tempPointer;
 					annotationItem = original.getAnnotationItem();
-					byte[] temp = annotationItem.getBytes(mm);
-					tempPointer += temp.length;
+					List<Byte> temp = annotationItem.getModifiedData(mm);
+					tempPointer += temp.size();
 					annotationItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
@@ -472,8 +472,8 @@ public class ApplyPatch {
 					mm.annotationSetItemIndexMap[mapIndex++] = fileIndex++;
 					mm.annotationSetItemPointerMap[pointerIndex++] = tempPointer;
 					annotationSetItem = original.getAnnotationSetItem();
-					byte[] temp = annotationSetItem.getBytes(mm);
-					tempPointer += temp.length;
+					List<Byte> temp = annotationSetItem.getModifiedData(mm);
+					tempPointer += temp.size();
 					annotationSetItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
@@ -510,8 +510,8 @@ public class ApplyPatch {
 					mm.annotationSetRefListIndexMap[mapIndex++] = fileIndex++;
 					mm.annotationSetRefListPointerMap[pointerIndex++] = tempPointer;
 					annotationSetRefList= original.getAnnotationSetRefList();
-					byte[] temp = annotationSetRefList.getBytes(mm);
-					tempPointer += temp.length;
+					List<Byte> temp = annotationSetRefList.getModifiedData(mm);
+					tempPointer += temp.size();
 					annotationSetRefListFile.write(temp);
 				}
 			} else if (command.type == 1) {
@@ -550,8 +550,8 @@ public class ApplyPatch {
 					mm.annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex++;
 					mm.annotationsDirectoryItemPointerMap[pointerIndex++] = tempPointer;
 					annotationsDirectoryItem = original.getAnnotationsDirectoryItem();
-					byte[] temp = annotationsDirectoryItem.getBytes(mm);
-					tempPointer += temp.length;
+					List<Byte> temp = annotationsDirectoryItem.getModifiedData(mm);
+					tempPointer += temp.size();
 					annotationsDirectoryItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
@@ -587,8 +587,8 @@ public class ApplyPatch {
 					mm.classDataItemIndexMap[mapIndex++] = fileIndex++;
 					mm.classDataItemPointerMap[pointerIndex++] = tempPointer;
 					classDataItem = original.getClassDataItem();
-					byte[] temp = classDataItem.getBytes(mm);
-					tempPointer += temp.length;
+					List<Byte> temp = classDataItem.getModifiedData(mm);
+					tempPointer += temp.size();
 					classDataItemFile.write(temp);
 				}
 			} else if (command.type == 1) {
@@ -624,7 +624,7 @@ public class ApplyPatch {
 					mm.encodedArrayItemIndexMap[mapIndex++] = fileIndex++;
 					mm.encodedArrayItemPointerMap[pointerIndex++] = tempPointer;
 					encodedArrayItem = original.getEncodedArrayItem();
-					Collection<Byte> temp = encodedArrayItem.getData(mm);
+					List<Byte> temp = encodedArrayItem.getModifiedData(mm);
 					tempPointer += temp.size();
 					encodedArrayItemFile.write(temp);
 				}
@@ -658,7 +658,7 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					mm.classDefItemIndexMap[mapIndex++] = fileIndex++;
 					classDefItem = original.getClassDefItem();
-					byte[] temp = classDefItem.getData(mm);
+					List<Byte> temp = classDefItem.getModifiedData(mm);
 					classDefItemFile.write(temp);
 				}
 			} else if (command.type == 1) {

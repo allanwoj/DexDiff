@@ -3,10 +3,11 @@ package item;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import patch.MapManager;
 
-public class DebugInfoItem {
+public class DebugInfoItem extends DexItem<DebugInfoItem> {
 
 	public long lineStart;
 	public long parametersSize;
@@ -21,7 +22,7 @@ public class DebugInfoItem {
 		this.debugByteCode = debugByteCode;
 	}
 	
-	public byte[] getByteCode(boolean withSize) {
+	public List<Byte> getRawData() {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(writeULeb128((int)lineStart));
 		l.addAll(writeULeb128((int)parametersSize));
@@ -31,29 +32,20 @@ public class DebugInfoItem {
 		
 		Iterator<DebugByteCode> it = debugByteCode.iterator();
 		while (it.hasNext()) {
-			l.addAll(it.next().getBytecode());
+			l.addAll(it.next().getRawData());
 		}
 		l.add((byte)0);
 		
-		byte[] ret = new byte[withSize ? 4 + l.size() : l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-		if (withSize) {
-			byte[] temp = write32bit(l.size());
-			for (int i = 0; i < 4; ++i)
-				ret[count++] = temp[i];
-		}
+		byte[] temp = write32bit(l.size());
+		for (int i = 3; i >= 0; --i)
+			l.add(0, temp[i]);
 		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
 	
 	
-	public byte[] getByteCode(MapManager mm) {
+	public List<Byte> getModifiedData(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.addAll(writeULeb128((int)lineStart));
 		l.addAll(writeULeb128((int)parametersSize));
@@ -67,19 +59,11 @@ public class DebugInfoItem {
 		
 		Iterator<DebugByteCode> it = debugByteCode.iterator();
 		while (it.hasNext()) {
-			l.addAll(it.next().getBytecode(mm));
+			l.addAll(it.next().getModifiedData(mm));
 		}
 		l.add((byte)0);
-		
-		byte[] ret = new byte[l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+				
+		return l;
 	}
 	
 	public boolean isEqual(DebugInfoItem other, MapManager mm) {
@@ -103,7 +87,7 @@ public class DebugInfoItem {
 			DebugByteCode b1 = it1.next();
 			DebugByteCode b2 = it2.next();
 			
-			if (!b1.isEqual(b2, mm.typeIndexMap, mm.stringIndexMap)) {
+			if (!b1.isEqual(b2, mm)) {
 				return false;
 			}
 		}

@@ -1,8 +1,11 @@
 package item;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import patch.MapManager;
 
-public class ProtoIdItem {
+public class ProtoIdItem extends DexItem<ProtoIdItem> {
 
 	public long shorty;
 	public long type;
@@ -16,30 +19,31 @@ public class ProtoIdItem {
 		this.typeListOffset = typeListOffset;
 	}
 	
-	public byte[] getOutput(boolean withSize) {
-		byte[] ret = new byte[withSize ? 16 : 12];
-		
-		int start = withSize ? 4 : 0;
-		if (withSize) {
-			byte[] temp = write32bit(12L);
-			for (int i = 0; i < 4; ++i)
-				ret[i] = temp[i];
-		}
-		
-		byte[] temp = write32bit(shorty);
+	public List<Byte> getModifiedData(MapManager mm) {
+		return null;
+	}
+	
+	public List<Byte> getRawData() {
+		ArrayList<Byte> l = new ArrayList<Byte>();
+
+		byte[] temp = write32bit(12L);
 		for (int i = 0; i < 4; ++i)
-			ret[start++] = temp[i];
+			l.add(temp[i]);
+
+		
+		temp = write32bit(shorty);
+		for (int i = 0; i < 4; ++i)
+			l.add(temp[i]);
 		
 		temp = write32bit(type);
 		for (int i = 0; i < 4; ++i)
-			ret[start++] = temp[i];
+			l.add(temp[i]);
 		
 		temp = write32bit(typeListOffset);
 		for (int i = 0; i < 4; ++i)
-			ret[start++] = temp[i];
+			l.add(temp[i]);
 		
-		
-		return ret;
+		return l;
 	}
 	
 	public boolean isEqual(ProtoIdItem other, MapManager mm) {

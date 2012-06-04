@@ -2,10 +2,11 @@ package item;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import patch.MapManager;
 
-public class ClassDefItem {
+public class ClassDefItem extends DexItem<ClassDefItem> {
 	public long classId;
 	public long accessFlags;
 	public long superclassId;
@@ -37,7 +38,7 @@ public class ClassDefItem {
 		this.staticValuesOffset = staticValuesOffset;
 	}
 	
-	public byte[] getData(MapManager mm) {
+	public List<Byte> getModifiedData(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		byte[] temp = write32bit(mm.typeIndexMap[(int)classId]);
 		for (int i = 0; i < 4; ++i)
@@ -107,17 +108,10 @@ public class ClassDefItem {
 				l.add(temp[i]);
 		}
 		
-		byte[] ret = new byte[l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
-	public byte[] getOutput() {
+	public List<Byte> getRawData() {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		byte[] temp = write32bit(classId);
 		for (int i = 0; i < 4; ++i)
@@ -151,18 +145,11 @@ public class ClassDefItem {
 		for (int i = 0; i < 4; ++i)
 			l.add(temp[i]);
 		
-		byte[] ret = new byte[4 + l.size()];
-		Iterator<Byte> iter = l.iterator();
-		int count = 0;
 		temp = write32bit(l.size());
-		for (int i = 0; i < 4; ++i)
-			ret[count++] = temp[i];
+		for (int i = 3; i >= 0; --i)
+			l.add(0, temp[i]);
 		
-		while (iter.hasNext()) {
-			ret[count++] = iter.next();
-		}
-		
-		return ret;
+		return l;
 	}
 	
 	public boolean isEqual(ClassDefItem other, MapManager mm) {

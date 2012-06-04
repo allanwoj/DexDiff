@@ -3,10 +3,11 @@ package item;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import patch.MapManager;
 
-public class DebugByteCode {
+public class DebugByteCode extends DexItem<DebugByteCode> {
 
 	public int value;
 	public long addrDiff;
@@ -27,7 +28,7 @@ public class DebugByteCode {
 		this.registerNum = registerNum;
 	}
 	
-	public boolean isEqual(DebugByteCode b, long[] typeIndexMap, long[] stringIndexMap) {
+	public boolean isEqual(DebugByteCode b, MapManager mm) {
 		
 		if (value != b.value) {
 			return false;
@@ -40,16 +41,16 @@ public class DebugByteCode {
 			if (lineDiff != b.lineDiff)
 				return false;
 		} else if (value == 3) {
-			if (stringIndexMap[(int)name] != b.name ||
-					typeIndexMap[(int)type] != b.type ||
+			if (mm.stringIndexMap[(int)name] != b.name ||
+					mm.typeIndexMap[(int)type] != b.type ||
 					registerNum != b.registerNum) {
 				return false;
 			}
 			
 		} else if (value == 4) {
-			if (stringIndexMap[(int)name] != b.name ||
-					stringIndexMap[(int)sig] != b.sig ||
-					typeIndexMap[(int)type] != b.type ||
+			if (mm.stringIndexMap[(int)name] != b.name ||
+					mm.stringIndexMap[(int)sig] != b.sig ||
+					mm.typeIndexMap[(int)type] != b.type ||
 					registerNum != b.registerNum) {
 				return false;
 			}
@@ -58,7 +59,7 @@ public class DebugByteCode {
 				return false;
 			}
 		} else if (value == 9) {
-			if (stringIndexMap[(int)name] != b.name) {
+			if (mm.stringIndexMap[(int)name] != b.name) {
 				return false;
 			}
 		}
@@ -66,7 +67,7 @@ public class DebugByteCode {
 		return true;
 	}
 	
-	public Collection<Byte> getBytecode() {
+	public List<Byte> getRawData() {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.add(write(value));
 		if (value == 1) {
@@ -90,7 +91,7 @@ public class DebugByteCode {
 		return l;
 	}
 	
-	public Collection<Byte> getBytecode(MapManager mm) {
+	public List<Byte> getModifiedData(MapManager mm) {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		l.add(write(value));
 		if (value == 1) {
