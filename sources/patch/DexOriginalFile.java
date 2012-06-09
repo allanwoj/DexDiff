@@ -24,7 +24,9 @@ import item.MethodAnnotation;
 import item.MethodIdItem;
 import item.ParameterAnnotation;
 import item.ProtoIdItem;
+import item.StringDataItem;
 import item.TryItem;
+import item.TypeIdItem;
 import item.TypeList;
 
 import java.io.FileNotFoundException;
@@ -93,10 +95,10 @@ public class DexOriginalFile extends DexParser {
     private long annotationsDirectoryItemSize;
     private long annotationsDirectoryItemOffset;
     
-    public String[] stringData;
+    public StringDataItem[] stringData;
     int stringDataIndex = 0;
     
-    public int[] typeIds;
+    public TypeIdItem[] typeIds;
     int typeIdsIndex = 0;
     
     public FieldIdItem[] fieldIds;
@@ -207,17 +209,17 @@ public class DexOriginalFile extends DexParser {
 	        	stringsPos[i] = readFileOffset();
 	        }
 	        
-	        typeIds = new int[(int)typeIdsSize];
+	        typeIds = new TypeIdItem[(int)typeIdsSize];
 	        // Read type_ids
 	        for(int i = 0 ; i < typeIdsSize; ++i) {
-	        	typeIds[i] = (int) read32Bit();
+	        	typeIds[i] = new TypeIdItem((int) read32Bit());
 	        }
 	        
-	        stringData = new String[(int)stringIdsSize];
+	        stringData = new StringDataItem[(int)stringIdsSize];
 	        // Read string_data_items
 	        for(int i = 0 ; i < stringIdsSize; ++i) {
 	        	setFilePosition(stringsPos[i]);
-	        	stringData[i] = readString();
+	        	stringData[i] = new StringDataItem(readString());
 	        }
 	        
 	        setFilePosition(fieldIdsOffset);
@@ -323,7 +325,7 @@ public class DexOriginalFile extends DexParser {
 	        	data = new int[tlsize];
 	        	for (int j = 0; j < tlsize; ++j) {
 	        		data[j] = read16Bit();
-	        		doWrite(data[j] + ": " + stringData[typeIds[data[j]]] + "\n");
+	        		doWrite(data[j] + ": " + stringData[typeIds[data[j]].stringIndex].data + "\n");
 	        	}
 	        	if (tlsize % 2 == 1)
 	        		read16Bit();
@@ -347,7 +349,7 @@ public class DexOriginalFile extends DexParser {
 	        		if(names[j] == -1) {
 	        			doWrite("NO_NAME\n");
 	        		} else {
-	        			doWrite(stringData[(int)names[j]] + "\n");
+	        			doWrite(stringData[(int)names[j]].data + "\n");
 	        		}
 	        	}
 	        	ArrayList<DebugByteCode> byteCode = new ArrayList<DebugByteCode>();
@@ -781,11 +783,11 @@ public class DexOriginalFile extends DexParser {
 		return output;
 	}
 	
-	public String getStringData() {
+	public StringDataItem getStringData() {
 		return stringData[stringDataIndex++];
 	}
 	
-	public int getTypeIdData() {
+	public TypeIdItem getTypeIdData() {
 		return typeIds[typeIdsIndex++];
 	}
 	

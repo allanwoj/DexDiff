@@ -16,6 +16,7 @@ import item.EncodedValue;
 import item.FieldIdItem;
 import item.MethodIdItem;
 import item.ProtoIdItem;
+import item.TypeIdItem;
 import item.TypeList;
 
 import java.io.File;
@@ -83,7 +84,7 @@ public class ApplyPatch {
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					buf = original.getStringData();
+					buf = original.getStringData().data;
 					currentStringOffset += buf.length() + 1;
 					if (patch.hasStringCommands() || i < command.size - 1)
 						stringIdsFile.write(currentStringOffset);
@@ -123,13 +124,15 @@ public class ApplyPatch {
 		System.out.println("DONE");
 		fileIndex = 0;
 		mapIndex = 0;
+		TypeIdItem typeItem = null;
 		// Generate patched type_ids
 		while(patch.hasTypeCommands()) {
 			command = patch.getNextTypeCommand();
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
-					typeIdsFile.write((mm.stringIndexMap[original.getTypeIdData()]));
+					typeItem = original.getTypeIdData();
+					typeIdsFile.write((mm.stringIndexMap[typeItem.stringIndex]));
 					mm.typeIndexMap[mapIndex++] = fileIndex++;
 				}
 			} else if (command.type == 1) {

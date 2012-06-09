@@ -1,20 +1,6 @@
 package generate;
 
-import item.AnnotationItem;
-import item.AnnotationSetItem;
-import item.AnnotationSetRefList;
-import item.AnnotationsDirectoryItem;
-import item.ClassDataItem;
-import item.ClassDefItem;
-import item.CodeItem;
-import item.DebugByteCode;
-import item.DebugInfoItem;
 import item.DexItem;
-import item.EncodedArray;
-import item.FieldIdItem;
-import item.MethodIdItem;
-import item.ProtoIdItem;
-import item.TypeList;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,9 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -73,775 +57,66 @@ public class GeneratePatch {
 		patchFile.write(((Long)update.getClassDataItemOffset()).toString() +"\n");
 		patchFile.write(((Long)update.getEncodedArrayItemOffset()).toString() +"\n");
 		
-		String[] data1 = { "a", "b", "c", "d", "e", "f", "g" };
-		String[] data2 = { "a", "f", "b", "c", "e", "f", "g", "s" };
-		List<PCommand> l = lcs2(original.stringData, update.stringData);
-		//List<PCommand> l = lcs2(data1, data2);
-		
 		// string_data_item
-		ListIterator<PCommand> it = l.listIterator(l.size());
-		PCommand c = it.previous();
-		int fileIndex = 0;
-		int mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.stringIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.stringIndexMap[mapIndex++] = -1;
-				}
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.stringIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.stringIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		List<PCommand> l = lcs(original.stringData, update.stringData, mm);
+		writePatchCommands(l, mm.stringIndexMap, patchFile, dataFile);
 		
 		// type_id
-		l = lcs2(original.typeIds, update.typeIds, mm.stringIndexMap);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.typeIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(4L);
-					dataFile.write((long)c.index);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.typeIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.typeIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(4L);
-						dataFile.write((long)c.index);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.typeIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		l = lcs(original.typeIds, update.typeIds, mm);
+		writePatchCommands(l, mm.typeIndexMap, patchFile, dataFile);
 		
 		// field_id_item
-		l = lcs2(original.fieldIds, update.fieldIds, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.fieldIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.fieldIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.fieldIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.fieldIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		l = lcs(original.fieldIds, update.fieldIds, mm);
+		writePatchCommands(l, mm.fieldIndexMap, patchFile, dataFile);
 		
 		// type_list
-		l = lcs2(original.typeLists, update.typeLists, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if(nx == 0) {
-					mm.typeListIndexMap[mapIndex++] = fileIndex++;
-				} else if(nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if(nx == 2) {
-					mm.typeListIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if(nx == 0) {
-						mm.typeListIndexMap[mapIndex++] = fileIndex++;
-					} else if(nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if(nx == 2) {
-						mm.typeListIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		l = lcs(original.typeLists, update.typeLists, mm);
+		writePatchCommands(l, mm.typeListIndexMap, patchFile, dataFile);
 		
 		// proto_id
-		l = lcs2(original.protoIds, update.protoIds, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.protoIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.protoIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.protoIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.protoIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		l = lcs(original.protoIds, update.protoIds, mm);
+		writePatchCommands(l, mm.protoIndexMap, patchFile, dataFile);
 		
 		// method_id
-		l = lcs2(original.methodIds, update.methodIds, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.methodIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.methodIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.methodIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.methodIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		
-		patchFile.write(4);
+		l = lcs(original.methodIds, update.methodIds, mm);
+		writePatchCommands(l, mm.methodIndexMap, patchFile, dataFile);
 		
 		// debug_info_item
-		l = lcs2(original.debugInfoItems, update.debugInfoItems, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.debugInfoItemMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.debugInfoItemMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.debugInfoItemMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.debugInfoItemMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
-		
-		
+		l = lcs(original.debugInfoItems, update.debugInfoItems, mm);
+		writePatchCommands(l, mm.debugInfoItemMap, patchFile, dataFile);
 		
 		// code_item
-		l = lcs2(original.codeItems, update.codeItems, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.codeItemIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.codeItemIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.codeItemIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.codeItemIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
-		
+		l = lcs(original.codeItems, update.codeItems, mm);
+		writePatchCommands(l, mm.codeItemIndexMap, patchFile, dataFile);
 		
 		// annotation_item
-		l = lcs2(original.annotationItems, update.annotationItems, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.annotationItemIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.annotationItemIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.annotationItemIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.annotationItemIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		l = lcs(original.annotationItems, update.annotationItems, mm);
+		writePatchCommands(l, mm.annotationItemIndexMap, patchFile, dataFile);
 		
 		// annotation_set_item
-		l = lcs2(original.annotationSetItems, update.annotationSetItems, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.annotationSetItemIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.annotationSetItemIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.annotationSetItemIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.annotationSetItemIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		l = lcs(original.annotationSetItems, update.annotationSetItems, mm);
+		writePatchCommands(l, mm.annotationSetItemIndexMap, patchFile, dataFile);
 		
 		// annotation_set_ref_list
-		l = lcs2(original.annotationSetRefList, update.annotationSetRefList, mm);
-		if (!l.isEmpty()) {
-			it = l.listIterator(l.size());
-			c = it.previous();
-			fileIndex = 0;
-			mapIndex = 0;
-			while (true) {
-				int val = c.type;
-				int nx = c.type;
-				long count = 0;
-				while (nx == val) {
-					if (nx == 0) {
-						mm.annotationSetRefListIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.annotationSetRefListIndexMap[mapIndex++] = -1;
-					}
-					
-					++count;
-					
-					if (!it.hasPrevious())
-						break;
-					
-					c = it.previous();
-					nx = c.type;
-				}
-				patchFile.write(val);
-				patchFile.write16bit(count);
-				
-				if (!it.hasPrevious()) {
-					if(nx != val) {
-						if (nx == 0) {
-							mm.annotationSetRefListIndexMap[mapIndex++] = fileIndex++;
-						} else if (nx == 1) {
-							dataFile.write(c.data);
-							++fileIndex;
-						} else if (nx == 2) {
-							mm.annotationSetRefListIndexMap[mapIndex++] = -1;
-						}
-						patchFile.write(val);
-						patchFile.write16bit(1L);
-					}
-					break;
-				}
-			}
-		}
-		
-		patchFile.write(4);
-		
+		l = lcs(original.annotationSetRefList, update.annotationSetRefList, mm);
+		writePatchCommands(l, mm.annotationSetRefListIndexMap, patchFile, dataFile);
+
 		// annotations_directory_item
-		l = lcs2(original.annotationsDirectoryItems, update.annotationsDirectoryItems, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.annotationsDirectoryItemIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.annotationsDirectoryItemIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
-		
-		
+		l = lcs(original.annotationsDirectoryItems, update.annotationsDirectoryItems, mm);
+		writePatchCommands(l, mm.annotationsDirectoryItemIndexMap, patchFile, dataFile);
 		
 		// class_data_item
-		l = lcs2(original.classDataItems, update.classDataItems, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		long[] classDataItemIndexMap = new long[10000];
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					classDataItemIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					classDataItemIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						classDataItemIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						classDataItemIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		l = lcs(original.classDataItems, update.classDataItems, mm);
+		writePatchCommands(l, mm.classDataItemIndexMap, patchFile, dataFile);
 		
 		// encododed_array_item
-		l = lcs2(original.encodedArrayItems, update.encodedArrayItems, mm);
-		fileIndex = 0;
-		mapIndex = 0;
-		if (!l.isEmpty()) {
-			it = l.listIterator(l.size());
-			c = it.previous();
-			while (true) {
-				int val = c.type;
-				int nx = c.type;
-				long count = 0;
-				while (nx == val) {
-					if (nx == 0) {
-						mm.encodedArrayItemIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.encodedArrayItemIndexMap[mapIndex++] = -1;
-					}
-					
-					++count;
-					
-					if (!it.hasPrevious())
-						break;
-					
-					c = it.previous();
-					nx = c.type;
-				}
-				patchFile.write(val);
-				patchFile.write16bit(count);
-				
-				if (!it.hasPrevious()) {
-					if(nx != val) {
-						if (nx == 0) {
-							mm.encodedArrayItemIndexMap[mapIndex++] = fileIndex++;
-						} else if (nx == 1) {
-							dataFile.write(c.data);
-							++fileIndex;
-						} else if (nx == 2) {
-							mm.encodedArrayItemIndexMap[mapIndex++] = -1;
-						}
-						patchFile.write(val);
-						patchFile.write16bit(1L);
-					}
-					break;
-				}
-			}
-		}
-		
-		patchFile.write(4);
-		
-		
+		l = lcs(original.encodedArrayItems, update.encodedArrayItems, mm);
+		writePatchCommands(l, mm.encodedArrayItemIndexMap, patchFile, dataFile);
 		
 		// class_def_item
-		l = lcs2(original.classDefItems, update.classDefItems, mm);
-		it = l.listIterator(l.size());
-		c = it.previous();
-		fileIndex = 0;
-		mapIndex = 0;
-		while (true) {
-			int val = c.type;
-			int nx = c.type;
-			long count = 0;
-			while (nx == val) {
-				if (nx == 0) {
-					mm.classDefItemIndexMap[mapIndex++] = fileIndex++;
-				} else if (nx == 1) {
-					dataFile.write(c.data);
-					++fileIndex;
-				} else if (nx == 2) {
-					mm.classDefItemIndexMap[mapIndex++] = -1;
-				}
-				
-				++count;
-				
-				if (!it.hasPrevious())
-					break;
-				
-				c = it.previous();
-				nx = c.type;
-			}
-			patchFile.write(val);
-			patchFile.write16bit(count);
-			
-			if (!it.hasPrevious()) {
-				if(nx != val) {
-					if (nx == 0) {
-						mm.classDefItemIndexMap[mapIndex++] = fileIndex++;
-					} else if (nx == 1) {
-						dataFile.write(c.data);
-						++fileIndex;
-					} else if (nx == 2) {
-						mm.classDefItemIndexMap[mapIndex++] = -1;
-					}
-					patchFile.write(val);
-					patchFile.write16bit(1L);
-				}
-				break;
-			}
-		}
-		
-		patchFile.write(4);
+		l = lcs(original.classDefItems, update.classDefItems, mm);
+		writePatchCommands(l, mm.classDefItemIndexMap, patchFile, dataFile);
+
 		
 		byte[] header = update.getHeader();
 		dataFile.write((long)header.length);
@@ -861,87 +136,9 @@ public class GeneratePatch {
 		f.delete();
 		System.out.print("Patch Generated");
 	}
-	
-	
-	public static List<PCommand> lcs2(String[] a, String[] b) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++)
-	        for (int j = 0; j < b.length; j++)
-	            if (a[i].equals(b[j]))
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            else
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	 
-	    // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 && y != 0; ) {
-	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	byte[] by = new byte[b[y-1].length() + 3];
-	        	int size = b[y-1].length() - 1;
-	        	by[0] = (byte) size;
-	        	by[1] = (byte) (size >> 8);
-	        	by[2] = (byte) (size >> 16);
-	        	by[3] = (byte) (size >> 24);
-	        	b[y-1].getBytes(1, b[y-1].length(), by, 4);
-	        	l.add(new PCommand(1, by));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
-	
-	public static List<PCommand> lcs2(int[] a, int[] b, long[] stringIndexMap) {
-	    int[][] lengths = new int[a.length+1][b.length+1];
-	 
-	    // row 0 and column 0 are initialized to 0 already
-	 
-	    for (int i = 0; i < a.length; i++)
-	        for (int j = 0; j < b.length; j++)
-	            if (stringIndexMap[a[i]] == b[j])
-	                lengths[i+1][j+1] = lengths[i][j] + 1;
-	            else
-	                lengths[i+1][j+1] =
-	                    Math.max(lengths[i+1][j], lengths[i][j+1]);
-	 
-	    // read the substring out from the matrix
-	    List<PCommand> l = new LinkedList<PCommand>();
-	    for (int x = a.length, y = b.length;
-	         x != 0 && y != 0; ) {
-	        if (lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
-	        	x--;
-	        } else if (lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1]));
-	        	y--;
-	            
-	        } else {
-	        	l.add(new PCommand(0));
-	        	
-	        	x--;
-	            y--;
-	        }
-	    }
-	 
-	    return l;
-	}
     
     // DexItem lcs
-    public static List<PCommand> lcs2(DexItem[] a, DexItem[] b, MapManager mm) {
+    public static List<PCommand> lcs(DexItem[] a, DexItem[] b, MapManager mm) {
 	    int[][] lengths = new int[a.length+1][b.length+1];
 	 
 	    // row 0 and column 0 are initialized to 0 already
@@ -962,15 +159,13 @@ public class GeneratePatch {
 	    for (int x = a.length, y = b.length;
 	         x != 0 || y != 0; ) {
 	        if (x > 0 && lengths[x][y] == lengths[x-1][y]) {
-	        	l.add(new PCommand(2));
+	        	l.add(new PCommand(2)); // DELETE
 	        	x--;
 	        } else if (y > 0 && lengths[x][y] == lengths[x][y-1]) {
-	        	l.add(new PCommand(1, b[y-1].getRawData()));
+	        	l.add(new PCommand(1, b[y-1].getRawData())); // INSERT
 	        	y--;
-	            
 	        } else {
-	        	l.add(new PCommand(0));
-	        	
+	        	l.add(new PCommand(0)); // KEEP
 	        	x--;
 	            y--;
 	        }
@@ -982,29 +177,15 @@ public class GeneratePatch {
 	private static class PCommand {
 		public int type;
 		List<Byte> data;
-		int index;
 		
 		public PCommand(int type) {
 			this.type = type;
 			this.data = null;
 		}
 		
-		public PCommand(int type, byte[] data) {
-			this.type = type;
-			ArrayList<Byte> l = new ArrayList<Byte>();
-			for (int i = 0; i < data.length; ++i)
-				l.add(data[i]);
-			this.data = l;
-		}
-		
 		public PCommand(int type, List<Byte> data) {
 			this.type = type;
 			this.data = data;
-		}
-		
-		public PCommand(int type, int index) {
-			this.type = type;
-			this.index = index;
 		}
 	}
 	
@@ -1037,4 +218,58 @@ public class GeneratePatch {
 		}
 		
 	}
+	
+	
+	static void writePatchCommands(List<PCommand> l, long[] indexMap,
+			GeneratedFile patchFile, GeneratedFile dataFile) {
+		if (!l.isEmpty()) {
+			ListIterator<PCommand> it = l.listIterator(l.size());
+			PCommand c = it.previous();
+			int fileIndex = 0;
+			int mapIndex = 0;
+			while (true) {
+				int val = c.type;
+				int nx = c.type;
+				long count = 0;
+				while (nx == val) {
+					if(nx == 0) {
+						indexMap[mapIndex++] = fileIndex++;
+					} else if(nx == 1) {
+						dataFile.write(c.data);
+						++fileIndex;
+					} else if(nx == 2) {
+						indexMap[mapIndex++] = -1;
+					}
+					
+					++count;
+					
+					if (!it.hasPrevious())
+						break;
+					
+					c = it.previous();
+					nx = c.type;
+				}
+				patchFile.write(val);
+				patchFile.write16bit(count);
+				
+				if (!it.hasPrevious()) {
+					if(nx != val) {
+						if(nx == 0) {
+							indexMap[mapIndex++] = fileIndex++;
+						} else if(nx == 1) {
+							dataFile.write(c.data);
+							++fileIndex;
+						} else if(nx == 2) {
+							indexMap[mapIndex++] = -1;
+						}
+						patchFile.write(val);
+						patchFile.write16bit(1L);
+					}
+					break;
+				}
+			}
+		}
+		patchFile.write(4);
+	}
+	
 }
