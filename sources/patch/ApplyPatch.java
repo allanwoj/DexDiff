@@ -117,6 +117,12 @@ public class ApplyPatch {
 					original.getStringData();
 					mm.stringIndexMap[mapIndex++] = -1;
 				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getStringData();
+					mm.stringIndexMap[mapIndex++] = fileIndex;
+				}
 			}
 		}
 		
@@ -146,6 +152,12 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					original.getTypeIdData();
 					mm.typeIndexMap[mapIndex++] = -1;
+				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getTypeIdData();
+					mm.typeIndexMap[mapIndex++] = fileIndex;
 				}
 			}
 		}
@@ -179,6 +191,12 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					original.getFieldIdData();
 					mm.fieldIndexMap[mapIndex++] = -1;
+				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getFieldIdData();
+					mm.fieldIndexMap[mapIndex++] = fileIndex;
 				}
 			}
 		}
@@ -235,6 +253,12 @@ public class ApplyPatch {
 					original.getTypeList();
 					mm.typeListIndexMap[mapIndex++] = -1;
 				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getTypeList();
+					mm.typeListIndexMap[mapIndex++] = fileIndex;
+				}
 			}
 		}
 		
@@ -270,6 +294,12 @@ public class ApplyPatch {
 					original.getProtoIdData();
 					mm.protoIndexMap[mapIndex++] = -1;
 				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getProtoIdData();
+					mm.protoIndexMap[mapIndex++] = fileIndex;
+				}
 			}
 		}
 		
@@ -300,6 +330,12 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					original.getMethodIdData();
 					mm.methodIndexMap[mapIndex++] = -1;
+				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getMethodIdData();
+					mm.methodIndexMap[mapIndex++] = fileIndex;
 				}
 			}
 		}
@@ -380,6 +416,12 @@ public class ApplyPatch {
 					original.getDebugInfoItem();
 					mm.debugInfoItemMap[mapIndex++] = -1;
 				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getDebugInfoItem();
+					mm.debugInfoItemMap[mapIndex++] = fileIndex;
+				}
 			}
 			
 		}
@@ -417,6 +459,12 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					original.getCodeItem();
 					mm.codeItemIndexMap[mapIndex++] = -1;
+				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getCodeItem();
+					mm.codeItemIndexMap[mapIndex++] = fileIndex;
 				}
 			}
 		}
@@ -456,6 +504,12 @@ public class ApplyPatch {
 					original.getAnnotationItem();
 					mm.annotationItemIndexMap[mapIndex++] = -1;
 				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getAnnotationItem();
+					mm.annotationItemIndexMap[mapIndex++] = fileIndex;
+				}
 			}
 		}
 		
@@ -494,6 +548,12 @@ public class ApplyPatch {
 					original.getAnnotationSetItem();
 					mm.annotationSetItemIndexMap[mapIndex++] = -1;
 				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getAnnotationSetItem();
+					mm.annotationSetItemIndexMap[mapIndex++] = fileIndex;
+				}
 			}
 		}
 		
@@ -531,6 +591,12 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					original.getAnnotationSetRefList();
 					mm.annotationSetRefListIndexMap[mapIndex++] = -1;
+				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getAnnotationSetRefList();
+					mm.annotationSetRefListIndexMap[mapIndex++] = fileIndex;
 				}
 			}
 		}
@@ -572,6 +638,12 @@ public class ApplyPatch {
 					original.getAnnotationsDirectoryItem();
 					mm.annotationsDirectoryItemIndexMap[mapIndex++] = -1;
 				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getAnnotationsDirectoryItem();
+					mm.annotationsDirectoryItemIndexMap[mapIndex++] = fileIndex;
+				}
 			}
 		}
 		
@@ -608,6 +680,12 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					original.getClassDataItem();
 					mm.classDataItemIndexMap[mapIndex++] = -1;
+				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getClassDataItem();
+					mm.classDataItemIndexMap[mapIndex++] = fileIndex;
 				}
 			}
 		}
@@ -646,6 +724,12 @@ public class ApplyPatch {
 					original.getEncodedArrayItem();
 					mm.encodedArrayItemIndexMap[mapIndex++] = -1;
 				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getEncodedArrayItem();
+					mm.encodedArrayItemIndexMap[mapIndex++] = fileIndex;
+				}
 			}
 		}
 		
@@ -676,6 +760,12 @@ public class ApplyPatch {
 				for(int i = 0; i < command.size; ++i) {
 					original.getClassDefItem();
 					mm.classDefItemIndexMap[mapIndex++] = -1;
+				}
+			} else if (command.type == 3) {
+				// MODIFY
+				for(int i = 0; i < command.size; ++i) {
+					original.getClassDefItem();
+					mm.classDefItemIndexMap[mapIndex++] = fileIndex;
 				}
 			}
 		}

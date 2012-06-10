@@ -142,8 +142,9 @@ public class GeneratePatch {
 			int mappedStart = (int) ((modify.index == 0) ? 0 : (indexMap[modify.index - 1] + 1));
 			System.out.println("(" + modify.index + ", " + modify.inserted + ", " + modify.deleted + ")");
 			List<Integer> upd = new ArrayList<Integer>();
+			int best = 0;
 			for (int i = 0; i < modify.deleted; ++i) {
-				int best = 0;
+				
 				for (int j = 0; j < modify.inserted; ++j) {
 					indexMap[modify.index + i] = mappedStart + j;
 					int score = modify(original, update, m, mm);
@@ -204,6 +205,8 @@ public class GeneratePatch {
 				++count;
 				it2 = commands.listIterator(cIndex);
 			}
+			
+			--count;
 			
 			int prev = 0;
 			for (int i = 0; i < mod.update.size(); ++i) {
