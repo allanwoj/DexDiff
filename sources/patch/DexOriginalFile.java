@@ -95,6 +95,8 @@ public class DexOriginalFile extends DexParser {
     private long annotationsDirectoryItemSize;
     private long annotationsDirectoryItemOffset;
     
+    private long overflow;
+    
     public StringDataItem[] stringData;
     int stringDataIndex = 0;
     
@@ -668,6 +670,7 @@ public class DexOriginalFile extends DexParser {
 	        			staticFields, instanceFields, directMethods, virtualMethods);
 	        	
 	        }
+	        overflow = mapOffset - position;
 	        
 	        setFilePosition(classDefsOffset);
 	        classDefItems = new ClassDefItem[(int)classDefsSize];
@@ -685,6 +688,7 @@ public class DexOriginalFile extends DexParser {
 	        	classDefItems[i] = new ClassDefItem(classId, accessFlags, superclassId, typeListOffsetMap.get(interfacesOffset),
 	        			interfacesOffset, sourceFileId, annotationsDirectoryItemOffsetMap.get(annotationsOffset), annotationsOffset, classDataItemOffsetMap.get(classDataOffset), classDataOffset, encodedArrayItemOffsetMap.get(staticValuesOffset), staticValuesOffset);
 	        }
+	        
 	        
 	        
 		} catch (IOException e) {
@@ -997,6 +1001,10 @@ public class DexOriginalFile extends DexParser {
     
     public long getStringDataItemOffset() {
         return stringDataItemOffset;
+    }
+    
+    public long getOverflow() {
+        return overflow;
     }
     
     public byte[] getHeader() {

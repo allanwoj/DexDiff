@@ -50,6 +50,7 @@ public class DexPatchFile {
 	private long classDataItemOffset;
 	private long encodedArrayItemOffset;
 	private long codeItemOffset;
+	private long overflow;
 	RandomAccessFile file;
 	
 	public DexPatchFile(String fileName) {
@@ -85,6 +86,7 @@ public class DexPatchFile {
 			annotationsDirectoryItemOffset = Long.parseLong(file.readLine());
 			classDataItemOffset = Long.parseLong(file.readLine());
 			encodedArrayItemOffset = Long.parseLong(file.readLine());
+			overflow = Long.parseLong(file.readLine());
 			
 			// Read string table commands
 			while(true) {
@@ -443,6 +445,10 @@ public class DexPatchFile {
 	
 	long getEncodedArrayItemOffset() {
 		return encodedArrayItemOffset;
+	}
+	
+	long getOverflow() {
+		return overflow;
 	}
 	
 	public int read8Bit() throws IOException {

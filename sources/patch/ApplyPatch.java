@@ -126,8 +126,6 @@ public class ApplyPatch {
 			}
 		}
 		
-		
-		System.out.println("DONE");
 		fileIndex = 0;
 		mapIndex = 0;
 		TypeIdItem typeItem = null;
@@ -435,6 +433,8 @@ public class ApplyPatch {
 		// Generate patched code_items
 		while(patch.hasCodeItemCommands()) {
 			command = patch.getNextCodeItemCommand();
+			if (tempPointer >= 375952)
+				System.out.println("Sup");
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
@@ -776,6 +776,9 @@ public class ApplyPatch {
 		
 		// map_list
 		temp = patch.getNextData();
+		for (int i = 0; i < patch.getOverflow(); ++i) {
+			mapListFile.write(0);
+		}
 		mapListFile.write(temp);
 		
 		stringIdsFile.close();
@@ -850,6 +853,8 @@ public class ApplyPatch {
 		f.delete();
 		f = new File("string_id.dex");
 		f.delete();
+		
+		System.out.println("Generated update");
 		
 	}
 	

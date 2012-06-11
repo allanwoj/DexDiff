@@ -58,6 +58,7 @@ public class GeneratePatch {
 		patchFile.write(((Long)update.getAnnotationsDirectoryItemOffset()).toString() +"\n");
 		patchFile.write(((Long)update.getClassDataItemOffset()).toString() +"\n");
 		patchFile.write(((Long)update.getEncodedArrayItemOffset()).toString() +"\n");
+		patchFile.write(((Long)update.getOverflow()).toString() +"\n");
 		
 		ModifyManager m = new ModifyManager();
 		PCommandManager l = new PCommandManager();
@@ -78,6 +79,16 @@ public class GeneratePatch {
 		lcs(original.encodedArrayItems, update.encodedArrayItems, mm, mm.encodedArrayItemIndexMap, l.encodedArrayCommands, m.encodedArrayMods);
 		lcs(original.classDefItems, update.classDefItems, mm, mm.classDefItemIndexMap, l.classDefCommands, m.classDefMods);
 		
+		PCommand ccc = null;
+		int bbb = -1;
+		ListIterator<PCommand> itt = l.codeCommands.listIterator(l.codeCommands.size());
+		while (itt.hasPrevious()) {
+			ccc = itt.previous();
+			if (ccc.type == 0 || ccc.type == 2) {
+				++bbb;
+				System.out.println("bbb[" + bbb + "]: " + ccc.type);
+			}
+		}
 		
 		alter(original, update, m, mm, m.stringMods, l.stringCommands, l, mm.stringIndexMap);
 		alter(original, update, m, mm, m.typeMods, l.typeCommands, l, mm.typeIndexMap);
@@ -137,10 +148,22 @@ public class GeneratePatch {
 		Modify modify = null;
 		List<Mod> up = new ArrayList<Mod>();
 		int bestScore = 0;
+		
+		PCommand ccc = null;
+		int bbb = -1;
+		ListIterator<PCommand> itt = commands.listIterator(commands.size());
+		while (itt.hasPrevious()) {
+			ccc = itt.previous();
+			if (ccc.type == 0 || ccc.type == 2) {
+				++bbb;
+				System.out.println("bbb[" + bbb + "]: " + ccc.type);
+			}
+		}
+		
 		while(it.hasNext()) {
 			modify = it.next();
 			int mappedStart = (int) ((modify.index == 0) ? 0 : (indexMap[modify.index - 1] + 1));
-			System.out.println("(" + modify.index + ", " + modify.inserted + ", " + modify.deleted + ")");
+			System.out.println("(" + modify.index + ", " + modify.deleted + ", " + modify.inserted + ")");
 			List<Integer> upd = new ArrayList<Integer>();
 			int best = 0;
 			for (int i = 0; i < modify.deleted; ++i) {
@@ -187,20 +210,21 @@ public class GeneratePatch {
 		int count = -1;
 		while (it1.hasNext()) {
 			mod = it1.next();
-			
+			System.out.println("T(" + mod.index + ", " + mod.update.toString() + ")");
 			while (count < mod.index) {
 				c = it2.previous();
 				--cIndex;
-				if (c.type == 0 || c.type == 2)
+				if (c.type == 0 || c.type == 2) {
 					++count;
+					System.out.println("count[" + count + "]: " + c.type);
+				}
 			}
 			
 			
-			
 			for (int i = 0; i < mod.update.size(); ++i) {
+				System.out.println("Type: " + c.type);
 				c = it2.previous();
 				commands.remove(cIndex);
-				System.out.println("Type: " + c.type);
 				--cIndex;
 				++count;
 				it2 = commands.listIterator(cIndex);
@@ -347,31 +371,33 @@ public class GeneratePatch {
 		int cc = -1;
 		while (it1.hasNext()) {
 			mod = it1.next();
-			
+			//System.out.println("T(" + mod.index + ", " + mod.update.toString() + ")");
 			while (cc < mod.index) {
 				c = it2.previous();
 				--cIndex;
-				if (c.type == 0 || c.type == 2)
+				if (c.type == 0 || c.type == 2) {
 					++cc;
+					//System.out.println("cc[" + cc + "]: " + c.type);
+				}
 			}
 			
-			
-			
 			for (int i = 0; i < mod.update.size(); ++i) {
+				//System.out.println("TType: " + c.type);
 				c = it2.previous();
 				commands.remove(cIndex);
-				System.out.println("Type: " + c.type);
 				--cIndex;
 				++cc;
 				it2 = commands.listIterator(cIndex);
 			}
-			
+			--cc;
 			
 			
 			int prev = 0;
+			boolean lastDel = false;
 			for (int i = 0; i < mod.update.size(); ++i) {
 				if (mod.update.get(i) == -1) {
 					commands.add(cIndex + 1, new PCommand(2));
+					lastDel = true;
 				} else {
 					while (prev < mod.update.get(i)) {
 						c = it2.previous();
@@ -380,10 +406,16 @@ public class GeneratePatch {
 					}
 					commands.remove(cIndex);
 					commands.add(cIndex, new PCommand(0));
-					--cIndex;
 					++prev;
+					--cIndex;
+					lastDel = false;
 				}
 				
+				it2 = commands.listIterator(cIndex);
+			}
+			
+			if (!lastDel) {
+				++cIndex;
 				it2 = commands.listIterator(cIndex);
 			}
 		}
