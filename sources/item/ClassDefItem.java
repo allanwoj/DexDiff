@@ -169,7 +169,7 @@ public class ClassDefItem extends DexItem<ClassDefItem> {
 			}
 		}
 		
-		if (sourceFileId != -1) {
+		if (sourceFileId != -1 && sourceFileId != 4294967295L) {
 			if (mm.stringIndexMap[(int) sourceFileId] != other.sourceFileId) {
 				return false;
 			}

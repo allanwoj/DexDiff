@@ -79,17 +79,6 @@ public class GeneratePatch {
 		lcs(original.encodedArrayItems, update.encodedArrayItems, mm, mm.encodedArrayItemIndexMap, l.encodedArrayCommands, m.encodedArrayMods);
 		lcs(original.classDefItems, update.classDefItems, mm, mm.classDefItemIndexMap, l.classDefCommands, m.classDefMods);
 		
-		PCommand ccc = null;
-		int bbb = -1;
-		ListIterator<PCommand> itt = l.codeCommands.listIterator(l.codeCommands.size());
-		while (itt.hasPrevious()) {
-			ccc = itt.previous();
-			if (ccc.type == 0 || ccc.type == 2) {
-				++bbb;
-				System.out.println("bbb[" + bbb + "]: " + ccc.type);
-			}
-		}
-		
 		alter(original, update, m, mm, m.stringMods, l.stringCommands, l, mm.stringIndexMap);
 		alter(original, update, m, mm, m.typeMods, l.typeCommands, l, mm.typeIndexMap);
 		alter(original, update, m, mm, m.fieldMods, l.fieldCommands, l, mm.fieldIndexMap);
@@ -156,31 +145,31 @@ public class GeneratePatch {
 			ccc = itt.previous();
 			if (ccc.type == 0 || ccc.type == 2) {
 				++bbb;
-				System.out.println("bbb[" + bbb + "]: " + ccc.type);
 			}
 		}
 		
 		while(it.hasNext()) {
 			modify = it.next();
 			int mappedStart = (int) ((modify.index == 0) ? 0 : (indexMap[modify.index - 1] + 1));
-			System.out.println("(" + modify.index + ", " + modify.deleted + ", " + modify.inserted + ")");
 			List<Integer> upd = new ArrayList<Integer>();
 			int best = 0;
+			int lastBest = 0;
 			for (int i = 0; i < modify.deleted; ++i) {
 				
-				for (int j = 0; j < modify.inserted; ++j) {
+				for (int j = lastBest; j < modify.inserted; ++j) {
 					indexMap[modify.index + i] = mappedStart + j;
 					int score = modify(original, update, m, mm);
 					if (score > bestScore) {
 						bestScore = score;
 						best = j;
+						lastBest = j+1;
 					}
 				}
 				indexMap[modify.index + i] = mappedStart + best;
 				upd.add(best);
 				
 			}
-			up.add(new Mod(modify.index, upd));
+			up.add(new Mod(modify.index, upd, modify.inserted));
 		}
 		mods.clear();
 		
@@ -210,19 +199,18 @@ public class GeneratePatch {
 		int count = -1;
 		while (it1.hasNext()) {
 			mod = it1.next();
-			System.out.println("T(" + mod.index + ", " + mod.update.toString() + ")");
 			while (count < mod.index) {
 				c = it2.previous();
 				--cIndex;
 				if (c.type == 0 || c.type == 2) {
 					++count;
-					System.out.println("count[" + count + "]: " + c.type);
 				}
 			}
 			
 			
 			for (int i = 0; i < mod.update.size(); ++i) {
-				System.out.println("Type: " + c.type);
+				if (c.type != 2)
+					System.out.println("Alt: " + c.type);
 				c = it2.previous();
 				commands.remove(cIndex);
 				--cIndex;
@@ -248,9 +236,11 @@ public class GeneratePatch {
 	private static class Mod {
 		int index;
 		List<Integer> update;
-		public Mod(int index, List<Integer> update) {
+		int max;
+		public Mod(int index, List<Integer> update, int max) {
 			this.index = index;
 			this.update = update;
+			this.max = max;
 		}
 	}
 	
@@ -315,11 +305,13 @@ public class GeneratePatch {
 			List<Integer> upd = new ArrayList<Integer>();
 			boolean hasChanged = false;
 			int mappedStart = (int) ((modify.index == 0) ? 0 : (indexMap[modify.index - 1] + 1));
+			int lastBest = 0;
 			for (int i = 0; i < modify.deleted; ++i) {
 				int best = -1;
-				for (int j = 0; j < modify.inserted; ++j) {
+				for (int j = lastBest; j < modify.inserted; ++j) {
 					if (original[modify.index + i].isEqual(update[mappedStart + j], mm)) {
 						best = j;
+						lastBest = j+1;
 						hasChanged = true;
 					}
 				}
@@ -328,7 +320,7 @@ public class GeneratePatch {
 			if (hasChanged) {
 				modify = m.remove(count);
 				--count;
-				changes.add(new Mod(modify.index, upd));
+				changes.add(new Mod(modify.index, upd, modify.inserted));
 				
 				int tempIndex = modify.index;
 				int available = modify.inserted;
@@ -371,18 +363,17 @@ public class GeneratePatch {
 		int cc = -1;
 		while (it1.hasNext()) {
 			mod = it1.next();
-			//System.out.println("T(" + mod.index + ", " + mod.update.toString() + ")");
 			while (cc < mod.index) {
 				c = it2.previous();
 				--cIndex;
 				if (c.type == 0 || c.type == 2) {
 					++cc;
-					//System.out.println("cc[" + cc + "]: " + c.type);
 				}
 			}
 			
 			for (int i = 0; i < mod.update.size(); ++i) {
-				//System.out.println("TType: " + c.type);
+				if (c.type != 2)
+					System.out.println("Adj: " + c.type);
 				c = it2.previous();
 				commands.remove(cIndex);
 				--cIndex;
@@ -410,11 +401,15 @@ public class GeneratePatch {
 					--cIndex;
 					lastDel = false;
 				}
-				
-				it2 = commands.listIterator(cIndex);
+				if (cIndex > -1) {
+					it2 = commands.listIterator(cIndex);
+				}
 			}
 			
 			if (!lastDel) {
+				++cIndex;
+				it2 = commands.listIterator(cIndex);
+			} else if (prev == mod.max) {
 				++cIndex;
 				it2 = commands.listIterator(cIndex);
 			}
@@ -472,7 +467,7 @@ public class GeneratePatch {
 	    }
 	    
 	    if (inserted > 0 && deleted > 0) {
-    		m.add(new Modify(mapIndex, inserted, deleted));
+    		m.add(0, new Modify(mapIndex + 1, inserted, deleted));
     	}
 	}
 	

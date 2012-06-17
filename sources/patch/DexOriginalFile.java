@@ -711,16 +711,16 @@ public class DexOriginalFile extends DexParser {
 		int valueType = b & 0x1F;
 		int valueArg = (b & 0xFF) >> 5;
 
-		if (valueArg == 0x1C) {
+		if (valueType == 0x1C) {
 			int anSize = readULEB128();
 			EncodedValue[] vals = new EncodedValue[anSize];
 			for (int k = 0; k < anSize; ++k) {
 				vals[k] = getEncodedValue();
 			}
 			return new EncodedValue(-1, valueType, valueArg, new EncodedArray(anSize, vals));
-		} else if (valueArg == 0x1D) {
+		} else if (valueType == 0x1D) {
 			return new EncodedValue(-1, valueType, valueArg, getEncodedAnnotation());
-		} else if (valueArg == 0x1E || valueArg == 0x1F) {
+		} else if (valueType == 0x1E || valueType == 0x1F) {
 			return new EncodedValue(-1, valueType, valueArg);
 		}
 	

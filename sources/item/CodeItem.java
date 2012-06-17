@@ -150,9 +150,17 @@ public class CodeItem extends DexItem<CodeItem> {
 		if (registersSize != other.registersSize || insSize != other.insSize ||
     			outsSize != other.outsSize || triesSize != other.triesSize ||
     			insnsSize != other.insnsSize || padding != other.padding || ins.size() != other.ins.size() ||
-    			times != other.times ||	mm.debugInfoItemMap[debugInfoIndex] != other.debugInfoIndex) {
+    			times != other.times) {
     		return false;
     	}
+		
+		if (debugInfoIndex != -1) {
+			if (mm.debugInfoItemMap[debugInfoIndex] != other.debugInfoIndex) {
+				return false;
+			}
+		} else if (other.debugInfoIndex != -1) {
+			return false;
+		}
 		
 		for (int k = 0; k < triesSize; ++k) {
 			if (!tries[k].isEqual(other.tries[k])) {

@@ -433,8 +433,6 @@ public class ApplyPatch {
 		// Generate patched code_items
 		while(patch.hasCodeItemCommands()) {
 			command = patch.getNextCodeItemCommand();
-			if (tempPointer >= 375952)
-				System.out.println("Sup");
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
@@ -611,8 +609,6 @@ public class ApplyPatch {
 		// Generate patched annotations_directory_items
 		while(patch.hasAnnotationsDirectoryItemCommands()) {
 			command = patch.getNextAnnotationsDirectoryItemCommand();
-			if (tempPointer > 403264)
-				System.out.print("hmmm");
 			if (command.type == 0) {
 				// KEEP
 				for(int i = 0; i < command.size; ++i) {
@@ -854,7 +850,6 @@ public class ApplyPatch {
 		f = new File("string_id.dex");
 		f.delete();
 		
-		System.out.println("Generated update");
 		
 	}
 	
