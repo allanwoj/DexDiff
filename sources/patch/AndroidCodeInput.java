@@ -17,13 +17,11 @@ implements CodeInput {
 		this.file = file;
 	}
 
-	@Override
 	public boolean hasMore() {
 		// TODO Auto-generated method stub
 		return true;
 	}
 
-	@Override
 	public Collection<Byte> read() throws EOFException {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		try {
@@ -36,7 +34,6 @@ implements CodeInput {
 		return l;
 	}
 
-	@Override
 	public long read16Bit() throws EOFException {
 		long result = 0;
 		try {
@@ -50,7 +47,6 @@ implements CodeInput {
 	    return result;
 	}
 
-	@Override
 	public Collection<Byte> readInt() throws EOFException {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		try {
@@ -65,7 +61,6 @@ implements CodeInput {
 		return l;
 	}
 
-	@Override
 	public Collection<Byte> readLong() throws EOFException {
 		ArrayList<Byte> l = new ArrayList<Byte>();
 		try {
